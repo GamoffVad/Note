@@ -36,3 +36,12 @@
 ## Регион функций
 
 По умолчанию Vercel размещает функции в своём регионе по умолчанию. Функцию стоит держать рядом с базой Supabase: когда регион базы выбран, добавьте в `vercel.json` `"regions": ["<ближайший регион Vercel>"]` ([настройка регионов](https://vercel.com/docs/functions/configuring-functions/region)).
+
+## Текущее развёртывание (26.09.2026)
+
+- Проект Vercel `mayak` (`prj_XD1vamgZ6dKxjAmd3W1GG3b7zLyE`), связан с репозиторием `gamoffvad/note`.
+- Развёртывание `dpl_9tPgccUhc1DND3ZwVn1ujiu4CtoD` из ветки `claude/new-session-kow5h4`, коммит `104ae9d`, статус READY, регион функций `iad1`. Vercel назначил ему цель production.
+- Адреса: `mayak-pied-theta.vercel.app`, `mayak-gamoffvads-projects.vercel.app`, `mayak-git-claude-new-session-kow5h4-gamoffvads-projects.vercel.app`.
+- Защита: Vercel Authentication, режим `all_except_custom_domains`.
+- Переменные окружения ещё не заданы: клиент работает только на устройстве, API отвечает 503.
+- Из среды разработки опубликованные адреса открыть не удалось (сетевая политика и область доступа подключения Vercel). Проверка в браузере: страница открывается, `/api/v1/bootstrap` отвечает 503 «Синхронизация на сервере ещё не настроена».
