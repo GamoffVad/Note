@@ -4,9 +4,13 @@
 
 Дизайн-пакет и техническое задание лежат в [`design/`](design/README.md): ТЗ — [`design/SPECIFICATION.md`](design/SPECIFICATION.md), дизайн-система «01 / Тихая ясность» — [`design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md).
 
-## Состояние
+## Скачать
 
-Идёт **этап 1 ТЗ — технический прототип** и первая версия веб-клиента. Готового приложения пока нет.
+**https://mayak-pied-theta.vercel.app** — страница сама предлагает установщик для вашей системы
+(Windows, macOS, Linux, Android). Все файлы — в [релизах GitHub](https://github.com/GamoffVad/Note/releases/latest).
+Версия для iPhone появится после оформления Apple Developer Program (TestFlight).
+
+## Состояние
 
 Сделано:
 
@@ -16,13 +20,14 @@
 - сервер API `/api/v1` на PostgreSQL: bootstrap, push, pull, история, восстановление версии, устройства и их отзыв;
 - веб-клиент `apps/web` на библиотеке компонентов `@mayak/ui` в стиле macOS 27 (Liquid Glass, см. [`docs/design-system.md`](docs/design-system.md)): заметки и редактор блоков, задачи, корзина, история версий, конфликты, устройства, настройки внешнего вида, светлая и тёмная темы, раскладки для компьютера, планшета и телефона;
 - вход через Supabase Auth по email (код из письма или ссылка): сервер проверяет токены по JWKS проекта, отзыв устройства закрывает и его сессию; таблицы в закрытой схеме `mayak`, не видимой Data API Supabase — [ADR 0004](docs/adr/0004-auth.md), [инструкция по настройке](docs/supabase-setup.md);
-- 80 модульных тестов (в том числе сквозные на PostgreSQL) и 23 браузерных теста Playwright, включая синхронизацию двух браузеров, вход через имитацию Supabase Auth и проверку доступности axe.
-
+- модульные тесты (в том числе сквозные на PostgreSQL), браузерные тесты Playwright (синхронизация двух браузеров, вход через имитацию Supabase Auth, доступность axe), тест настоящего окна приложения через WebDriver и распознавание речи в CI;
 - развёртывание API на Vercel — [docs/deploy-vercel.md](docs/deploy-vercel.md);
 - библиотека компонентов `packages/ui` в стиле macOS 27 (Liquid Glass) — [docs/design-system.md](docs/design-system.md);
-- настольное приложение на Tauri 2 для Windows, macOS и Linux: заметки в SQLite на устройстве, ключ сессии в системном хранилище секретов, сборка установщиков в GitHub Actions — [docs/desktop.md](docs/desktop.md).
+- приложения на Tauri 2 для Windows, macOS, Linux и Android: заметки в SQLite на устройстве, ключ сессии в системном хранилище секретов, вход по ссылке из письма, сборка и публикация установщиков в GitHub Actions — [docs/desktop.md](docs/desktop.md);
+- база и вход на Supabase (проект `mayak`, eu-west-1), API на Vercel с автопроверкой после развёртывания;
+- голосовой ввод: локальное распознавание русской речи Whisper (small на компьютерах, tiny на телефонах), модель скачивается по нажатию с проверкой SHA-256.
 
-Не сделано: создание проекта Supabase и проверка на живом проекте (нужен аккаунт владельца), подпись установщиков (нужны учётные записи разработчика Apple и сертификат для Windows), приложения для Android и iOS, файлы и передача копий, диктовка (кнопка честно сообщает о недоступности), импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
+Не сделано: своя почта (SMTP) — без неё письма входа приходят только владельцу проекта; приложение для iPhone (нужен Apple Developer Program); подпись установщиков macOS и Windows; проверка диктовки на живом микрофоне; файлы и передача копий; импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
 
 ## Структура
 
