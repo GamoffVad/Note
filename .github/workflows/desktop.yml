@@ -116,7 +116,9 @@ jobs:
           java-version: 17
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-linux-android,armv7-linux-androideabi
+          # Только 64-битный ARM: whisper.cpp не собирается под 32-битный armv7,
+          # а распознавание на таких телефонах было бы слишком медленным.
+          targets: aarch64-linux-android
       - run: npm ci
       - name: Ключ подписи
         env:
@@ -139,7 +141,7 @@ jobs:
       - name: Сборка APK
         run: |
           export NDK_HOME="$ANDROID_NDK_LATEST_HOME"
-          npm run tauri -w @mayak/desktop -- android build --apk --target aarch64 --target armv7
+          npm run tauri -w @mayak/desktop -- android build --apk --target aarch64
       - name: Файл установщика
         run: |
           version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
