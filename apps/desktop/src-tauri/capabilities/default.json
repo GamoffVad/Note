@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Главное окно: только собственные команды приложения (хранилище и секреты) и базовые события.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

@@ -18,18 +18,22 @@
 - вход через Supabase Auth по email (код из письма или ссылка): сервер проверяет токены по JWKS проекта, отзыв устройства закрывает и его сессию; таблицы в закрытой схеме `mayak`, не видимой Data API Supabase — [ADR 0004](docs/adr/0004-auth.md), [инструкция по настройке](docs/supabase-setup.md);
 - 80 модульных тестов (в том числе сквозные на PostgreSQL) и 23 браузерных теста Playwright, включая синхронизацию двух браузеров, вход через имитацию Supabase Auth и проверку доступности axe.
 
-- развёртывание на Vercel: веб-клиент и функция API в одном проекте — [docs/deploy-vercel.md](docs/deploy-vercel.md);
+- развёртывание API на Vercel — [docs/deploy-vercel.md](docs/deploy-vercel.md);
+- библиотека компонентов `packages/ui` в стиле macOS 27 (Liquid Glass) — [docs/design-system.md](docs/design-system.md);
+- настольное приложение на Tauri 2 для Windows, macOS и Linux: заметки в SQLite на устройстве, ключ сессии в системном хранилище секретов, сборка установщиков в GitHub Actions — [docs/desktop.md](docs/desktop.md).
 
-Не сделано: создание проекта Supabase и проверка на живом проекте (нужен аккаунт владельца), файлы и передача копий, диктовка (кнопка честно сообщает о недоступности), SQLite и Tauri, импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
+Не сделано: создание проекта Supabase и проверка на живом проекте (нужен аккаунт владельца), подпись установщиков (нужны учётные записи разработчика Apple и сертификат для Windows), приложения для Android и iOS, файлы и передача копий, диктовка (кнопка честно сообщает о недоступности), импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
 
 ## Структура
 
 ```text
 packages/domain       типы, схемы (zod), лимиты, протокол, Markdown, задачи
-packages/local-store  LocalStore: память, IndexedDB
+packages/local-store  LocalStore: память, IndexedDB, SQLite через KvBackend
 packages/sync         SyncEngine, HttpTransport, планировщик, тексты статусов
-packages/server       SyncService, HTTP-обработчик (Fetch API), миграции SQL
-apps/web              веб-клиент: React + Vite, IndexedDB, тесты Playwright
+packages/server       SyncService, HTTP-обработчик (Fetch API), CORS, миграции SQL
+packages/ui           библиотека компонентов в стиле macOS 27 (Liquid Glass)
+apps/web              интерфейс: React + Vite, тесты Playwright; сборка desktop — для приложения
+apps/desktop          настольное приложение Tauri 2: SQLite, хранилище секретов, установщики
 docs/adr              решения: хранение, синхронизация, редактор
 design/               утверждённый дизайн-пакет и ТЗ
 ```
@@ -84,6 +88,8 @@ MAYAK_E2E_DATABASE_URL=postgres://…/mayak_e2e_test npm run e2e  # плюс с�
 - [ADR 0004 · Вход и сессии через Supabase Auth](docs/adr/0004-auth.md)
 - [Подключение Supabase](docs/supabase-setup.md)
 - [Развёртывание на Vercel](docs/deploy-vercel.md)
+- [Настольное приложение](docs/desktop.md)
+- [Дизайн-система](docs/design-system.md)
 - [Формат Markdown](docs/markdown-format.md)
 - [Приёмочные сценарии](docs/acceptance.md)
 

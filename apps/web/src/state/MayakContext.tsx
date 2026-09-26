@@ -6,8 +6,8 @@ import { getSupabase } from "./supabase.ts";
 import {
   loadSyncConfig,
   META_DEVICE_REVOKED,
+  destroyNamespace,
   openWorkspace,
-  releaseNamespace,
   saveSyncConfig,
   type SyncConfig,
   type Workspace,
@@ -193,11 +193,7 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
           // Сначала закрываем и удаляем базу, потом открываем пространство заново:
           // иначе новое подключение заблокировало бы удаление той же базы.
           workspace.close();
-          await new Promise<void>((resolve) => {
-            const request = indexedDB.deleteDatabase(`mayak:${namespace}`);
-            request.onsuccess = request.onerror = () => resolve();
-          });
-          releaseNamespace(namespace);
+          await destroyNamespace(namespace);
         }
         saveSyncConfig({ mode: "local" });
         setConfig({ mode: "local" });

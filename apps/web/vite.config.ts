@@ -40,7 +40,14 @@ const apiTarget = process.env.MAYAK_API_PROXY ?? "http://localhost:8787";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "VITE_");
-  const origins: string[] = [];
+  // Сборка для настольного приложения (apps/desktop, Tauri 2): страницы открываются
+  // с tauri://localhost, поэтому адрес API должен быть абсолютным.
+  const desktop = mode === "desktop";
+  if (desktop && !/^https:\/\//.test(env.VITE_API_BASE ?? "")) {
+    console.warn("VITE_API_BASE не задан (https://…/api/v1): приложение будет работать только на устройстве, без синхронизации.");
+  }
+  // IPC Tauri: ipc:// на macOS и Linux, http://ipc.localhost на Windows (документация Tauri, «CSP»).
+  const origins: string[] = desktop ? ["ipc:", "http://ipc.localhost"] : [];
   if (env.VITE_SUPABASE_URL) origins.push(new URL(env.VITE_SUPABASE_URL).origin);
   if (env.VITE_API_BASE && /^https?:/.test(env.VITE_API_BASE)) origins.push(new URL(env.VITE_API_BASE).origin);
   return {
@@ -51,12 +58,14 @@ export default defineConfig(({ mode }) => {
     preview: { port: 4173, proxy: { "/api": apiTarget } },
     build: {
       target: "es2022",
-      sourcemap: true,
+      outDir: desktop ? "dist-desktop" : "dist",
+      // В приложение карты исходников не встраиваются.
+      sourcemap: !desktop,
       rolldownOptions: {
         input: {
           main: fileURLToPath(new URL("./index.html", import.meta.url)),
-          // Каталог компонентов — отдельная страница.
-          catalog: fileURLToPath(new URL("./catalog.html", import.meta.url)),
+          // Каталог компонентов — отдельная страница, в приложение не входит.
+          ...(desktop ? {} : { catalog: fileURLToPath(new URL("./catalog.html", import.meta.url)) }),
         },
       },
     },

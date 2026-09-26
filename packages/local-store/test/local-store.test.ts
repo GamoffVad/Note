@@ -1,10 +1,53 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
-import { IndexedDbLocalStore, LocalWriteError, MemoryBacking, MemoryLocalStore, type LocalStore } from "../src/index.ts";
+import {
+  IndexedDbLocalStore,
+  KvLocalStore,
+  LocalWriteError,
+  MemoryBacking,
+  MemoryLocalStore,
+  type KvBackend,
+  type KvOp,
+  type LocalStore,
+} from "../src/index.ts";
+
+/**
+ * Бэкенд «как SQLite»: строки JSON, атомарная фиксация пакета операций.
+ * Та же семантика, что у команд kv_* настольного приложения (apps/desktop).
+ */
+class TestKvBackend implements KvBackend {
+  readonly tables = new Map<string, Map<string, string>>();
+  failNextCommit = false;
+  commits: KvOp[][] = [];
+  private table(store: string) {
+    let t = this.tables.get(store);
+    if (!t) this.tables.set(store, (t = new Map()));
+    return t;
+  }
+  async get(store: string, key: string) {
+    return this.table(store).get(key) ?? null;
+  }
+  async getAll(store: string) {
+    return [...this.table(store).entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  }
+  async commit(ops: KvOp[]) {
+    if (this.failNextCommit) {
+      this.failNextCommit = false;
+      throw new Error("SQLITE_FULL");
+    }
+    this.commits.push(ops);
+    for (const op of ops) {
+      if (op.op === "clear") this.table(op.store).clear();
+      else if (op.op === "delete") this.table(op.store).delete(op.key);
+      else this.table(op.store).set(op.key, op.value);
+    }
+  }
+}
 
 const implementations: Array<[string, () => Promise<LocalStore>]> = [
   ["память", async () => new MemoryLocalStore()],
   ["IndexedDB", async () => IndexedDbLocalStore.open(`test-${crypto.randomUUID()}`)],
+  ["SQLite (KvBackend)", async () => new KvLocalStore(new TestKvBackend())],
 ];
 
 describe.each(implementations)("LocalStore: %s", (_name, open) => {
@@ -84,5 +127,46 @@ describe("MemoryLocalStore: имитация аварий", () => {
     backing.failNextCommit = true;
     await expect(store.write((tx) => tx.put("notes", "a", 1))).rejects.toBeInstanceOf(LocalWriteError);
     expect(await store.read((tx) => tx.get("notes", "a"))).toBeUndefined();
+  });
+});
+
+describe("KvLocalStore", () => {
+  it("отправляет транзакцию одной фиксацией, а сбой фиксации — LocalWriteError без частичных изменений", async () => {
+    const backend = new TestKvBackend();
+    const store = new KvLocalStore(backend);
+    await store.write(async (tx) => {
+      await tx.put("notes", "a", { v: 1 });
+      await tx.put("outbox", "a", { m: 1 });
+    });
+    expect(backend.commits).toHaveLength(1);
+    expect(backend.commits[0]).toEqual([
+      { op: "put", store: "notes", key: "a", value: '{"v":1}' },
+      { op: "put", store: "outbox", key: "a", value: '{"m":1}' },
+    ]);
+
+    backend.failNextCommit = true;
+    await expect(store.write((tx) => tx.put("notes", "a", { v: 2 }))).rejects.toBeInstanceOf(LocalWriteError);
+    expect(await store.read((tx) => tx.get("notes", "a"))).toEqual({ v: 1 });
+    // После сбоя очередь записей продолжает работать.
+    await store.write((tx) => tx.put("notes", "b", 1));
+    expect(await store.read((tx) => tx.getAll("notes"))).toEqual([{ v: 1 }, 1]);
+  });
+
+  it("транзакция без изменений не обращается к диску; clear отправляется до новых записей", async () => {
+    const backend = new TestKvBackend();
+    const store = new KvLocalStore(backend);
+    await store.write(async (tx) => {
+      await tx.get("notes", "a");
+    });
+    expect(backend.commits).toEqual([]);
+    await store.write(async (tx) => {
+      await tx.put("notes", "x", 1);
+      await tx.clear("notes");
+      await tx.put("notes", "y", 2);
+    });
+    expect(backend.commits[0]).toEqual([
+      { op: "clear", store: "notes" },
+      { op: "put", store: "notes", key: "y", value: "2" },
+    ]);
   });
 });

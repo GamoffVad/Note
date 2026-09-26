@@ -1,6 +1,7 @@
 import { newId, type Platform } from "@mayak/domain";
-import { IndexedDbLocalStore, type LocalStore } from "@mayak/local-store";
+import { IndexedDbLocalStore, KvLocalStore, type LocalStore } from "@mayak/local-store";
 import { HttpTransport, SyncEngine, SyncScheduler, type SyncTransport } from "@mayak/sync";
+import { dropSqliteNamespace, isNativeApp, nativePlatform, sqliteBackend } from "./native.ts";
 import { getSupabase } from "./supabase.ts";
 
 /**
@@ -124,7 +125,9 @@ const offlineTransport: SyncTransport = {
 
 export async function openWorkspace(config: SyncConfig): Promise<Workspace> {
   const namespace = namespaceFor(config);
-  const store = await IndexedDbLocalStore.open(namespace);
+  const native = isNativeApp();
+  // В приложении — SQLite на устройстве, в браузере — IndexedDB.
+  const store: LocalStore = native ? new KvLocalStore(sqliteBackend(namespace)) : await IndexedDbLocalStore.open(namespace);
   let deviceId = await store.read((tx) => tx.get<string>("meta", META_DEVICE_ID));
   const revoked = await store.read((tx) => tx.get<boolean>("meta", META_DEVICE_REVOKED));
   if (!deviceId || revoked) {
@@ -137,8 +140,8 @@ export async function openWorkspace(config: SyncConfig): Promise<Workspace> {
     });
     deviceId = created;
   }
-  const deviceName = `Браузер · ${detectOs().label}`;
-  const platform: Platform = "web";
+  const deviceName = native ? `Маяк · ${detectOs().label}` : `Браузер · ${detectOs().label}`;
+  const platform: Platform = native ? nativePlatform() : "web";
   const transport =
     config.mode === "dev"
       ? new HttpTransport({
@@ -170,4 +173,17 @@ export async function openWorkspace(config: SyncConfig): Promise<Workspace> {
       store.close();
     },
   };
+}
+
+/** Удаляет заметки пространства с устройства; хранилище пространства должно быть закрыто. */
+export async function destroyNamespace(namespace: string): Promise<void> {
+  if (isNativeApp()) {
+    await dropSqliteNamespace(namespace);
+  } else {
+    await new Promise<void>((resolve) => {
+      const request = indexedDB.deleteDatabase(`mayak:${namespace}`);
+      request.onsuccess = request.onerror = () => resolve();
+    });
+  }
+  releaseNamespace(namespace);
 }

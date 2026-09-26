@@ -1,4 +1,4 @@
-import { authFromEnv, createApiHandler, createPool, SyncService } from "@mayak/server";
+import { authFromEnv, corsOriginsFromEnv, createApiHandler, createPool, SyncService, withCors } from "@mayak/server";
 
 /**
  * Vercel Function для /api/v1/*. vercel.json перезаписывает /api/v1/:path*
@@ -29,34 +29,39 @@ function getHandler(): (request: Request) => Promise<Response> {
   return handler;
 }
 
+/** Все ответы, включая 503 «не настроено», — с CORS для приложений Tauri. */
+const serve = withCors(handle, corsOriginsFromEnv(process.env));
+
 export default {
-  async fetch(request: Request): Promise<Response> {
-    const url = new URL(request.url);
-    if (!url.pathname.startsWith("/api/v1/")) {
-      const rest = url.searchParams.get("path") ?? "";
-      url.searchParams.delete("path");
-      url.pathname = `/api/v1/${rest.replace(/^\/+/, "")}`;
-    }
-    const problem = configurationError();
-    if (problem) {
-      console.error(`Маяк API не настроен: ${problem}`);
-      return Response.json(
-        {
-          code: "SERVICE_UNAVAILABLE",
-          message: "Синхронизация на сервере ещё не настроена",
-          retryable: true,
-          requestId: crypto.randomUUID(),
-        },
-        { status: 503, headers: { "cache-control": "no-store", "retry-after": "300" } },
-      );
-    }
-    const hasBody = request.method !== "GET" && request.method !== "HEAD";
-    const forwarded = new Request(url, {
-      method: request.method,
-      headers: request.headers,
-      body: hasBody ? request.body : undefined,
-      duplex: "half",
-    } as RequestInit);
-    return getHandler()(forwarded);
-  },
+  fetch: serve,
 };
+
+async function handle(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  if (!url.pathname.startsWith("/api/v1/")) {
+    const rest = url.searchParams.get("path") ?? "";
+    url.searchParams.delete("path");
+    url.pathname = `/api/v1/${rest.replace(/^\/+/, "")}`;
+  }
+  const problem = configurationError();
+  if (problem) {
+    console.error(`Маяк API не настроен: ${problem}`);
+    return Response.json(
+      {
+        code: "SERVICE_UNAVAILABLE",
+        message: "Синхронизация на сервере ещё не настроена",
+        retryable: true,
+        requestId: crypto.randomUUID(),
+      },
+      { status: 503, headers: { "cache-control": "no-store", "retry-after": "300" } },
+    );
+  }
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const forwarded = new Request(url, {
+    method: request.method,
+    headers: request.headers,
+    body: hasBody ? request.body : undefined,
+    duplex: "half",
+  } as RequestInit);
+  return getHandler()(forwarded);
+}

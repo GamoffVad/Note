@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { Readable } from "node:stream";
 import { authFromEnv } from "../src/auth.ts";
+import { corsOriginsFromEnv, withCors } from "../src/cors.ts";
 import { createPool } from "../src/db.ts";
 import { createApiHandler } from "../src/http.ts";
 import { SyncService } from "../src/service.ts";
@@ -13,11 +14,14 @@ import { SyncService } from "../src/service.ts";
 const port = Number(process.env.PORT ?? 8787);
 const pool = createPool(process.env);
 const auth = authFromEnv(process.env);
-const handler = createApiHandler({
-  service: new SyncService(pool),
-  auth,
-  log: (e) => console.log(`${e.status} ${e.route} ${e.ms}ms ${e.requestId}${e.error ? " " + e.error : ""}`),
-});
+const handler = withCors(
+  createApiHandler({
+    service: new SyncService(pool),
+    auth,
+    log: (e) => console.log(`${e.status} ${e.route} ${e.ms}ms ${e.requestId}${e.error ? " " + e.error : ""}`),
+  }),
+  corsOriginsFromEnv(process.env),
+);
 
 createServer(async (req, res) => {
   const body = req.method === "GET" || req.method === "HEAD" ? undefined : (Readable.toWeb(req) as ReadableStream);

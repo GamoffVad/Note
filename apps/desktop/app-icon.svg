@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Значок «Маяк» по сетке значков macOS: содержимое 824×824 с отступом 100, скругление 185. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b8cff"/>
+      <stop offset="1" stop-color="#1450c8"/>
+    </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.35"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#gloss)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#fff" stroke-opacity="0.35" stroke-width="3"/>
+  <g transform="translate(512 512) scale(20) translate(-16 -15.5)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 27l2-13h4l2 13M10 27h12M12 14h8M13 8h6v6h-6zM12 8l4-4 4 4M7 10H3m22 0h4M7 6L4 4m21 2 3-2"/>
+  </g>
+</svg>
