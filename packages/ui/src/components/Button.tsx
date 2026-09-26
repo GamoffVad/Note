@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { cx } from "./util.ts";
 
 export type ButtonVariant = "default" | "primary" | "destructive" | "plain";
-export type ControlSize = "small" | "regular" | "large";
+export type ControlSize = "small" | "regular" | "large" | "xlarge";
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;

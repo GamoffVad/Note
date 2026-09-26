@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState, type ReactNode } from "react";
+import { StrictMode, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import "@mayak/ui/styles.css";
 import "./catalog.css";
@@ -21,6 +21,7 @@ import {
   SegmentedControl,
   Sheet,
   SidebarItem,
+  SidebarPanel,
   SidebarSection,
   Slider,
   Spinner,
@@ -29,6 +30,7 @@ import {
   TextField,
   ToastProvider,
   TokenField,
+  ToolbarGroup,
   useToast,
 } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
@@ -153,7 +155,8 @@ function Catalog() {
   const [progress, setProgress] = useState(40);
   const toast = useToast();
 
-  useEffect(() => {
+  // До эффектов дочерних компонентов: таблица цветов читает значения уже новой темы.
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
@@ -162,7 +165,7 @@ function Catalog() {
       <header className="cat-header mk-material">
         <div>
           <h1 className="mk-large-title">Маяк · компоненты</h1>
-          <p className="mk-secondary">Стиль macOS · дизайн-система 2.0</p>
+          <p className="mk-secondary">Стиль macOS 27 · Liquid Glass · дизайн-система 2.1</p>
         </div>
         <SegmentedControl
           label="Тема каталога"
@@ -205,6 +208,9 @@ function Catalog() {
             <Button size="large" variant="primary">
               Крупная
             </Button>
+            <Button size="xlarge" variant="primary">
+              Очень крупная
+            </Button>
           </Row>
           <Row label="Состояния">
             <Button disabled>Недоступна</Button>
@@ -222,6 +228,13 @@ function Catalog() {
             <IconButton label="История" icon={<Icon name="history" />} />
             <IconButton label="Синхронизация" icon={<Icon name="sync" />} />
             <IconButton label="В корзину" icon={<Icon name="trash" />} />
+          </Row>
+          <Row label="Группа на стекле">
+            <ToolbarGroup label="Действия с заметкой">
+              <IconButton label="История" icon={<Icon name="history" />} />
+              <IconButton label="Синхронизация" icon={<Icon name="sync" />} />
+              <IconButton label="В корзину" icon={<Icon name="trash" />} />
+            </ToolbarGroup>
           </Row>
           <Row label="Нажата / недоступна">
             <IconButton label="Закрепить" icon={<Icon name="pin" />} pressed />
@@ -385,7 +398,7 @@ function Catalog() {
                 <Switch size="mini" checked={sw.a} onChange={(v) => setSw({ ...sw, a: v })} label={<span className="mk-visually-hidden">Цвет из темы</span>} />
               </FormRow>
             </FormGroup>
-            <div className="cat-sidebar mk-material">
+            <SidebarPanel className="cat-sidebar" aria-label="Боковая панель">
               <SidebarSection label="Разделы">
                 <SidebarItem href="#" icon={<Icon name="notes" />} label="Заметки" count={6} selected onClick={(e) => e.preventDefault()} />
                 <SidebarItem href="#" icon={<Icon name="tasks" />} label="Задачи" count={3} onClick={(e) => e.preventDefault()} />
@@ -394,7 +407,7 @@ function Catalog() {
               <SidebarSection title="Теги" label="Теги">
                 <SidebarItem href="#" icon={<Icon name="tag" />} label="Личное" onClick={(e) => e.preventDefault()} />
               </SidebarSection>
-            </div>
+            </SidebarPanel>
           </div>
           <Disclosure label="Режим разработчика">
             <p className="mk-secondary">Содержимое раскрывающегося блока.</p>

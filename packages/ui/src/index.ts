@@ -16,4 +16,5 @@ export * from "./components/Feedback.tsx";
 export * from "./components/Layout.tsx";
 export * from "./components/TokenField.tsx";
 export * from "./components/Toast.tsx";
+export * from "./components/Toolbar.tsx";
 export { cx } from "./components/util.ts";

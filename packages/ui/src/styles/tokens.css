@@ -1,5 +1,5 @@
 /*
- * Маяк · токены 2.0 · стиль macOS.
+ * Маяк · токены 2.1 · стиль macOS 27 (Liquid Glass).
  * Три слоя: primitive (--p-*) → semantic → component (--c-*).
  *
  * Источник цветов — таблица системных цветов Apple HIG «Color»
@@ -60,7 +60,13 @@
   --text-callout: 0.75rem; /* 12 / 15 */
   --text-caption: 0.75rem; /* 10 pt в macOS → 12 px по ТЗ */
 
-  /* ── размеры (наша оценка «в духе macOS»; HIG не публикует пиксели) ── */
+  /*
+   * ── размеры и формы ──
+   * Liquid Glass (Apple «Adopting Liquid Glass», HIG «Buttons», «Materials»):
+   * элементы управления круглее — капсулы; вложенные скругления концентричны
+   * контейнеру; у листов, меню, окон и групп форм радиус больше; строки выше.
+   * Конкретные пиксели — наша оценка: HIG не публикует метрики macOS.
+   */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -68,16 +74,19 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-  --radius-xs: 4px; /* чекбокс */
-  --radius-sm: 6px; /* кнопки, поля */
-  --radius-md: 8px; /* выделение в списках, меню */
-  --radius-lg: 12px; /* карточки, листы */
-  --radius-xl: 16px; /* окна-листы на телефоне */
+  --radius-xs: 5px; /* флажок */
+  --radius-sm: 8px; /* поля, выделение в меню */
+  --radius-md: 12px; /* строки боковой панели, всплывающие элементы */
+  --radius-lg: 18px; /* группы форм, карточки */
+  --radius-xl: 24px; /* листы, боковая панель */
+  --radius-capsule: 999px; /* кнопки, сегменты, поиск, переключатели */
   /* Высота элементов: 28 px при точном указателе (WCAG 2.5.8 требует ≥ 24), 44 px на сенсорных экранах. */
-  --control-h: 28px;
-  --control-h-sm: 24px;
+  --control-h: 30px;
+  --control-h-sm: 26px;
   --control-h-lg: 36px;
-  --hit: 28px;
+  --control-h-xl: 44px;
+  --hit: 30px;
+  --row-h: 44px; /* строки списков и форм: выше, чем раньше */
   --duration-fast: 120ms;
   --duration-normal: 180ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
@@ -119,11 +128,30 @@
   --danger-text: var(--p-red-ic);
   --success-text: var(--p-green-ic);
   --warning-text: var(--p-orange-ic);
+  /* Текст на цветной подложке (значки, токены): темнее на ступень, контраст ≥ 4.5:1. */
+  --accent-on-tint: #0a5bd6;
+  --success-on-tint: #007a2c;
+  --warning-on-tint: #b04a00;
+  --danger-on-tint: #c8102a;
 
   --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.06);
-  --shadow-popover: 0 10px 30px rgb(0 0 0 / 0.16), 0 0 0 0.5px rgb(0 0 0 / 0.12);
-  --shadow-sheet: 0 24px 64px rgb(0 0 0 / 0.24), 0 0 0 0.5px rgb(0 0 0 / 0.12);
+  --shadow-popover: 0 12px 36px rgb(0 0 0 / 0.16), 0 0 0 0.5px rgb(0 0 0 / 0.1);
+  --shadow-sheet: 0 28px 72px rgb(0 0 0 / 0.24), 0 0 0 0.5px rgb(0 0 0 / 0.1);
   --blur-material: saturate(180%) blur(24px);
+
+  /*
+   * Liquid Glass, вариант regular: размытие и подстройка яркости фона,
+   * блик по верхней кромке, мягкая тень. Преломление света в вебе
+   * недоступно — эффект приближённый.
+   */
+  --glass-bg: rgb(255 255 255 / 0.62);
+  --glass-bg-strong: rgb(255 255 255 / 0.8);
+  --glass-tint: rgb(255 255 255 / 0.2);
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-edge-shadow: rgb(0 0 0 / 0.07);
+  --glass-shadow: 0 6px 20px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.08);
+  --glass-filter: blur(20px) saturate(190%) brightness(1.04);
+  --glass-highlight: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 55%);
 
   color-scheme: light;
 }
@@ -167,10 +195,23 @@
   --danger-text: var(--p-red-ic-dark);
   --success-text: var(--p-green-dark);
   --warning-text: var(--p-orange-dark);
+  --accent-on-tint: var(--accent-text);
+  --success-on-tint: var(--success-text);
+  --warning-on-tint: var(--warning-text);
+  --danger-on-tint: var(--danger-text);
 
   --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.4), 0 0 0 0.5px rgb(255 255 255 / 0.08);
-  --shadow-popover: 0 10px 30px rgb(0 0 0 / 0.5), 0 0 0 0.5px rgb(255 255 255 / 0.12);
-  --shadow-sheet: 0 24px 64px rgb(0 0 0 / 0.6), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+  --shadow-popover: 0 12px 36px rgb(0 0 0 / 0.5), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+  --shadow-sheet: 0 28px 72px rgb(0 0 0 / 0.6), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+
+  --glass-bg: rgb(58 58 62 / 0.55);
+  --glass-bg-strong: rgb(44 44 48 / 0.82);
+  --glass-tint: rgb(255 255 255 / 0.06);
+  --glass-edge: rgb(255 255 255 / 0.22);
+  --glass-edge-shadow: rgb(0 0 0 / 0.3);
+  --glass-shadow: 0 6px 20px rgb(0 0 0 / 0.35), 0 1px 3px rgb(0 0 0 / 0.3);
+  --glass-filter: blur(20px) saturate(170%) brightness(0.96);
+  --glass-highlight: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 55%);
 
   color-scheme: dark;
 }
@@ -181,7 +222,9 @@
     --control-h: 44px;
     --control-h-sm: 36px;
     --control-h-lg: 48px;
+    --control-h-xl: 52px;
     --hit: 44px;
+    --row-h: 52px;
   }
 }
 
@@ -190,6 +233,9 @@
   :root,
   [data-theme="dark"] {
     --blur-material: none;
+    --glass-filter: none;
+    --glass-bg: var(--bg-control);
+    --glass-bg-strong: var(--bg-elevated);
     --bg-sidebar: var(--bg-sidebar-solid);
     --bg-toolbar: var(--bg-content);
   }
@@ -201,11 +247,19 @@
     --separator: var(--p-gray);
     --border-subtle: var(--p-gray);
     --text-secondary: #48484a;
+    --glass-bg: var(--p-white);
+    --glass-bg-strong: var(--p-white);
+    --glass-filter: none;
+    --glass-edge: var(--p-gray);
   }
   [data-theme="dark"] {
     --separator: var(--p-gray);
     --border-subtle: var(--p-gray);
     --text-secondary: #d1d1d6;
+    --glass-bg: #2c2c2e;
+    --glass-bg-strong: #2c2c2e;
+    --glass-filter: none;
+    --glass-edge: var(--p-gray);
   }
 }
 
