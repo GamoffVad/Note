@@ -1,0 +1,32 @@
+{
+  "name": "@mayak/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "dev:desktop": "vite --mode desktop",
+    "build:desktop": "vite build --mode desktop",
+    "preview": "vite preview",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.56.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.1"
+  },
+  "dependencies": {
+    "@mayak/domain": "^0.1.0",
+    "@mayak/local-store": "^0.1.0",
+    "@mayak/sync": "^0.1.0",
+    "@mayak/ui": "^0.1.0",
+    "@supabase/supabase-js": "^2.117.2",
+    "@tauri-apps/api": "^2.11.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

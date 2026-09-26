@@ -1,0 +1,1334 @@
+/* Маяк · компоненты 2.1 · стиль macOS 27 (Liquid Glass). Только токены из tokens.css. */
+
+/*
+ * Liquid Glass — функциональный слой для элементов управления и навигации
+ * (HIG «Materials»): размытие фона, блик по верхней кромке, тонкая светлая
+ * граница и мягкая тень. В слое содержимого стекло не используется.
+ */
+.mk-glass {
+  position: relative;
+  background: var(--glass-highlight), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), inset 0 -0.5px 0 var(--glass-edge-shadow), 0 0 0 0.5px var(--glass-edge-shadow),
+    var(--glass-shadow);
+}
+
+/* ─── Кнопки ─────────────────────────────────────────────── */
+.mk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--control-h);
+  min-width: var(--hit);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  font-size: var(--text-body);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text-primary);
+  background: var(--glass-highlight), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), 0 0 0 0.5px var(--glass-edge-shadow), 0 1px 3px rgb(0 0 0 / 0.08);
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease), box-shadow var(--duration-fast) var(--ease);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mk-button:hover {
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  text-decoration: none;
+}
+/* Отклик на нажатие: лёгкое сжатие, как у элементов Liquid Glass. */
+.mk-button:active:not(:disabled) {
+  transform: scale(0.97);
+  background: var(--bg-control-active);
+}
+.mk-button--small {
+  height: var(--control-h-sm);
+  padding: 0 10px;
+  font-size: var(--text-callout);
+}
+.mk-button--large {
+  height: var(--control-h-lg);
+  padding: 0 18px;
+}
+.mk-button--xlarge {
+  height: var(--control-h-xl);
+  padding: 0 24px;
+  font-size: var(--text-title3);
+}
+/* «Prominent glass»: акцент в фоне основной кнопки (HIG «Liquid Glass color»). */
+.mk-button--primary {
+  color: var(--text-on-accent);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0) 60%), var(--accent);
+  box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.45), 0 1px 3px rgb(0 0 0 / 0.18);
+}
+.mk-button--primary:hover {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0) 60%), var(--accent-hover);
+}
+.mk-button--primary:active:not(:disabled) {
+  background: var(--accent-pressed);
+}
+.mk-button--destructive {
+  color: var(--text-on-accent);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0) 60%), var(--danger);
+  box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.4), 0 1px 3px rgb(0 0 0 / 0.18);
+}
+.mk-button--destructive:hover {
+  filter: brightness(0.94);
+}
+.mk-button--plain {
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-text);
+}
+.mk-button--plain:hover {
+  background: var(--bg-hover);
+}
+.mk-button:disabled {
+  color: var(--text-disabled);
+  background: var(--glass-bg);
+  box-shadow: 0 0 0 0.5px var(--glass-edge-shadow);
+  filter: none;
+}
+.mk-button--plain:disabled {
+  background: transparent;
+  box-shadow: none;
+}
+.mk-button.is-loading {
+  color: var(--text-secondary);
+}
+.mk-button .icon,
+.mk-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mk-icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+}
+a.mk-icon-button,
+a.mk-icon-button:hover {
+  text-decoration: none;
+}
+.mk-icon-button[aria-current="page"] {
+  color: var(--accent-text);
+}
+.mk-icon-button--small {
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+}
+.mk-icon-button:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+.mk-icon-button:active,
+.mk-icon-button[aria-expanded="true"] {
+  background: var(--bg-selected-muted);
+}
+.mk-icon-button[aria-pressed="true"] {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+.mk-icon-button:disabled {
+  color: var(--text-disabled);
+  background: transparent;
+}
+.mk-icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+/* Группа кнопок панели инструментов на общей стеклянной подложке (HIG «Toolbars»). */
+.mk-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-capsule);
+}
+.mk-toolbar-group .mk-icon-button {
+  color: var(--text-primary);
+}
+.mk-toolbar-group .mk-icon-button:hover {
+  background: var(--bg-hover);
+}
+
+/* ─── Подсказка ──────────────────────────────────────────── */
+.mk-tooltip {
+  position: fixed;
+  z-index: 1000;
+  transform: translateX(-50%);
+  max-width: 260px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-callout);
+  line-height: 1.3;
+  color: var(--text-primary);
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), var(--shadow-popover);
+  pointer-events: none;
+}
+
+/* ─── Поля ───────────────────────────────────────────────── */
+.mk-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.mk-field__label {
+  display: block;
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.mk-field__control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-h);
+  padding: 0 10px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-sm);
+  background: var(--bg-field);
+}
+.mk-field__control:focus-within {
+  border-color: var(--focus-ring);
+}
+.mk-field__input {
+  flex: 1;
+  min-width: 0;
+  height: calc(var(--control-h) - 2px);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--text-body);
+  color: var(--text-primary);
+}
+.mk-field__input::placeholder,
+.mk-field__textarea::placeholder {
+  color: var(--text-placeholder);
+}
+.mk-field__textarea {
+  display: block;
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 10px;
+  resize: vertical;
+  font-size: var(--text-body);
+  line-height: 1.35;
+}
+.mk-field__textarea:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+.mk-field__adornment {
+  display: inline-flex;
+  color: var(--text-secondary);
+}
+.mk-field__hint {
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+}
+.mk-field__error {
+  font-size: var(--text-caption);
+  font-weight: 500;
+  color: var(--danger-text);
+}
+.mk-field.is-invalid .mk-field__control {
+  border-color: var(--danger);
+}
+
+/* ─── Поиск ──────────────────────────────────────────────── */
+.mk-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-h);
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-capsule);
+  background: var(--bg-field);
+  color: var(--text-secondary);
+}
+.mk-search__icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.mk-search__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  font-size: var(--text-body);
+  color: var(--text-primary);
+}
+.mk-search__input::placeholder {
+  color: var(--text-placeholder);
+}
+.mk-search__clear {
+  display: grid;
+  place-items: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-secondary);
+}
+.mk-search__clear svg {
+  width: 14px;
+  height: 14px;
+}
+.mk-search__clear svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+.mk-search__clear svg path {
+  stroke: var(--bg-field);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+/* ─── Флажок и радиокнопка ───────────────────────────────── */
+.mk-check,
+.mk-radio {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.mk-check__hit {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: max(20px, 1.25em);
+}
+@media (pointer: coarse) {
+  .mk-check__hit {
+    width: 32px;
+    height: 32px;
+    margin: -6px -6px -6px -6px;
+  }
+}
+.mk-check__input,
+.mk-radio__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: default;
+}
+.mk-check__box {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-xs);
+  background: var(--bg-field);
+  box-shadow: var(--shadow-control);
+  transition: background var(--duration-fast) var(--ease), border-color var(--duration-fast) var(--ease);
+  pointer-events: none;
+}
+.mk-check__box svg {
+  grid-area: 1 / 1;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: var(--text-on-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.mk-check__input:checked + .mk-check__box,
+.mk-check__input:indeterminate + .mk-check__box {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.mk-check__input:checked:not(:indeterminate) + .mk-check__box .mk-check__mark,
+.mk-check__input:indeterminate + .mk-check__box .mk-check__dash {
+  opacity: 1;
+}
+.mk-check__input:focus-visible + .mk-check__box,
+.mk-radio__input:focus-visible + .mk-radio__circle {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+.mk-check__input:disabled + .mk-check__box {
+  opacity: 0.5;
+}
+.mk-check__label {
+  min-width: 0;
+  padding-top: 1px;
+  overflow-wrap: anywhere;
+  cursor: default;
+}
+.mk-check--strike:has(.mk-check__input:checked) .mk-check__label {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+.mk-radio__circle {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border-control);
+  border-radius: 50%;
+  background: var(--bg-field);
+  box-shadow: var(--shadow-control);
+  pointer-events: none;
+}
+.mk-radio__circle::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-on-accent);
+  opacity: 0;
+}
+.mk-radio__input:checked + .mk-radio__circle {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.mk-radio__input:checked + .mk-radio__circle::after {
+  opacity: 1;
+}
+.mk-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.mk-radio-group--horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.mk-radio-group legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+/* ─── Переключатель ──────────────────────────────────────── */
+.mk-switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.mk-switch-row__label {
+  cursor: default;
+}
+.mk-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: var(--p-gray4);
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.14);
+  transition: background var(--duration-normal) var(--ease);
+}
+[data-theme="dark"] .mk-switch {
+  background: var(--p-gray3-dark);
+}
+.mk-switch--mini {
+  width: 26px;
+  height: 15px;
+}
+.mk-switch[aria-checked="true"] {
+  background: var(--accent);
+}
+.mk-switch__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 0 0 0.5px rgb(0 0 0 / 0.08);
+  transition: transform var(--duration-normal) var(--ease), width var(--duration-fast) var(--ease);
+}
+.mk-switch--mini .mk-switch__thumb {
+  width: 11px;
+  height: 11px;
+}
+.mk-switch[aria-checked="true"] .mk-switch__thumb {
+  transform: translateX(18px);
+}
+/* Во время нажатия ручка превращается в Liquid Glass и растягивается (HIG «Adopting Liquid Glass»). */
+.mk-switch:active:not(:disabled) .mk-switch__thumb {
+  width: 24px;
+  background: var(--glass-highlight), rgb(255 255 255 / 0.55);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.9), 0 2px 8px rgb(0 0 0 / 0.25);
+}
+.mk-switch[aria-checked="true"]:active:not(:disabled) .mk-switch__thumb {
+  transform: translateX(10px);
+}
+.mk-switch--mini[aria-checked="true"] .mk-switch__thumb {
+  transform: translateX(11px);
+}
+.mk-switch:disabled {
+  opacity: 0.5;
+}
+/* Невидимое расширение зоны нажатия на сенсорных экранах. */
+@media (pointer: coarse) {
+  .mk-switch::before {
+    content: "";
+    position: absolute;
+    inset: -11px -3px;
+  }
+}
+
+/* ─── Сегменты ───────────────────────────────────────────── */
+.mk-segmented {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--radius-capsule);
+  background: var(--bg-selected-muted);
+}
+.mk-segmented__item {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(var(--control-h) - 6px);
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: transparent;
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background var(--duration-fast) var(--ease);
+}
+.mk-segmented--small .mk-segmented__item {
+  height: calc(var(--control-h-sm) - 4px);
+  font-size: var(--text-callout);
+}
+.mk-segmented__item:hover:not(.is-selected) {
+  background: var(--bg-hover);
+}
+.mk-segmented__item.is-selected {
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), 0 0 0 0.5px var(--glass-edge-shadow), 0 1px 4px rgb(0 0 0 / 0.12);
+}
+.mk-segmented__item:disabled {
+  color: var(--text-disabled);
+}
+
+/* ─── Всплывающая кнопка и меню ──────────────────────────── */
+.mk-popup {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.mk-popup__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 10px 0 14px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: var(--glass-highlight), var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), 0 0 0 0.5px var(--glass-edge-shadow), 0 1px 3px rgb(0 0 0 / 0.08);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  text-align: left;
+}
+.mk-popup__button--small {
+  height: var(--control-h-sm);
+  font-size: var(--text-callout);
+}
+.mk-popup__button:hover {
+  background: var(--glass-highlight), var(--glass-bg-strong);
+}
+.mk-popup__button:disabled {
+  color: var(--text-disabled);
+}
+.mk-popup__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk-popup__chevrons {
+  flex-shrink: 0;
+  width: 12px;
+  height: 16px;
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mk-menu,
+.mk-popover {
+  position: fixed;
+  z-index: 900;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), var(--shadow-popover);
+  color: var(--text-primary);
+  transform-origin: top center;
+  animation: mk-morph-in var(--duration-normal) var(--ease);
+}
+/* Кнопка «перетекает» в меню: короткое появление с масштабом. */
+@keyframes mk-morph-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+.mk-menu:focus {
+  outline: none;
+}
+.mk-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 12px 4px 6px;
+  /* Концентрично меню: радиус меню минус внутренний отступ. */
+  border-radius: calc(var(--radius-md) - 6px);
+  font-size: var(--text-body);
+  white-space: nowrap;
+  cursor: default;
+}
+@media (pointer: coarse) {
+  .mk-menu__item {
+    min-height: 44px;
+  }
+}
+.mk-menu__item.is-active {
+  color: var(--text-on-accent);
+  background: var(--accent);
+}
+.mk-menu__item.is-destructive {
+  color: var(--danger-text);
+}
+.mk-menu__item.is-destructive.is-active {
+  color: var(--text-on-accent);
+  background: var(--danger);
+}
+.mk-menu__item.is-disabled {
+  color: var(--text-disabled);
+}
+.mk-menu__check,
+.mk-menu__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  flex-shrink: 0;
+  font-size: var(--text-callout);
+  font-weight: 700;
+}
+.mk-menu__icon svg {
+  width: 15px;
+  height: 15px;
+}
+.mk-menu__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mk-menu__shortcut {
+  margin-left: 24px;
+  font-family: inherit;
+  font-size: var(--text-callout);
+  color: var(--text-secondary);
+}
+.mk-menu__item.is-active .mk-menu__shortcut {
+  color: inherit;
+}
+.mk-menu__separator {
+  height: 1px;
+  margin: 5px 10px;
+  background: var(--separator);
+}
+
+/* ─── Ползунок ───────────────────────────────────────────── */
+.mk-slider {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.mk-slider__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.mk-slider__value {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.mk-slider__track {
+  position: relative;
+  height: var(--hit);
+  margin: 0 10px;
+  touch-action: none;
+}
+.mk-slider__track::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  top: 50%;
+  height: 5px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: var(--border-subtle);
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 0.1);
+}
+.mk-slider__fill {
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  height: 5px;
+  transform: translateY(-50%);
+  border-radius: 3px;
+  background: var(--accent);
+  margin-right: -10px;
+}
+.mk-slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 26px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border-radius: var(--radius-capsule);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3), 0 0 0 0.5px rgb(0 0 0 / 0.12);
+  transition: width var(--duration-fast) var(--ease), height var(--duration-fast) var(--ease), background var(--duration-fast) var(--ease);
+}
+/* Во время перетаскивания ручка превращается в Liquid Glass. */
+.mk-slider__track:active .mk-slider__thumb {
+  width: 36px;
+  height: 24px;
+  background: var(--glass-highlight), rgb(255 255 255 / 0.5);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 rgb(255 255 255 / 0.9), 0 3px 10px rgb(0 0 0 / 0.22);
+}
+/* Недоступный ползунок: приглушена дорожка, подписи остаются читаемыми. */
+.mk-slider.is-disabled {
+  color: var(--text-secondary);
+}
+.mk-slider.is-disabled .mk-slider__track {
+  opacity: 0.5;
+}
+
+/* ─── Цветовая ячейка ────────────────────────────────────── */
+.mk-colorwell {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.mk-colorwell__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--control-h);
+  max-width: 100%;
+  padding: 0 14px 0 4px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: var(--glass-highlight), var(--glass-bg);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), 0 0 0 0.5px var(--glass-edge-shadow), 0 1px 3px rgb(0 0 0 / 0.08);
+  color: var(--text-primary);
+  font-size: var(--text-body);
+}
+.mk-colorwell__button:disabled {
+  opacity: 0.5;
+}
+.mk-colorwell__swatch {
+  width: 36px;
+  height: calc(var(--control-h) - 8px);
+  border-radius: var(--radius-capsule);
+  /* Контур виден и на светлом, и на тёмном фоне. */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.2), 0 0 0 1px var(--border-subtle);
+}
+.mk-colorwell__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mk-colorwell__panel {
+  width: min(292px, calc(100vw - 16px));
+  padding: 12px;
+}
+.mk-colorwell__grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.mk-colorwell__chip {
+  aspect-ratio: 1;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18);
+}
+.mk-colorwell__chip.is-selected {
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18), 0 0 0 2px var(--bg-elevated), 0 0 0 4px var(--accent);
+}
+.mk-colorwell__hex {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ─── Лист (диалог) ──────────────────────────────────────── */
+.mk-sheet {
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: max(6vh, 16px) auto auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xl);
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  color: var(--text-primary);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), var(--shadow-sheet);
+  overflow: auto;
+}
+.mk-sheet--wide {
+  width: min(820px, calc(100% - 32px));
+}
+.mk-sheet::backdrop {
+  background: var(--bg-backdrop);
+}
+.mk-sheet[open] {
+  animation: mk-sheet-in var(--duration-normal) var(--ease);
+}
+@keyframes mk-sheet-in {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+}
+.mk-sheet__body {
+  padding: 20px 20px 4px;
+}
+.mk-sheet__title {
+  margin: 0 0 8px;
+}
+.mk-sheet__content {
+  font-size: var(--text-body);
+  line-height: 1.4;
+}
+.mk-sheet__content p {
+  margin: 0 0 10px;
+}
+.mk-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px 20px;
+}
+@media (max-width: 599px) {
+  /* Нижний лист отстоит от краёв экрана (Liquid Glass). */
+  .mk-sheet {
+    margin: auto 8px calc(8px + env(safe-area-inset-bottom));
+    width: calc(100% - 16px);
+    max-width: none;
+    border-radius: var(--radius-xl);
+  }
+  .mk-sheet__actions {
+    flex-direction: column-reverse;
+  }
+  .mk-sheet__actions .mk-button {
+    width: 100%;
+  }
+}
+
+/* ─── Индикаторы, значки, баннеры ────────────────────────── */
+.mk-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-subtle);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: mk-spin 0.8s linear infinite;
+}
+.mk-spinner--small,
+.mk-spinner--inline {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+.mk-spinner--large {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+@keyframes mk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-spinner {
+    animation-duration: 2.4s;
+  }
+}
+.mk-progress__track {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--border-subtle);
+}
+.mk-progress__fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width var(--duration-normal) var(--ease);
+}
+.mk-progress__track.is-indeterminate .mk-progress__fill {
+  width: 30%;
+  animation: mk-indeterminate 1.2s var(--ease) infinite;
+}
+@keyframes mk-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+.mk-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-secondary);
+  /* Подложка — оттенок цвета текста: контраст ≥ 4.5:1 для всех вариантов. */
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.mk-badge--info {
+  color: var(--accent-on-tint);
+}
+.mk-badge--success {
+  color: var(--success-on-tint);
+}
+.mk-badge--warning {
+  color: var(--warning-on-tint);
+}
+.mk-badge--danger {
+  color: var(--danger-on-tint);
+}
+.mk-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-selected-muted);
+  font-size: var(--text-body);
+  line-height: 1.4;
+}
+.mk-banner__icon {
+  display: inline-flex;
+  color: var(--text-secondary);
+}
+.mk-banner__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.mk-banner__text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.mk-banner__text p {
+  margin: 0;
+}
+.mk-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mk-banner--info .mk-banner__icon {
+  color: var(--accent-text);
+}
+.mk-banner--success .mk-banner__icon {
+  color: var(--success-text);
+}
+.mk-banner--warning {
+  box-shadow: inset 3px 0 0 var(--warning-text);
+}
+.mk-banner--warning .mk-banner__icon {
+  color: var(--warning-text);
+}
+.mk-banner--danger {
+  box-shadow: inset 3px 0 0 var(--danger-text);
+}
+.mk-banner--danger .mk-banner__icon {
+  color: var(--danger-text);
+}
+
+/* ─── Раскрывающийся блок ────────────────────────────────── */
+.mk-disclosure__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit);
+  padding: 0 4px 0 0;
+  border: 0;
+  background: none;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.mk-disclosure__chevron {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: var(--text-secondary);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--duration-fast) var(--ease);
+}
+.mk-disclosure.is-open .mk-disclosure__chevron {
+  transform: rotate(90deg);
+}
+.mk-disclosure__content {
+  padding: 8px 0 0 16px;
+}
+
+/* ─── Группы настроек ────────────────────────────────────── */
+.mk-form-group {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+.mk-form-group__title {
+  margin: 0 0 0 4px;
+}
+.mk-form-group__card {
+  border-radius: var(--radius-lg);
+  background: var(--bg-content);
+  box-shadow: 0 0 0 0.5px var(--border-subtle);
+  overflow: hidden;
+}
+.mk-form-group__description {
+  margin: 0 4px;
+}
+.mk-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: var(--row-h);
+  padding: 8px 16px;
+}
+/* Разделитель строк начинается от текста, как в группах форм macOS. */
+.mk-form-row + .mk-form-row {
+  box-shadow: inset 16px 0 var(--bg-content), inset 0 1px var(--separator);
+}
+.mk-form-row__label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.mk-form-row__control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+.mk-form-row__control .mk-popup,
+.mk-form-row__control .mk-colorwell {
+  min-width: 180px;
+}
+.mk-form-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+.mk-form-row--stacked .mk-form-row__control {
+  justify-content: flex-start;
+}
+/* Ползунок и поля в строке «друг под другом» занимают всю ширину. */
+.mk-form-row--stacked .mk-form-row__control > * {
+  flex: 1 1 auto;
+}
+@media (max-width: 599px) {
+  .mk-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mk-form-row__control {
+    justify-content: flex-start;
+  }
+}
+
+/* ─── Боковая панель ─────────────────────────────────────── */
+.mk-sidebar-section {
+  display: grid;
+  gap: 1px;
+}
+.mk-sidebar-section__title {
+  padding: 10px 10px 4px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.mk-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: calc(var(--hit) + 2px);
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: var(--text-body);
+  text-decoration: none;
+}
+.mk-sidebar-item:hover {
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+.mk-sidebar-item.is-selected {
+  background: var(--bg-selected-muted);
+  font-weight: 600;
+}
+.mk-sidebar-item__icon {
+  display: inline-flex;
+  color: var(--accent-text);
+}
+.mk-sidebar-item__icon svg {
+  width: 17px;
+  height: 17px;
+}
+.mk-sidebar-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mk-sidebar-item__count {
+  font-size: var(--text-callout);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+/* На подложке выделения вторичный цвет опускается ниже 4.5:1 — счётчик берёт основной. */
+.mk-sidebar-item.is-selected .mk-sidebar-item__count {
+  color: var(--text-primary);
+}
+
+/* ─── Жетоны ─────────────────────────────────────────────── */
+.mk-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.mk-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 0 2px 0 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-on-tint);
+  font-size: var(--text-callout);
+  font-weight: 500;
+}
+.mk-token__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 2px 0;
+}
+.mk-token__remove {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+}
+.mk-token__remove:hover {
+  background: var(--accent-soft);
+}
+.mk-token__remove svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.mk-tokens__input {
+  width: 8rem;
+  min-height: 22px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font-size: var(--text-callout);
+  color: var(--text-primary);
+}
+.mk-tokens__input::placeholder {
+  color: var(--text-placeholder);
+}
+
+/* ─── Пустое состояние ───────────────────────────────────── */
+.mk-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 32px 16px;
+  text-align: center;
+}
+.mk-empty__title,
+.mk-empty__text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mk-empty__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+.mk-empty__icon svg {
+  width: 26px;
+  height: 26px;
+}
+.mk-empty .mk-button {
+  margin-top: 8px;
+}
+
+/* ─── Уведомления ────────────────────────────────────────── */
+/* --mk-toast-offset: приложение поднимает уведомление над своей нижней панелью. */
+.mk-toast-region {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--mk-toast-offset, 24px) + env(safe-area-inset-bottom));
+  z-index: 950;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.mk-toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 6px 6px 18px;
+  border-radius: var(--radius-capsule);
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), var(--shadow-popover);
+  color: var(--text-primary);
+  font-size: var(--text-body);
+}
+.mk-toast--error {
+  box-shadow: var(--shadow-popover), inset 3px 0 0 var(--danger-text);
+}
+.mk-toast__action {
+  height: var(--control-h-sm);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius-capsule);
+  background: var(--accent-soft);
+  color: var(--accent-on-tint);
+  font-weight: 600;
+}
+
+/* Боковая панель в слое Liquid Glass: парит над содержимым с отступом от краёв окна. */
+.mk-sidebar-panel {
+  margin: 8px;
+  padding: 8px;
+  border-radius: var(--radius-xl);
+  background: var(--glass-highlight), var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+  box-shadow: inset 0 0.5px 0 var(--glass-edge), 0 0 0 0.5px var(--glass-edge-shadow), var(--glass-shadow);
+}
+
+/*
+ * Эффект края прокрутки (HIG «Scroll views»): содержимое под стеклянной
+ * панелью плавно растворяется, чтобы элементы управления оставались читаемыми.
+ */
+.mk-scroll-edge {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--scroll-edge, 16px));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--scroll-edge, 16px));
+}

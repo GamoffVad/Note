@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.vercel/
+test-results/
+playwright-report/
+.claude/worktrees/
+# Tauri: сборка Rust и сгенерированные схемы
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+dist-desktop/

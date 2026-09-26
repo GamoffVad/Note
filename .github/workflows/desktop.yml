@@ -1,0 +1,120 @@
+name: Настольное приложение
+
+# Сборка «Маяка» для Windows, macOS (Apple Silicon и Intel) и Linux.
+# Обычный запуск — установщики в артефактах сборки (вкладка Actions).
+# Тег desktop-v* — черновик релиза GitHub с установщиками.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+    tags: ["desktop-v*"]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "design/**"
+      - "package-lock.json"
+      - ".github/workflows/desktop.yml"
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Проверки
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Системные библиотеки WebKitGTK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Модульные тесты (без PostgreSQL серверные тесты пропускаются)
+        run: npx vitest run
+      - name: Тесты Rust
+        working-directory: apps/desktop/src-tauri
+        run: cargo test
+
+  window-test:
+    name: Окно приложения (Linux, WebDriver)
+    needs: test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Системные библиотеки, WebKitWebDriver и Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf webkit2gtk-driver xvfb dbus-x11
+      - run: npm ci
+      - run: cargo install tauri-driver --locked
+      - name: Сборка программы без установщиков
+        run: npm run tauri -w @mayak/desktop -- build --no-bundle
+      - name: Заметка переживает перезапуск и хранится в SQLite
+        run: xvfb-run -a dbus-run-session -- sh -c 'tauri-driver & sleep 2; node apps/desktop/e2e/smoke.mjs'
+
+  build:
+    name: Сборка · ${{ matrix.name }}
+    needs: test
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS (Apple Silicon)
+            platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - name: macOS (Intel)
+            platform: macos-latest
+            args: --target x86_64-apple-darwin
+          - name: Linux
+            platform: ubuntu-22.04
+            args: ""
+          - name: Windows
+            platform: windows-latest
+            args: ""
+    runs-on: ${{ matrix.platform }}
+    env:
+      # Публичные параметры сборки: адрес API и Supabase задаются в
+      # Settings → Secrets and variables → Actions → Variables.
+      VITE_API_BASE: ${{ vars.MAYAK_API_BASE }}
+      VITE_SUPABASE_URL: ${{ vars.MAYAK_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.MAYAK_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: Системные библиотеки (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          args: ${{ matrix.args }}
+          uploadWorkflowArtifacts: true
+          tagName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && github.ref_name || '' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && 'Маяк __VERSION__' || '' }}
+          releaseBody: Установщики «Маяка» для Windows, macOS и Linux.
+          releaseDraft: true

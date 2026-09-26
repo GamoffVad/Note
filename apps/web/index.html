@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="Маяк — заметки, задачи и файлы между своими устройствами" />
+    <title>Маяк</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      // До отрисовки: тёмная тема без вспышки светлого фона.
+      try {
+        var a = JSON.parse(localStorage.getItem("mayak.appearance.v2") || "{}");
+        if (a.theme === "dark" || (a.theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches))
+          document.documentElement.dataset.theme = "dark";
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

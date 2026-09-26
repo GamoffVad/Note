@@ -1,0 +1,13 @@
+{
+  "_comment": "ТОЛЬКО ДЛЯ ТЕСТОВ: ключ имитации Supabase Auth в e2e. Не используется нигде, кроме apps/web/e2e и e2e-server.",
+  "privateJwk": {
+    "kty": "EC",
+    "x": "HHtAY-lpCclCRKABVsIDMnTPcXO2A-ExFy1oVR5CeDM",
+    "y": "bjDJr5UxuhON7_YiRv0V3Lwj03r98SwHX60XWNlFopw",
+    "crv": "P-256",
+    "d": "-L8xaQJ2w3cv7snV8aEcvQmTCYZ_8Islc2leMwzLfMs",
+    "kid": "mayak-e2e-test-key",
+    "alg": "ES256",
+    "use": "sig"
+  }
+}

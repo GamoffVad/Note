@@ -1,0 +1,271 @@
+/*
+ * Маяк · токены 2.1 · стиль macOS 27 (Liquid Glass).
+ * Три слоя: primitive (--p-*) → semantic → component (--c-*).
+ *
+ * Источник цветов — таблица системных цветов Apple HIG «Color»
+ * (https://developer.apple.com/design/human-interface-guidelines/color,
+ * обновлена 16.12.2025). Для акцента и статусов берутся значения
+ * «Increased contrast»: значения по умолчанию не проходят WCAG AA,
+ * которого требует ТЗ (см. docs/design-system.md, раздел «Контраст»).
+ * Нейтральные цвета — из таблицы серых цветов HIG (system gray 1–6);
+ * цвета текста подобраны нами: HIG не публикует числа для label colors macOS.
+ */
+:root {
+  /* ── primitive: цвета HIG, sRGB ── */
+  --p-blue: #0088ff; /* Blue, light */
+  --p-blue-dark: #0091ff; /* Blue, dark */
+  --p-blue-ic: #1e6ef4; /* Blue, increased contrast light */
+  --p-blue-ic-dark: #5cb8ff; /* Blue, increased contrast dark */
+  --p-red-ic: #e9152d;
+  --p-red-ic-dark: #ff6165;
+  --p-green-ic: #008932;
+  --p-green-dark: #30d158;
+  --p-orange-ic: #c55300;
+  --p-orange-dark: #ff9230;
+  --p-gray: #8e8e93;
+  --p-gray-ic: #6c6c70;
+  --p-gray-ic-dark: #aeaeb2;
+  --p-gray2: #aeaeb2;
+  --p-gray3: #c7c7cc;
+  --p-gray4: #d1d1d6;
+  --p-gray5: #e5e5ea;
+  --p-gray6: #f2f2f7;
+  --p-gray3-dark: #48484a;
+  --p-gray4-dark: #3a3a3c;
+  --p-gray5-dark: #2c2c2e;
+  --p-gray6-dark: #1c1c1e;
+  --p-white: #ffffff;
+  --p-black: #000000;
+  /* Подобраны нами (HIG не публикует чисел для label colors macOS). */
+  --p-ink: #1d1d1f;
+  --p-ink-dark: #f5f5f7;
+
+  /* ── шрифты: системный шрифт ОС; San Francisco не встраивается (лицензия Apple) ── */
+  --font-system: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI Variable Text", "Segoe UI", Roboto,
+    "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-rounded: ui-rounded, var(--font-system);
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /*
+   * Типографика macOS (HIG «Typography», macOS text styles), пересчитана в rem:
+   * при корневом размере 16 px основной текст — 13 px, как в macOS.
+   * Подписи macOS 10–11 pt подняты до 12 px: минимум по ТЗ.
+   */
+  --text-large-title: 1.625rem; /* 26 / 32 */
+  --text-title1: 1.375rem; /* 22 / 26 */
+  --text-title2: 1.0625rem; /* 17 / 22 */
+  --text-title3: 0.9375rem; /* 15 / 20 */
+  --text-headline: 0.8125rem; /* 13 / 16, bold */
+  --text-body: 0.8125rem; /* 13 / 16 */
+  --text-callout: 0.75rem; /* 12 / 15 */
+  --text-caption: 0.75rem; /* 10 pt в macOS → 12 px по ТЗ */
+
+  /*
+   * ── размеры и формы ──
+   * Liquid Glass (Apple «Adopting Liquid Glass», HIG «Buttons», «Materials»):
+   * элементы управления круглее — капсулы; вложенные скругления концентричны
+   * контейнеру; у листов, меню, окон и групп форм радиус больше; строки выше.
+   * Конкретные пиксели — наша оценка: HIG не публикует метрики macOS.
+   */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-xs: 5px; /* флажок */
+  --radius-sm: 8px; /* поля, выделение в меню */
+  --radius-md: 12px; /* строки боковой панели, всплывающие элементы */
+  --radius-lg: 18px; /* группы форм, карточки */
+  --radius-xl: 24px; /* листы, боковая панель */
+  --radius-capsule: 999px; /* кнопки, сегменты, поиск, переключатели */
+  /* Высота элементов: 28 px при точном указателе (WCAG 2.5.8 требует ≥ 24), 44 px на сенсорных экранах. */
+  --control-h: 30px;
+  --control-h-sm: 26px;
+  --control-h-lg: 36px;
+  --control-h-xl: 44px;
+  --hit: 30px;
+  --row-h: 44px; /* строки списков и форм: выше, чем раньше */
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ── semantic: светлая тема ── */
+  --bg-window: var(--p-gray6);
+  --bg-content: var(--p-white);
+  --bg-sidebar: rgb(236 236 241 / 0.86);
+  --bg-sidebar-solid: #ececf1;
+  --bg-toolbar: rgb(255 255 255 / 0.82);
+  --bg-control: var(--p-white);
+  --bg-control-hover: var(--p-gray6);
+  --bg-control-active: var(--p-gray5);
+  --bg-field: var(--p-white);
+  --bg-elevated: var(--p-white);
+  --bg-hover: rgb(0 0 0 / 0.05);
+  --bg-selected-muted: rgb(0 0 0 / 0.08);
+  --bg-backdrop: rgb(0 0 0 / 0.28);
+
+  --text-primary: var(--p-ink);
+  --text-secondary: var(--p-gray-ic);
+  --text-placeholder: var(--p-gray-ic);
+  --text-disabled: var(--p-gray);
+  --text-on-accent: var(--p-white);
+
+  --accent: var(--p-blue-ic);
+  --accent-text: var(--p-blue-ic);
+  --accent-hover: #185ed8;
+  --accent-pressed: #144fb8;
+  --accent-soft: rgb(30 110 244 / 0.12);
+  --focus-ring: var(--p-blue-ic);
+  --selection-text-bg: rgb(30 110 244 / 0.24);
+
+  --separator: var(--p-gray4);
+  --border-control: var(--p-gray); /* ≥ 3:1 к белому — граница полей и чекбоксов */
+  --border-subtle: var(--p-gray5);
+
+  --danger: var(--p-red-ic);
+  --danger-text: var(--p-red-ic);
+  --success-text: var(--p-green-ic);
+  --warning-text: var(--p-orange-ic);
+  /* Текст на цветной подложке (значки, токены): темнее на ступень, контраст ≥ 4.5:1. */
+  --accent-on-tint: #0a5bd6;
+  --success-on-tint: #007a2c;
+  --warning-on-tint: #b04a00;
+  --danger-on-tint: #c8102a;
+
+  --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.06);
+  --shadow-popover: 0 12px 36px rgb(0 0 0 / 0.16), 0 0 0 0.5px rgb(0 0 0 / 0.1);
+  --shadow-sheet: 0 28px 72px rgb(0 0 0 / 0.24), 0 0 0 0.5px rgb(0 0 0 / 0.1);
+  --blur-material: saturate(180%) blur(24px);
+
+  /*
+   * Liquid Glass, вариант regular: размытие и подстройка яркости фона,
+   * блик по верхней кромке, мягкая тень. Преломление света в вебе
+   * недоступно — эффект приближённый.
+   */
+  --glass-bg: rgb(255 255 255 / 0.62);
+  --glass-bg-strong: rgb(255 255 255 / 0.8);
+  --glass-tint: rgb(255 255 255 / 0.2);
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-edge-shadow: rgb(0 0 0 / 0.07);
+  --glass-shadow: 0 6px 20px rgb(0 0 0 / 0.1), 0 1px 3px rgb(0 0 0 / 0.08);
+  --glass-filter: blur(20px) saturate(190%) brightness(1.04);
+  --glass-highlight: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 55%);
+
+  color-scheme: light;
+}
+
+/* ── semantic: тёмная тема ── */
+[data-theme="dark"] {
+  --bg-window: var(--p-gray6-dark);
+  --bg-content: #1e1e20;
+  --bg-sidebar: rgb(38 38 41 / 0.86);
+  --bg-sidebar-solid: #262629;
+  --bg-toolbar: rgb(30 30 32 / 0.82);
+  --bg-control: #3a3a3c;
+  --bg-control-hover: #454548;
+  --bg-control-active: #505053;
+  --bg-field: #1c1c1e;
+  --bg-elevated: var(--p-gray5-dark);
+  --bg-hover: rgb(255 255 255 / 0.06);
+  --bg-selected-muted: rgb(255 255 255 / 0.1);
+  --bg-backdrop: rgb(0 0 0 / 0.5);
+
+  --text-primary: var(--p-ink-dark);
+  --text-secondary: var(--p-gray-ic-dark);
+  --text-placeholder: var(--p-gray-ic-dark);
+  --text-disabled: #7c7c80;
+  --text-on-accent: var(--p-white);
+
+  /* Заливка — синий IC светлой темы: белый текст на нём 4.57:1; синий тёмной темы даёт только 3.23:1. */
+  --accent: var(--p-blue-ic);
+  --accent-text: var(--p-blue-ic-dark);
+  --accent-hover: #3a82f7;
+  --accent-pressed: #185ed8;
+  --accent-soft: rgb(92 184 255 / 0.16);
+  --focus-ring: var(--p-blue-ic-dark);
+  --selection-text-bg: rgb(92 184 255 / 0.3);
+
+  --separator: var(--p-gray4-dark);
+  --border-control: var(--p-gray);
+  --border-subtle: var(--p-gray3-dark);
+
+  --danger: var(--p-red-ic);
+  --danger-text: var(--p-red-ic-dark);
+  --success-text: var(--p-green-dark);
+  --warning-text: var(--p-orange-dark);
+  --accent-on-tint: var(--accent-text);
+  --success-on-tint: var(--success-text);
+  --warning-on-tint: var(--warning-text);
+  --danger-on-tint: var(--danger-text);
+
+  --shadow-control: 0 0.5px 1px rgb(0 0 0 / 0.4), 0 0 0 0.5px rgb(255 255 255 / 0.08);
+  --shadow-popover: 0 12px 36px rgb(0 0 0 / 0.5), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+  --shadow-sheet: 0 28px 72px rgb(0 0 0 / 0.6), 0 0 0 0.5px rgb(255 255 255 / 0.12);
+
+  --glass-bg: rgb(58 58 62 / 0.55);
+  --glass-bg-strong: rgb(44 44 48 / 0.82);
+  --glass-tint: rgb(255 255 255 / 0.06);
+  --glass-edge: rgb(255 255 255 / 0.22);
+  --glass-edge-shadow: rgb(0 0 0 / 0.3);
+  --glass-shadow: 0 6px 20px rgb(0 0 0 / 0.35), 0 1px 3px rgb(0 0 0 / 0.3);
+  --glass-filter: blur(20px) saturate(170%) brightness(0.96);
+  --glass-highlight: linear-gradient(180deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0) 55%);
+
+  color-scheme: dark;
+}
+
+/* Сенсорные экраны: зоны нажатия 44 px (ТЗ, DESIGN-SYSTEM 1.0, раздел 5). */
+@media (pointer: coarse) {
+  :root {
+    --control-h: 44px;
+    --control-h-sm: 36px;
+    --control-h-lg: 48px;
+    --control-h-xl: 52px;
+    --hit: 44px;
+    --row-h: 52px;
+  }
+}
+
+/* «Уменьшить прозрачность» в ОС — материалы без размытия. */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  [data-theme="dark"] {
+    --blur-material: none;
+    --glass-filter: none;
+    --glass-bg: var(--bg-control);
+    --glass-bg-strong: var(--bg-elevated);
+    --bg-sidebar: var(--bg-sidebar-solid);
+    --bg-toolbar: var(--bg-content);
+  }
+}
+
+/* «Увеличить контраст» в ОС — более заметные границы и разделители. */
+@media (prefers-contrast: more) {
+  :root {
+    --separator: var(--p-gray);
+    --border-subtle: var(--p-gray);
+    --text-secondary: #48484a;
+    --glass-bg: var(--p-white);
+    --glass-bg-strong: var(--p-white);
+    --glass-filter: none;
+    --glass-edge: var(--p-gray);
+  }
+  [data-theme="dark"] {
+    --separator: var(--p-gray);
+    --border-subtle: var(--p-gray);
+    --text-secondary: #d1d1d6;
+    --glass-bg: #2c2c2e;
+    --glass-bg-strong: #2c2c2e;
+    --glass-filter: none;
+    --glass-edge: var(--p-gray);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}

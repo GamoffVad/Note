@@ -1,0 +1,69 @@
+{
+  "primitive": {
+    "color": {
+      "blue": {
+        "50": "#f4f7fb",
+        "100": "#e7efff",
+        "200": "#d9e1ed",
+        "500": "#3975ee",
+        "600": "#235bd6",
+        "700": "#1947aa"
+      },
+      "neutral": {
+        "0": "#ffffff",
+        "100": "#edf2f8",
+        "500": "#5a6a80",
+        "900": "#182538"
+      },
+      "status": {
+        "success": "#23764b",
+        "warning": "#875a0c",
+        "danger": "#b32c36"
+      }
+    },
+    "space": {
+      "1": 4,
+      "2": 8,
+      "3": 12,
+      "4": 16,
+      "5": 20,
+      "6": 24,
+      "8": 32,
+      "10": 40,
+      "12": 48,
+      "16": 64
+    },
+    "radius": {
+      "small": 6,
+      "medium": 8,
+      "large": 12
+    },
+    "type": {
+      "caption": 12,
+      "body": 14,
+      "editor": 17,
+      "title": 32
+    },
+    "duration": {
+      "fast": 120,
+      "normal": 180
+    }
+  },
+  "semantic": {
+    "surface.page": "{primitive.color.blue.50}",
+    "surface.panel": "{primitive.color.neutral.0}",
+    "surface.navigation": "{primitive.color.neutral.100}",
+    "text.primary": "{primitive.color.neutral.900}",
+    "text.secondary": "{primitive.color.neutral.500}",
+    "action.primary": "{primitive.color.blue.600}",
+    "selection.background": "{primitive.color.blue.100}",
+    "border.subtle": "{primitive.color.blue.200}"
+  },
+  "component": {
+    "button.primary.background": "{semantic.action.primary}",
+    "note.selected.background": "{semantic.selection.background}",
+    "editor.background": "{semantic.surface.panel}",
+    "navigation.background": "{semantic.surface.navigation}"
+  },
+  "notes": "Project token schema; not a certified DTCG interchange file. Exploratory palettes in variants.json."
+}

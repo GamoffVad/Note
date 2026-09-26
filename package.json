@@ -1,0 +1,33 @@
+{
+  "name": "mayak",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Маяк — заметки, задачи и файлы между своими устройствами",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "tsx --conditions=source packages/server/scripts/migrate.ts",
+    "dev:api": "tsx --conditions=source packages/server/scripts/dev-server.ts",
+    "dev:web": "npm run dev -w @mayak/web",
+    "build:web": "npm run build -w @mayak/web",
+    "e2e": "npm run e2e -w @mayak/web",
+    "build:api": "tsc -p packages/domain/tsconfig.build.json && tsc -p packages/server/tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/pg": "^8.23.1",
+    "fake-indexeddb": "^6.2.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  }
+}
