@@ -9,6 +9,7 @@
  * Под Xvfb: xvfb-run -a sh -c 'tauri-driver & sleep 1; node apps/desktop/e2e/smoke.mjs'
  * Используется протокол W3C WebDriver напрямую, без дополнительных пакетов.
  */
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -82,6 +83,17 @@ const db = new DatabaseSync(dbPath, { readOnly: true });
 const rows = db.prepare("select value from kv where store = 'notes'").all();
 assert(rows.some((r) => JSON.parse(r.value).document?.title === title), "заметка записана в таблицу kv");
 db.close();
+
+// Приложение разрешает одно окно (single-instance): второй запуск, пока первое
+// ещё закрывается, просто передал бы ему управление. Ждём завершения процесса.
+for (let i = 0; i < 40; i++) {
+  try {
+    execFileSync("pgrep", ["-f", application], { stdio: "ignore" });
+  } catch {
+    break;
+  }
+  await new Promise((r) => setTimeout(r, 250));
+}
 
 // 3. Повторный запуск: заметка на месте.
 app = await session();

@@ -43,6 +43,19 @@ export function createApiHandler(options: ApiOptions): (request: Request) => Pro
       const segments = path.split("/").filter(Boolean);
       route = routeName(request.method, segments);
 
+      // Проверка состояния для мониторинга: без входа, без данных пользователей.
+      if (route === "GET /health") {
+        try {
+          await service.ping();
+        } catch (error) {
+          errorCode = `DB:${(error as { code?: string })?.code ?? (error as Error)?.name ?? "Error"}`;
+          status = 503;
+          return json(503, { status: "unavailable", database: "unavailable" }, { "cache-control": "no-store" });
+        }
+        status = 200;
+        return json(200, { status: "ok", database: "ok" }, { "cache-control": "no-store" });
+      }
+
       const protocolHeader = request.headers.get(HEADER_PROTOCOL);
       if (protocolHeader !== null && Number(protocolHeader) !== PROTOCOL_VERSION) {
         throw new ApiError("UPGRADE_REQUIRED", "Обновите приложение, чтобы продолжить синхронизацию", {
@@ -144,6 +157,7 @@ function mutationResponse(result: MutationResult): Response {
 
 function routeName(method: string, segments: string[]): string {
   const [a, b, c] = segments;
+  if (segments.length === 1 && a === "health" && method === "GET") return "GET /health";
   if (segments.length === 1 && a === "bootstrap") return `${method} /bootstrap`;
   if (segments.length === 2 && a === "sync" && (b === "push" || b === "pull")) return `${method} /sync/${b}`;
   if (segments.length === 3 && a === "notes" && (c === "history" || c === "restore")) return `${method} /notes/:id/${c}`;

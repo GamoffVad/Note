@@ -27,7 +27,8 @@
 |---|---|---|
 | `SUPABASE_URL` | Production, Preview | plain |
 | `DATABASE_URL` (transaction pooler, 6543) | Production, Preview | sensitive |
-| `DATABASE_CA_CERT` | Production, Preview | sensitive |
+| `DATABASE_CA_CERT` (необязательно) | Production, Preview | sensitive; для адресов Supabase встроен корневой сертификат Supabase |
+| `SUPABASE_PUBLISHABLE_KEY` | Production, Preview | plain; проверка токенов проектов со старой подписью HS256 через Supabase Auth |
 | `DATABASE_POOL_MAX` = `1` | Production, Preview | plain |
 | `MAYAK_CORS_ORIGINS` (необязательно) | Production, Preview | plain; источники сверх `tauri://localhost` и `http(s)://tauri.localhost` |
 

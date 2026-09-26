@@ -101,6 +101,63 @@ describe("SupabaseAuthProvider", () => {
     expect(await p.authenticate(req("dev:alice"))).toBeNull();
   });
 
+  describe("проекты со старой подписью HS256: подтверждение у Supabase Auth", () => {
+    const secret = new TextEncoder().encode("legacy-shared-secret-legacy-shared-secret");
+    async function hsToken(claims: Record<string, unknown> = {}, sub = newId()) {
+      const { iss = ISSUER, ...rest } = claims;
+      return new SignJWT({ role: "authenticated", session_id: newId(), is_anonymous: false, ...rest })
+        .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+        .setIssuer(String(iss))
+        .setAudience("authenticated")
+        .setSubject(sub)
+        .setIssuedAt()
+        .setExpirationTime("1h")
+        .sign(secret);
+    }
+    function remote(respond: (auth: string) => Response | Promise<Response>) {
+      const calls: Array<{ url: string; apikey: string | null }> = [];
+      const fake = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const headers = new Headers(init?.headers);
+        calls.push({ url: String(input), apikey: headers.get("apikey") });
+        return respond(headers.get("authorization") ?? "");
+      }) as typeof fetch;
+      const p = new SupabaseAuthProvider({
+        projectUrl: PROJECT,
+        keys: createLocalJWKSet({ keys: [publicJwk] }),
+        apiKey: "sb_publishable_test",
+        fetch: fake,
+      });
+      return { p, calls };
+    }
+
+    it("принимает токен, который подтвердил Supabase Auth, и кэширует ответ", async () => {
+      const sub = newId();
+      const sessionId = newId();
+      const { p, calls } = remote(() => Response.json({ id: sub }));
+      const t = await hsToken({ session_id: sessionId }, sub);
+      expect(await p.authenticate(req(t))).toEqual({ subject: `supabase|${sub}`, sessionId });
+      expect(await p.authenticate(req(t))).not.toBeNull();
+      expect(calls).toEqual([{ url: `${ISSUER}/user`, apikey: "sb_publishable_test" }]);
+    });
+
+    it("отклоняет: Supabase Auth ответил 401/403, другой пользователь, чужой issuer, аноним", async () => {
+      expect(await remote(() => new Response(null, { status: 401 })).p.authenticate(req(await hsToken()))).toBeNull();
+      expect(await remote(() => new Response(null, { status: 403 })).p.authenticate(req(await hsToken()))).toBeNull();
+      expect(await remote(() => Response.json({ id: newId() })).p.authenticate(req(await hsToken()))).toBeNull();
+      const ok = remote(() => Response.json({ id: "x" }));
+      expect(await ok.p.authenticate(req(await hsToken({ iss: "https://other.supabase.co/auth/v1" })))).toBeNull();
+      expect(await ok.p.authenticate(req(await hsToken({ is_anonymous: true })))).toBeNull();
+      expect(ok.calls).toEqual([]);
+    });
+
+    it("недоступный Supabase Auth — временная ошибка", async () => {
+      const down = remote(() => new Response(null, { status: 502 }));
+      await expect(down.p.authenticate(req(await hsToken()))).rejects.toBeInstanceOf(AuthUnavailableError);
+      const offline = remote(() => Promise.reject(new TypeError("fetch failed")));
+      await expect(offline.p.authenticate(req(await hsToken()))).rejects.toBeInstanceOf(AuthUnavailableError);
+    });
+  });
+
   it("требует https для URL проекта", () => {
     expect(() => new SupabaseAuthProvider({ projectUrl: "http://evil.example.com" })).toThrow(/https/);
   });

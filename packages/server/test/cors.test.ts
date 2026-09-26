@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { corsOriginsFromEnv, withCors } from "../src/index.ts";
+import { corsOriginsFromEnv, createApiHandler, withCors, type SyncService } from "../src/index.ts";
 
 const handler = withCors(async () => Response.json({ ok: true }, { status: 401, headers: { "retry-after": "30" } }));
 
@@ -39,5 +39,24 @@ describe("CORS для приложений Tauri", () => {
     const extra = withCors(async () => new Response(null, { status: 204 }), corsOriginsFromEnv({ MAYAK_CORS_ORIGINS: " http://localhost:1420 , " }));
     expect((await extra(req("OPTIONS", "http://localhost:1420"))).status).toBe(204);
     expect((await extra(req("OPTIONS", "tauri://localhost"))).status).toBe(204);
+  });
+});
+
+describe("проверка состояния /api/v1/health", () => {
+  const auth = { authenticate: async () => null };
+  const call = (service: unknown) =>
+    createApiHandler({ service: service as SyncService, auth })(new Request("https://api.example.com/api/v1/health"));
+
+  it("база доступна — 200 без входа", async () => {
+    const res = await call({ ping: async () => undefined });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: "ok", database: "ok" });
+  });
+
+  it("база недоступна — 503 без подробностей ошибки", async () => {
+    const res = await call({ ping: async () => Promise.reject(Object.assign(new Error("password authentication failed"), { code: "28P01" })) });
+    expect(res.status).toBe(503);
+    const text = await res.text();
+    expect(text).not.toContain("password");
   });
 });

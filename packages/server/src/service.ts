@@ -44,6 +44,12 @@ interface NoteRow {
 export class SyncService {
   constructor(private readonly pool: Db) {}
 
+  /** Проверка состояния: база доступна и таблицы Маяка на месте. */
+  async ping(): Promise<void> {
+    // Таблица, к которой у роли API есть доступ (к журналу миграций доступа нет).
+    await this.pool.query("select 1 from mayak.users where false");
+  }
+
   /** Находит или создаёт пользователя приложения по идентичности провайдера. */
   async resolveUser(authSubject: string): Promise<string> {
     const { rows } = await this.pool.query<{ id: string }>(

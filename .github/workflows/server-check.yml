@@ -1,0 +1,41 @@
+name: Проверка сервера
+
+# После развёртывания на Vercel проверяет API: база доступна, вход
+# обязателен, CORS пускает приложения Tauri и не пускает чужие сайты.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+    paths: ["api/**", "packages/server/**", "packages/domain/**", "vercel.json", ".github/workflows/server-check.yml"]
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Адрес развёртывания
+        run: |
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+            echo "BASE=https://mayak-pied-theta.vercel.app/api/v1" >> "$GITHUB_ENV"
+          else
+            slug=$(echo "$GITHUB_REF_NAME" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+            echo "BASE=https://mayak-git-${slug}-gamoffvads-projects.vercel.app/api/v1" >> "$GITHUB_ENV"
+          fi
+      - name: База доступна (ждём новое развёртывание до 10 минут)
+        run: |
+          for i in $(seq 1 40); do
+            body=$(curl -s -m 20 "$BASE/health" || true)
+            echo "$i: $body"
+            case "$body" in *'"database":"ok"'*) exit 0;; esac
+            sleep 15
+          done
+          echo "::error::API не ответил database: ok"
+          exit 1
+      - name: Без токена — 401
+        run: |
+          code=$(curl -s -o /tmp/b -w '%{http_code}' "$BASE/bootstrap")
+          cat /tmp/b; echo; test "$code" = 401
+      - name: CORS для приложения и отказ чужому сайту
+        run: |
+          ok=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS -H 'Origin: tauri://localhost' -H 'Access-Control-Request-Method: GET' "$BASE/bootstrap")
+          bad=$(curl -s -o /dev/null -w '%{http_code}' -X OPTIONS -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: GET' "$BASE/bootstrap")
+          echo "tauri: $ok, чужой: $bad"; test "$ok" = 204 && test "$bad" = 403

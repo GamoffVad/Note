@@ -138,3 +138,35 @@ export function appSessionStorage(): AsyncStorage {
     },
   };
 }
+
+// ─── Вход по ссылке из письма ────────────────────────────────────────────
+
+/** Адрес возврата из письма: ссылка открывает приложение (плагин deep-link Tauri). */
+export const AUTH_REDIRECT_URL = "io.github.gamoffvad.mayak://login-callback";
+
+/** Событие окна с текстом ошибки входа по ссылке — его показывает форма входа. */
+export const AUTH_LINK_ERROR_EVENT = "mayak:auth-link-error";
+
+/** Разбор ссылки возврата: код PKCE в параметрах или ошибка Supabase Auth. */
+export function parseAuthLink(url: string): { code: string } | { error: string } | null {
+  if (!url.startsWith(AUTH_REDIRECT_URL)) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const params = new URLSearchParams(parsed.search);
+  for (const [k, v] of new URLSearchParams(parsed.hash.replace(/^#/, ""))) params.set(k, v);
+  const code = params.get("code");
+  if (code) return { code };
+  const error = params.get("error_description") ?? params.get("error");
+  return error ? { error } : null;
+}
+
+/** Слушает ссылки, которыми открыто приложение: при запуске и во время работы. */
+export async function listenForAuthLinks(onUrl: (url: string) => void): Promise<() => void> {
+  const { getCurrent, onOpenUrl } = await import("@tauri-apps/plugin-deep-link");
+  (await getCurrent())?.forEach(onUrl);
+  return onOpenUrl((urls) => urls.forEach(onUrl));
+}
