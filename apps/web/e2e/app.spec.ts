@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { createNote, expectNoHorizontalScroll } from "./helpers.ts";
+import { chooseOption, createNote, expectNoHorizontalScroll } from "./helpers.ts";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
@@ -130,10 +130,13 @@ test("диктовка честно сообщает, что недоступн�
 
 test("внешний вид: тёмная тема и размер редактора сохраняются, сброс возвращает значения", async ({ page }) => {
   await page.getByRole("link", { name: "Настройки" }).first().click();
-  await page.getByLabel("Тема оформления").selectOption("dark");
+  await chooseOption(page, "Тема оформления", "Тёмная");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  // Ползунок библиотеки (role="slider"): стрелка вправо — шаг 1 px, с 17 до 22.
   const editorSize = page.getByRole("group", { name: "Шрифт редактора" }).getByRole("slider");
-  await editorSize.fill("22");
+  await editorSize.focus();
+  for (let i = 0; i < 5; i++) await editorSize.press("ArrowRight");
+  await expect(editorSize).toHaveAttribute("aria-valuenow", "22");
   await expect(page.getByText("Оформление сохранено на устройстве.")).toBeVisible();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
@@ -147,19 +150,27 @@ test("внешний вид: тёмная тема и размер редакт�
 test("внешний вид: предупреждение о низком контрасте и повреждённые настройки", async ({ page }) => {
   await page.goto("/#/settings");
   const ui = page.getByRole("group", { name: "Шрифт интерфейса" });
-  await ui.getByLabel("Цвет из темы").uncheck();
-  await ui.getByLabel("Свой цвет текста").fill("#dddddd");
+  const auto = ui.getByRole("switch", { name: "Цвет из темы" });
+  await auto.uncheck();
+  await expect(auto).not.toBeChecked();
+  // Цветовая ячейка: панель с образцами и полем HEX.
+  await ui.getByRole("button", { name: /Свой цвет текста/ }).click();
+  const panel = page.getByRole("dialog", { name: "Свой цвет текста" });
+  await panel.getByLabel("HEX").fill("#dddddd");
+  await panel.getByRole("button", { name: "Применить" }).click();
+  await expect(panel).toBeHidden();
+  await expect(ui.getByRole("button", { name: /Свой цвет текста/ })).toContainText("#DDDDDD");
   await expect(page.getByText(/Низкий контраст текста интерфейса/)).toBeVisible();
 
   await page.evaluate(() => localStorage.setItem("mayak.appearance.v2", "{испорчено"));
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-  await expect(page.getByLabel("Тема оформления")).toHaveValue("light");
+  await expect(page.getByRole("combobox", { name: "Тема оформления" })).toContainText("Светлая");
 });
 
 test("тема «Как в системе» следует настройке ОС без перезагрузки", async ({ page }) => {
   await page.goto("/#/settings");
-  await page.getByLabel("Тема оформления").selectOption("system");
+  await chooseOption(page, "Тема оформления", "Как в системе");
   await page.emulateMedia({ colorScheme: "dark" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.emulateMedia({ colorScheme: "light" });
@@ -196,6 +207,36 @@ test("доступность: axe без нарушений WCAG A/AA на ос�
       const summary = result.violations.map((v) => `${theme} ${hash}: ${v.id} — ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
       expect(summary).toEqual([]);
     }
+  }
+});
+
+test("на экранах нет стандартных элементов браузера: только компоненты @mayak/ui", async ({ page }) => {
+  await createNote(page, "Проверка элементов", "Текст");
+  await page.getByRole("button", { name: "Задача", exact: true }).click();
+  await page.keyboard.type("Задача");
+  for (const hash of ["#/notes", "#/tasks", "#/files", "#/devices", "#/trash", "#/settings"]) {
+    await page.goto(`/${hash}`);
+    await expect(page.locator("main")).toBeVisible();
+    const native = await page.evaluate(() =>
+      [
+        ...document.querySelectorAll(
+          [
+            "select",
+            'input[type="range"]',
+            'input[type="color"]',
+            'input[type="search"]',
+            "details",
+            "summary",
+            "body [title]",
+            "dialog:not(.mk-sheet)",
+            // Нативные флажки и радиокнопки допустимы только скрытыми внутри компонентов библиотеки.
+            'input[type="checkbox"]:not(.mk-check__input)',
+            'input[type="radio"]:not(.mk-radio__input)',
+          ].join(", "),
+        ),
+      ].map((el) => el.outerHTML.slice(0, 80)),
+    );
+    expect(native, hash).toEqual([]);
   }
 });
 

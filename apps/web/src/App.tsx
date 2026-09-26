@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { projectTasks } from "@mayak/domain";
+import { ButtonLink, EmptyState, IconButton, IconLink, SidebarItem, SidebarPanel, SidebarSection, ToolbarGroup } from "@mayak/ui";
 import { BrandMark, Icon, type IconName } from "./components/Icon.tsx";
 import { SyncFooter } from "./components/SyncIndicator.tsx";
 import { useMayak } from "./state/MayakContext.tsx";
@@ -29,7 +30,8 @@ const SECTION_TITLE: Record<Section, string> = {
   settings: "Настройки",
 };
 
-const wideScreen = typeof matchMedia === "function" ? matchMedia("(min-width: 600px)") : null;
+/** Телефон — до 700 px: отдельные экраны списка и заметки, нижняя навигация. */
+const wideScreen = typeof matchMedia === "function" ? matchMedia("(min-width: 701px)") : null;
 
 export function App() {
   const route = useRoute();
@@ -85,22 +87,32 @@ export function App() {
     content = <NoteEditor key={selected.id} note={selected} outbox={outbox.get(selected.id)} conflict={conflicts.get(selected.id)} />;
   else if (route.noteId)
     content = (
-      <div className="sheet empty-page">
-        <h1 className="page-title">Заметка не найдена</h1>
-        <p className="intro">Возможно, она была удалена окончательно или принадлежит другому аккаунту.</p>
-        <a className="button" href={routeHref({ section: "notes" })}>
-          К списку заметок
-        </a>
+      <div className="page page--center">
+        <EmptyState
+          as="h1"
+          title="Заметка не найдена"
+          icon={<Icon name="notes" />}
+          action={<ButtonLink href={routeHref({ section: "notes" })}>К списку заметок</ButtonLink>}
+        >
+          Возможно, она была удалена окончательно или принадлежит другому аккаунту.
+        </EmptyState>
       </div>
     );
   else
     content = (
-      <div className="sheet empty-page">
-        <div className="eyebrow accent">Место для ваших мыслей</div>
-        <h1 className="page-title">Начните здесь</h1>
-        <p className="intro">Продолжите на любом устройстве. Выберите заметку в списке или создайте новую.</p>
+      <div className="page page--center">
+        <EmptyState as="h1" title="Начните здесь" icon={<BrandMark />}>
+          Продолжите на любом устройстве. Выберите заметку в списке или создайте новую.
+        </EmptyState>
       </div>
     );
+
+  const modeLabel =
+    workspace.config.mode === "dev"
+      ? `Сервер разработки · ${workspace.config.account}`
+      : workspace.config.mode === "account"
+        ? workspace.config.email
+        : "Только это устройство";
 
   return (
     <div className={`app${wide ? " view-wide" : ""}${showEditor ? " show-editor" : " show-list"}${drawer ? " drawer-open" : ""}`}>
@@ -108,36 +120,28 @@ export function App() {
         Перейти к содержимому
       </a>
       <header className="titlebar">
-        <button
-          type="button"
-          className="icon-button menu-button"
-          aria-label="Меню разделов"
+        <IconButton
+          className="menu-button"
+          label="Меню разделов"
+          icon={<Icon name="menu" />}
           aria-expanded={drawer}
           aria-controls="sidebar"
           onClick={() => setDrawer((v) => !v)}
-        >
-          <Icon name="menu" />
-        </button>
+        />
         <a className="brand" href={routeHref({ section: "notes" })} aria-label="Маяк — все заметки">
           <BrandMark />
           <span aria-hidden="true">маяк</span>
         </a>
-        <div className="meta">
-          <span className="mode-label">
-            {workspace.config.mode === "dev"
-              ? `Сервер разработки · ${workspace.config.account}`
-              : workspace.config.mode === "account"
-                ? workspace.config.email
-                : "Только это устройство"}
-          </span>
-          <a
-            className="icon-button"
-            href={routeHref({ section: "settings" })}
-            aria-label="Настройки"
-            aria-current={route.section === "settings" ? "page" : undefined}
-          >
-            <Icon name="settings" />
-          </a>
+        <div className="titlebar__meta">
+          <span className="mode-label">{modeLabel}</span>
+          <ToolbarGroup label="Окно">
+            <IconLink
+              label="Настройки"
+              icon={<Icon name="settings" />}
+              href={routeHref({ section: "settings" })}
+              aria-current={route.section === "settings" ? "page" : undefined}
+            />
+          </ToolbarGroup>
         </div>
       </header>
 
@@ -162,7 +166,7 @@ export function App() {
         </span>
       </footer>
 
-      <nav className="bottom-nav" aria-label="Основные разделы">
+      <nav className="bottom-nav mk-glass" aria-label="Основные разделы">
         {MAIN_SECTIONS.map((item) => (
           <a
             key={item.section}
@@ -189,64 +193,52 @@ function Sidebar({ route }: { route: Route }) {
   const connected = workspace.transport !== null;
 
   return (
-    <aside className="sidebar" id="sidebar" aria-label="Навигация">
+    <SidebarPanel className="sidebar" id="sidebar" aria-label="Навигация">
       <div className="workspace">
-        Моё пространство
-        <small>Заметки всегда с вами</small>
+        <span className="mk-headline">Моё пространство</span>
+        <span className="mk-caption">Заметки всегда с вами</span>
       </div>
-      <nav className="navigation" aria-label="Основная навигация">
-        {MAIN_SECTIONS.map((item) => {
-          const active = route.section === item.section && !(item.section === "notes" && route.tag);
-          return (
-            <a
-              key={item.section}
-              href={routeHref({ section: item.section })}
-              className={`nav${active ? " active" : ""}`}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon name={item.icon} />
-              <span>{item.label}</span>
-              {counts[item.section] !== undefined && (
-                <b aria-label={`${counts[item.section]}`}>{counts[item.section]}</b>
-              )}
-            </a>
-          );
-        })}
-      </nav>
+      <SidebarSection label="Основная навигация">
+        {MAIN_SECTIONS.map((item) => (
+          <SidebarItem
+            key={item.section}
+            href={routeHref({ section: item.section })}
+            icon={<Icon name={item.icon} />}
+            label={item.label}
+            count={counts[item.section]}
+            selected={route.section === item.section && !(item.section === "notes" && route.tag)}
+          />
+        ))}
+      </SidebarSection>
       {tags.length > 0 && (
-        <nav className="tags" aria-label="Теги">
-          <div className="eyebrow">Теги</div>
+        <SidebarSection title="Теги" label="Теги">
           {tags.map((tag) => (
-            <a
+            <SidebarItem
               key={tag}
-              className={`tag${route.tag === tag ? " active" : ""}`}
               href={routeHref({ section: "notes", tag })}
-              aria-current={route.tag === tag ? "page" : undefined}
-            >
-              {tag}
-            </a>
+              icon={<Icon name="tag" />}
+              label={tag}
+              selected={route.tag === tag}
+            />
           ))}
-        </nav>
+        </SidebarSection>
       )}
-      <nav className="navigation secondary" aria-label="Дополнительно">
-        <a
+      <div className="sidebar__spacer" />
+      <SidebarSection label="Дополнительно">
+        <SidebarItem
           href={routeHref({ section: "trash" })}
-          className={`nav${route.section === "trash" ? " active" : ""}`}
-          aria-current={route.section === "trash" ? "page" : undefined}
-        >
-          <Icon name="trash" />
-          <span>Корзина</span>
-          {trashCount > 0 && <b>{trashCount}</b>}
-        </a>
-        <a
+          icon={<Icon name="trash" />}
+          label="Корзина"
+          count={trashCount > 0 ? trashCount : undefined}
+          selected={route.section === "trash"}
+        />
+        <SidebarItem
           href={routeHref({ section: "settings" })}
-          className={`nav${route.section === "settings" ? " active" : ""}`}
-          aria-current={route.section === "settings" ? "page" : undefined}
-        >
-          <Icon name="settings" />
-          <span>Настройки</span>
-        </a>
-      </nav>
+          icon={<Icon name="settings" />}
+          label="Настройки"
+          selected={route.section === "settings"}
+        />
+      </SidebarSection>
       <div className="sync-card">
         {connected ? (
           <>
@@ -261,10 +253,12 @@ function Sidebar({ route }: { route: Route }) {
           <>
             <strong>Только это устройство</strong>
             <p>Синхронизация не настроена</p>
-            <a href={routeHref({ section: "settings" })}>Настроить</a>
+            <ButtonLink size="small" href={routeHref({ section: "settings" })}>
+              Настроить
+            </ButtonLink>
           </>
         )}
       </div>
-    </aside>
+    </SidebarPanel>
   );
 }

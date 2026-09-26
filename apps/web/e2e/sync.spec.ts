@@ -11,7 +11,9 @@ async function device(browser: Browser, account: string): Promise<{ context: Bro
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "ru-RU" });
   const page = await context.newPage();
   await page.goto("/#/settings");
-  await page.getByText("Режим разработчика", { exact: true }).click();
+  const developer = page.getByRole("button", { name: "Режим разработчика" });
+  await developer.click();
+  await expect(developer).toHaveAttribute("aria-expanded", "true");
   await page.getByLabel("Имя аккаунта разработчика").fill(account);
   await page.getByRole("button", { name: "Подключить" }).click();
   await expect(page.getByRole("contentinfo")).toContainText(/Сохранено в облаке|Сохранено на устройстве/);

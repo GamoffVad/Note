@@ -29,9 +29,12 @@ test("телефон: отдельные экраны списка и замет
 
 test("телефон: зоны нажатия не меньше 44 px в нижней навигации и у создания заметки", async ({ page }) => {
   await page.goto("/");
+  // Сначала дождаться отрисовки: без этого замер мог пройти до загрузки приложения и не найти элементов.
+  await expect(page.getByRole("navigation", { name: "Основные разделы" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Создать заметку" }).first()).toBeVisible();
   const boxes = await page.locator(".bottom-nav .nav, .list-header .new").evaluateAll((els) =>
     els.map((e) => e.getBoundingClientRect()).map((r) => Math.min(r.width, r.height)),
   );
   expect(boxes.length).toBe(5);
-  for (const size of boxes) expect(size).toBeGreaterThanOrEqual(40);
+  for (const size of boxes) expect(size).toBeGreaterThanOrEqual(44);
 });

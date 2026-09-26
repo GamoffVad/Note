@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DeviceInfo } from "@mayak/domain";
-import { Dialog } from "../components/Dialog.tsx";
+import { Badge, Banner, Button, Sheet, useToast } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
-import { useToast } from "../components/Toast.tsx";
+import { Loading } from "../components/Loading.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
 import { formatRelativeDate } from "../state/format.ts";
 import { navigate } from "../state/router.ts";
@@ -35,45 +35,48 @@ export function DevicesScreen() {
   useEffect(load, [load]);
 
   return (
-    <article className="sheet">
-      <div className="eyebrow accent">Связь между устройствами</div>
-      <div className="page-heading">
-        <h1 className="page-title">Ваши устройства</h1>
+    <article className="page">
+      <header className="page-header page-header--actions">
+        <div>
+          <h1 className="page-title">Ваши устройства</h1>
+          <p className="page-subtitle">Связь между устройствами</p>
+        </div>
         {transport && (
-          <button type="button" className="button" onClick={load} aria-label="Обновить список устройств">
-            <Icon name="sync" size={16} /> Обновить
-          </button>
+          <Button onClick={load} aria-label="Обновить список устройств" icon={<Icon name="sync" />}>
+            Обновить
+          </Button>
         )}
-      </div>
+      </header>
       <p className="intro">Мысли остаются с вами, даже когда меняется экран.</p>
 
       {!transport && (
         <>
-          <DeviceCard name={workspace.deviceName} detail="Это устройство · синхронизация не настроена" badge="Сейчас" />
-          <div className="cloud-explain">
-            <strong>Второе устройство</strong>
-            <br />
-            Чтобы продолжить работу на другом устройстве, войдите в тот же аккаунт на обоих. Сейчас заметки хранятся только
-            в этом браузере.
-            <br />
-            <button type="button" className="button" onClick={() => navigate({ section: "settings" })}>
+          <ul className="card device-list">
+            <li>
+              <DeviceCard name={workspace.deviceName} detail="Это устройство · синхронизация не настроена" badge="Сейчас" />
+            </li>
+          </ul>
+          <div className="explain">
+            <h2 className="mk-headline">Второе устройство</h2>
+            <p>
+              Чтобы продолжить работу на другом устройстве, войдите в тот же аккаунт на обоих. Сейчас заметки хранятся
+              только в этом браузере.
+            </p>
+            <Button variant="primary" onClick={() => navigate({ section: "settings" })}>
               Настроить синхронизацию
-            </button>
+            </Button>
           </div>
         </>
       )}
 
       {transport && error && (
-        <div className="banner banner-danger" role="alert">
+        <Banner tone="danger" role="alert" icon={<Icon name="warning" />} actions={<Button onClick={load}>Повторить</Button>}>
           <p>{error}</p>
-          <button type="button" className="button" onClick={load}>
-            Повторить
-          </button>
-        </div>
+        </Banner>
       )}
-      {transport && !devices && !error && <p aria-busy="true">Загружаем устройства…</p>}
+      {transport && !devices && !error && <Loading text="Загружаем устройства…" />}
       {transport && devices && (
-        <ul className="plain-list">
+        <ul className="card device-list">
           {devices.map((d) => (
             <li key={d.id}>
               <DeviceCard
@@ -92,26 +95,24 @@ export function DevicesScreen() {
         </ul>
       )}
       {transport && (
-        <div className="cloud-explain">
-          <strong>Где хранятся данные</strong>
-          <br />
-          Заметки сохраняются на каждом устройстве и на сервере синхронизации. Отзыв устройства закрывает ему доступ к
-          аккаунту, но не удаляет то, что уже сохранено на нём.
+        <div className="explain">
+          <h2 className="mk-headline">Где хранятся данные</h2>
+          <p>
+            Заметки сохраняются на каждом устройстве и на сервере синхронизации. Отзыв устройства закрывает ему доступ к
+            аккаунту, но не удаляет то, что уже сохранено на нём.
+          </p>
         </div>
       )}
 
       {revoking && transport && (
-        <Dialog
+        <Sheet
           title="Отозвать доступ устройства?"
           onClose={() => setRevoking(null)}
           actions={
             <>
-              <button type="button" className="button" onClick={() => setRevoking(null)}>
-                Отмена
-              </button>
-              <button
-                type="button"
-                className="button danger"
+              <Button onClick={() => setRevoking(null)}>Отмена</Button>
+              <Button
+                variant="destructive"
                 onClick={async () => {
                   try {
                     await transport.revokeDevice(revoking.id);
@@ -124,7 +125,7 @@ export function DevicesScreen() {
                 }}
               >
                 Отозвать доступ
-              </button>
+              </Button>
             </>
           }
         >
@@ -132,7 +133,7 @@ export function DevicesScreen() {
             «{revoking.name}» больше не сможет синхронизироваться с аккаунтом. Заметки, уже сохранённые на нём, останутся
             там.
           </p>
-        </Dialog>
+        </Sheet>
       )}
     </article>
   );
@@ -141,16 +142,19 @@ export function DevicesScreen() {
 function DeviceCard(props: { name: string; detail: string; badge: string | null; revoked?: boolean; onRevoke?: () => void }) {
   return (
     <div className={`device${props.revoked ? " revoked" : ""}`}>
-      <Icon name="devices" />
-      <div>
+      <span className="device__icon">
+        <Icon name="devices" />
+      </span>
+      <div className="device__text">
         <strong>{props.name}</strong>
-        <small>{props.detail}</small>
+        <small className="mk-caption">{props.detail}</small>
       </div>
-      {props.badge && <span className="device-badge">{props.badge}</span>}
+      {props.badge && <Badge tone="info">{props.badge}</Badge>}
+      {props.revoked && <Badge>Отозвано</Badge>}
       {props.onRevoke && (
-        <button type="button" className="button small" onClick={props.onRevoke}>
+        <Button size="small" onClick={props.onRevoke}>
           Отозвать
-        </button>
+        </Button>
       )}
     </div>
   );

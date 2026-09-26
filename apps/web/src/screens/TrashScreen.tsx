@@ -1,5 +1,5 @@
+import { Button, EmptyState, useToast } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
-import { useToast } from "../components/Toast.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
 import { formatRelativeDate, notePreview, noteTitle } from "../state/format.ts";
 import { navigate, routeHref } from "../state/router.ts";
@@ -10,26 +10,30 @@ export function TrashScreen() {
   const deleted = notes.filter((n) => n.deleted).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
   return (
-    <article className="sheet">
-      <div className="eyebrow accent">Ничего не пропадает сразу</div>
-      <h1 className="page-title">Корзина</h1>
+    <article className="page">
+      <header className="page-header">
+        <h1 className="page-title">Корзина</h1>
+        <p className="page-subtitle">Ничего не пропадает сразу</p>
+      </header>
       {deleted.length === 0 ? (
-        <p className="intro">Корзина пуста.</p>
+        <EmptyState title="Корзина пуста" icon={<Icon name="trash" />}>
+          Удалённые заметки хранятся здесь, пока вы их не восстановите.
+        </EmptyState>
       ) : (
-        <ul className="plain-list trash-list">
+        <ul className="card trash-list">
           {deleted.map((note) => (
             <li key={note.id} className="trash-item">
-              <div>
+              <div className="trash-item__text">
                 <a href={routeHref({ section: "notes", noteId: note.id })}>
                   <strong>{noteTitle(note.document)}</strong>
                 </a>
-                <span className="muted small">
+                <span className="mk-caption">
                   Удалена {formatRelativeDate(note.updatedAt).toLocaleLowerCase("ru")} · {notePreview(note.document)}
                 </span>
               </div>
-              <button
-                type="button"
-                className="button"
+              <Button
+                size="small"
+                icon={<Icon name="restore" />}
                 onClick={async () => {
                   await setDeleted(note.id, false);
                   toast({
@@ -39,13 +43,13 @@ export function TrashScreen() {
                   });
                 }}
               >
-                <Icon name="restore" size={16} /> Восстановить
-              </button>
+                Восстановить
+              </Button>
             </li>
           ))}
         </ul>
       )}
-      <p className="cloud-explain">
+      <p className="explain">
         Удаление и восстановление синхронизируются как обычные изменения. Окончательное удаление и автоматическая
         очистка корзины пока не реализованы.
       </p>

@@ -24,3 +24,12 @@ export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   });
   expect(overflow).toEqual({ scroll: 0, widest: [] });
 }
+
+/** Выбор значения во всплывающей кнопке @mayak/ui (combobox + listbox) — как пользователь: открыть и выбрать пункт. */
+export async function chooseOption(page: Page, label: string, option: string): Promise<void> {
+  const combobox = page.getByRole("combobox", { name: label });
+  await combobox.click();
+  await page.getByRole("listbox", { name: label }).getByRole("option", { name: option, exact: true }).click();
+  await expect(combobox).toContainText(option);
+  await expect(combobox).toHaveAttribute("aria-expanded", "false");
+}

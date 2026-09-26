@@ -1,9 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "../../../design/design-tokens.css";
+// Токены, базовые стили и компоненты @mayak/ui — единственный источник цветов, радиусов и материалов.
+import "@mayak/ui/styles.css";
 import "./styles/app.css";
+import { Button, EmptyState, Spinner, ToastProvider } from "@mayak/ui";
 import { App } from "./App.tsx";
-import { ToastProvider } from "./components/Toast.tsx";
 import { AppearanceProvider } from "./state/AppearanceContext.tsx";
 import { MayakProvider } from "./state/MayakContext.tsx";
 
@@ -11,18 +12,22 @@ function Startup({ error }: { error: Error | null }) {
   return (
     <main className="startup" aria-busy={!error}>
       {error ? (
-        <>
-          <h1>Не удалось открыть хранилище браузера</h1>
-          <p>
-            Маяк хранит заметки в IndexedDB. Возможно, браузер запрещает хранение данных сайта (например, в приватном
-            режиме) или хранилище повреждено.
-          </p>
-          <button type="button" className="button primary" onClick={() => location.reload()}>
-            Повторить
-          </button>
-        </>
+        <EmptyState
+          as="h1"
+          title="Не удалось открыть хранилище браузера"
+          action={
+            <Button variant="primary" onClick={() => location.reload()}>
+              Повторить
+            </Button>
+          }
+        >
+          Маяк хранит заметки в IndexedDB. Возможно, браузер запрещает хранение данных сайта (например, в приватном
+          режиме) или хранилище повреждено.
+        </EmptyState>
       ) : (
-        <p>Открываем заметки…</p>
+        <p className="startup__loading">
+          <Spinner label="Открываем заметки" /> <span aria-hidden="true">Открываем заметки…</span>
+        </p>
       )}
     </main>
   );

@@ -21,9 +21,10 @@ export interface Appearance {
 }
 
 export const FONTS: Record<FontFamily, { label: string; stack: string }> = {
+  // Системный шрифт ОС, как --font-system в @mayak/ui: на macOS и iOS это SF.
   system: {
     label: "Системный",
-    stack: 'system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif',
+    stack: '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI Variable Text", "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif',
   },
   sans: { label: "Arial / без засечек", stack: 'Arial, "Helvetica Neue", "Liberation Sans", "Noto Sans", sans-serif' },
   serif: { label: "Georgia / с засечками", stack: 'Georgia, "Times New Roman", "Liberation Serif", "Noto Serif", serif' },
@@ -114,10 +115,14 @@ export function saveAppearance(storage: StorageLike | null, value: Appearance): 
   }
 }
 
-/** Фактические поверхности тем (design-tokens.css). */
+/**
+ * Фактические поверхности тем по токенам @mayak/ui (tokens.css): page — фон окна
+ * (--bg-window), panel — содержимое (--bg-content), navigation — стеклянная боковая
+ * панель (--glass-bg-strong поверх фона окна), text — --text-primary.
+ */
 export const SURFACES = {
-  light: { page: "#f4f7fb", panel: "#ffffff", navigation: "#edf2f8", text: "#182538" },
-  dark: { page: "#101723", panel: "#16202e", navigation: "#111925", text: "#e4eaf4" },
+  light: { page: "#f2f2f7", panel: "#ffffff", navigation: "#fcfcfd", text: "#1d1d1f" },
+  dark: { page: "#1c1c1e", panel: "#1e1e20", navigation: "#29292d", text: "#f5f5f7" },
 } as const;
 
 function luminance(hex: string): number {
@@ -148,7 +153,11 @@ export function resolveDark(theme: ThemeChoice, systemDark: boolean): boolean {
   return theme === "dark" || (theme === "system" && systemDark);
 }
 
-/** Применяет оформление к корню документа через CSS-переменные. */
+/**
+ * Применяет оформление к корню документа через CSS-переменные. --ui-* читают
+ * базовые стили @mayak/ui (шрифт, размер корня, толщина) и app.css (цвет текста
+ * интерфейса); --editor-* — только текст заметки.
+ */
 export function applyAppearance(root: HTMLElement, a: Appearance, dark: boolean): void {
   root.dataset.theme = dark ? "dark" : "light";
   root.style.colorScheme = dark ? "dark" : "light";

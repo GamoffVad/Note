@@ -1,11 +1,10 @@
 import { useState } from "react";
+import { Button, Sheet, useToast } from "@mayak/ui";
 import { toMarkdown, type NoteDocument } from "@mayak/domain";
 import type { ConflictChoice, ConflictRecord, LocalNote } from "@mayak/sync";
 import { useMayak } from "../state/MayakContext.tsx";
 import { formatRelativeDate } from "../state/format.ts";
 import { navigate } from "../state/router.ts";
-import { Dialog } from "./Dialog.tsx";
-import { useToast } from "./Toast.tsx";
 
 interface Props {
   note: LocalNote;
@@ -38,29 +37,29 @@ export function ConflictDialog({ note, conflict, onClose }: Props) {
   };
 
   return (
-    <Dialog
+    <Sheet
       title="Найдены изменения с другого устройства"
       onClose={onClose}
-      wide
+      size="wide"
       initialFocus="[data-default]"
       actions={
         <>
-          <button type="button" className="button" disabled={saving !== null} onClick={() => choose("theirs")}>
-            {saving === "theirs" ? "Сохраняем…" : "Взять с другого устройства"}
-          </button>
-          <button type="button" className="button" disabled={saving !== null} onClick={() => choose("mine")}>
-            {saving === "mine" ? "Сохраняем…" : "Оставить мою"}
-          </button>
-          <button
-            type="button"
-            className="button primary"
+          <Button disabled={saving !== null} loading={saving === "theirs"} loadingLabel="Сохраняем…" onClick={() => choose("theirs")}>
+            Взять с другого устройства
+          </Button>
+          <Button disabled={saving !== null} loading={saving === "mine"} loadingLabel="Сохраняем…" onClick={() => choose("mine")}>
+            Оставить мою
+          </Button>
+          <Button
+            variant="primary"
             data-default
-            aria-busy={saving === "both"}
             disabled={saving !== null}
+            loading={saving === "both"}
+            loadingLabel="Сохраняем…"
             onClick={() => choose("both")}
           >
-            {saving === "both" ? "Сохраняем…" : "Сохранить обе"}
-          </button>
+            Сохранить обе
+          </Button>
         </>
       }
     >
@@ -79,20 +78,20 @@ export function ConflictDialog({ note, conflict, onClose }: Props) {
           />
         ) : (
           <section className="version">
-            <h3>С другого устройства</h3>
-            <p className="muted">Заметка окончательно удалена на сервере.</p>
+            <h3 className="mk-headline">С другого устройства</h3>
+            <p className="mk-secondary">Заметка окончательно удалена на сервере.</p>
           </section>
         )}
       </div>
-    </Dialog>
+    </Sheet>
   );
 }
 
 function Version({ label, hint, document, deleted }: { label: string; hint: string; document: NoteDocument; deleted: boolean }) {
   return (
     <section className="version">
-      <h3>{label}</h3>
-      <p className="muted small">
+      <h3 className="mk-headline">{label}</h3>
+      <p className="mk-caption">
         {hint}
         {deleted && " · в корзине"}
       </p>

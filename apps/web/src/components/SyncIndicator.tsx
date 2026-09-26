@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { Banner, Button, Sheet } from "@mayak/ui";
 import { describeSyncStatus, pluralChanges, type StatusText } from "@mayak/sync";
 import { useMayak } from "../state/MayakContext.tsx";
 import { formatTime } from "../state/format.ts";
 import { navigate } from "../state/router.ts";
-import { Dialog } from "./Dialog.tsx";
 import { Icon, type IconName } from "./Icon.tsx";
 
 export function useSyncText(): StatusText & { icon: IconName } {
@@ -40,61 +40,48 @@ export function SyncDialog({ onClose }: { onClose: () => void }) {
   const failed = [...outbox.values()].filter((e) => e.failure);
   const titleOf = (id: string) => notes.find((n) => n.id === id)?.document.title.trim() || "Без названия";
   const connected = workspace.transport !== null;
+  const toSettings = () => {
+    onClose();
+    navigate({ section: "settings" });
+  };
 
   return (
-    <Dialog
+    <Sheet
       title="Состояние синхронизации"
       onClose={onClose}
       actions={
         <>
+          <Button onClick={onClose}>Закрыть</Button>
           {!connected && (
-            <button
-              type="button"
-              className="button"
-              onClick={() => {
-                onClose();
-                navigate({ section: "settings" });
-              }}
-            >
+            <Button variant="primary" onClick={toSettings}>
               Настроить
-            </button>
+            </Button>
           )}
           {connected && (status.state === "auth-required" || status.state === "forbidden") && (
-            <button
-              type="button"
-              className="button primary"
-              onClick={() => {
-                onClose();
-                navigate({ section: "settings" });
-              }}
-            >
+            <Button variant="primary" onClick={toSettings}>
               Войти
-            </button>
+            </Button>
           )}
           {connected && status.state !== "auth-required" && status.state !== "forbidden" && (
-            <button
-              type="button"
-              className="button primary"
-              aria-busy={busy}
-              disabled={busy}
+            <Button
+              variant="primary"
+              loading={busy}
+              loadingLabel="Синхронизируем…"
               onClick={async () => {
                 setBusy(true);
                 await syncNow();
                 setBusy(false);
               }}
             >
-              {busy ? "Синхронизируем…" : "Повторить сейчас"}
-            </button>
+              Повторить сейчас
+            </Button>
           )}
-          <button type="button" className="button" onClick={onClose}>
-            Закрыть
-          </button>
         </>
       }
     >
-      <p className={`status-line tone-${text.tone}`}>
-        <Icon name={text.icon} /> <strong>{text.text}</strong>
-      </p>
+      <Banner tone={text.tone} icon={<Icon name={text.icon} />}>
+        <strong>{text.text}</strong>
+      </Banner>
       <dl className="facts">
         <dt>Это устройство</dt>
         <dd>{workspace.deviceName}</dd>
@@ -125,24 +112,24 @@ export function SyncDialog({ onClose }: { onClose: () => void }) {
       </dl>
       {failed.length > 0 && (
         <>
-          <h3>Не удалось отправить</h3>
+          <h3 className="mk-headline">Не удалось отправить</h3>
           <ul className="plain-list">
             {failed.map((entry) => (
               <li key={entry.entityId}>
                 <strong>{titleOf(entry.entityId)}</strong>
                 <br />
-                <span className="muted">{entry.failure!.message}. Текст сохранён на устройстве.</span>
+                <span className="mk-secondary">{entry.failure!.message}. Текст сохранён на устройстве.</span>
               </li>
             ))}
           </ul>
         </>
       )}
       {!connected && (
-        <p className="muted">
+        <p className="mk-secondary">
           Заметки хранятся в браузере этого устройства. Чтобы продолжать работу на другом устройстве, нужна
           синхронизация с аккаунтом.
         </p>
       )}
-    </Dialog>
+    </Sheet>
   );
 }
