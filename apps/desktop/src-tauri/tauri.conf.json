@@ -54,7 +54,15 @@
         "schemes": [
           "io.github.gamoffvad.mayak"
         ]
-      }
+      },
+      "mobile": [
+        {
+          "scheme": [
+            "io.github.gamoffvad.mayak"
+          ],
+          "appLink": false
+        }
+      ]
     }
   }
 }
