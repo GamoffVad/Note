@@ -1,5 +1,7 @@
 # Маяк
 
+![Маяк среди островов — картографическая иллюстрация приложения](design/mayak-readme-map.png)
+
 Личное приложение для заметок, задач и файлов между своими устройствами: Windows, macOS, Linux, Android, iOS и браузер. Интерфейс и диктовка только на русском.
 
 Дизайн-пакет и техническое задание лежат в [`design/`](design/README.md): ТЗ — [`design/SPECIFICATION.md`](design/SPECIFICATION.md), дизайн-система «01 / Тихая ясность» — [`design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md).
