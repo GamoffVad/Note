@@ -19,6 +19,12 @@ Supabase пускает ссылку только на разрешённые а
 1. Панель Supabase → проект **mayak** → **Authentication** → **URL Configuration**.
 2. **Redirect URLs** → **Add URL** →
    `io.github.gamoffvad.mayak://**` → **Save**.
+3. Для телефона там же **Add URL** →
+   `https://mayak-pied-theta.vercel.app/auth/callback/` → **Save**.
+   На Android ссылка из письма ведёт на эту страницу сайта, а она открывает
+   приложение кнопкой «Открыть Маяк»: без нажатия браузер телефона приложение
+   не открывал. Supabase пускает ссылку только на адреса из этого списка
+   ([redirect-urls.mdx](https://github.com/supabase/supabase/blob/master/apps/docs/content/guides/auth/redirect-urls.mdx)).
 
 Письмо открывайте на том же компьютере, где нажали «Получить код».
 

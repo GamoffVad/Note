@@ -18,7 +18,7 @@ import { useAppearance } from "../state/AppearanceContext.tsx";
 import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope, type ThemeChoice } from "../state/appearance.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, plural, safeFileName } from "../state/format.ts";
-import { AUTH_LINK_ERROR_EVENT, AUTH_REDIRECT_URL, isNativeApp } from "../state/native.ts";
+import { AUTH_LINK_ERROR_EVENT, authEmailRedirect, isNativeApp } from "../state/native.ts";
 import { getSupabase, isValidEmail, normalizeOtp, supabaseConfigured } from "../state/supabase.ts";
 import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/workspace.ts";
 
@@ -246,7 +246,7 @@ function SignInForm() {
           // В приложении ссылка из письма открывает «Маяк» (deep link) и выполняет вход.
           options: {
             shouldCreateUser: true,
-            emailRedirectTo: isNativeApp() ? AUTH_REDIRECT_URL : `${location.origin}${location.pathname}`,
+            emailRedirectTo: isNativeApp() ? authEmailRedirect() : `${location.origin}${location.pathname}`,
           },
         }),
       ));

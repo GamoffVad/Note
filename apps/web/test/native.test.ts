@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AUTH_REDIRECT_URL, encryptedStorage, importSessionKey, nativePlatform, parseAuthLink } from "../src/state/native.ts";
+import { AUTH_REDIRECT_URL, authEmailRedirect, encryptedStorage, importSessionKey, nativePlatform, parseAuthLink } from "../src/state/native.ts";
 
 class MemoryStorage {
   readonly data = new Map<string, string>();
@@ -71,5 +71,17 @@ describe("вход по ссылке из письма в приложении",
     expect(parseAuthLink("https://evil.example/login-callback?code=x")).toBeNull();
     expect(parseAuthLink("io.github.gamoffvad.mayak://other?code=x")).toBeNull();
     expect(parseAuthLink(AUTH_REDIRECT_URL)).toBeNull();
+  });
+});
+
+describe("authEmailRedirect", () => {
+  it("на Android ведёт на страницу сайта, которая открывает приложение кнопкой", () => {
+    expect(authEmailRedirect("android", "https://mayak-pied-theta.vercel.app/api/v1")).toBe("https://mayak-pied-theta.vercel.app/auth/callback/");
+  });
+  it("на компьютере и без адреса сайта — сразу в приложение", () => {
+    expect(authEmailRedirect("windows", "https://mayak-pied-theta.vercel.app/api/v1")).toBe(AUTH_REDIRECT_URL);
+    expect(authEmailRedirect("macos", "https://mayak-pied-theta.vercel.app/api/v1")).toBe(AUTH_REDIRECT_URL);
+    expect(authEmailRedirect("android", undefined)).toBe(AUTH_REDIRECT_URL);
+    expect(authEmailRedirect("android", "/api/v1")).toBe(AUTH_REDIRECT_URL);
   });
 });
