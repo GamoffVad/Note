@@ -54,10 +54,15 @@ pub fn run() {
         .setup(|app| {
             // Windows и Linux: схема ссылок регистрируется при установке; в Linux
             // (AppImage) и при разработке в Windows — ещё и при запуске.
+            // Сбой регистрации (нет ~/.local/share/applications или
+            // update-desktop-database) не должен мешать запуску: без неё не
+            // работает только вход по ссылке, вход по коду остаётся.
             #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
-                app.deep_link().register_all()?;
+                if let Err(error) = app.deep_link().register_all() {
+                    eprintln!("Маяк: не удалось зарегистрировать ссылки входа: {error}");
+                }
             }
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
