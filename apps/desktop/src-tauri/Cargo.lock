@@ -2405,12 +2405,13 @@ dependencies = [
 
 [[package]]
 name = "mayak-desktop"
-version = "0.1.3"
+version = "0.1.4"
 dependencies = [
  "core-foundation 0.10.1",
  "core-graphics",
  "getrandom 0.4.3",
  "keyring",
+ "reqwest 0.12.28",
  "rusqlite",
  "serde",
  "serde_json",

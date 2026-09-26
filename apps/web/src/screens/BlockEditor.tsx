@@ -10,12 +10,13 @@ interface Props {
   onChange: (blocks: Block[]) => void;
   readOnly: boolean;
   /**
-   * Диктовка: "speech" — встроенное распознавание телефона, текст вставляется
-   * по мере речи; "wispr" — на компьютере курсор ставится в поле и вызывается
-   * onWispr (текст вставит Wispr Flow); null — кнопки нет.
+   * Диктовка удержанием кнопки: "speech" — встроенное распознавание телефона,
+   * текст вставляется по мере речи; "wispr" — на компьютере, пока кнопка
+   * нажата, onWispr(true), отпустили — onWispr(false) (текст вставит Wispr
+   * Flow); null — кнопки нет.
    */
   dictation: "speech" | "wispr" | null;
-  onWispr?: () => void;
+  onWispr?: (down: boolean) => void;
 }
 
 type FocusRequest = { id: string; at: "start" | "end"; dictate?: boolean } | null;
@@ -123,23 +124,59 @@ export function BlockEditor({ blocks, onChange, readOnly, dictation, onWispr }: 
     if (field && document.activeElement === field) field.setSelectionRange(target.at, target.at);
   }, [blocks]);
 
-  const dictate = () => {
-    if (dictation === "wispr") return withField(() => onWispr?.());
+  // Удержание: нажали — запись, отпустили — конец; распознанный текст остаётся в поле.
+  const holding = useRef(false);
+  const [held, setHeld] = useState(false);
+  const pressedAt = useRef(0);
+  const wisprDown = useRef(false);
+
+  const begin = () => {
+    if (holding.current) return;
+    holding.current = true;
+    pressedAt.current = Date.now();
+    setHeld(true);
+    if (dictation === "wispr") {
+      withField(() => {
+        if (!holding.current || wisprDown.current) return;
+        wisprDown.current = true;
+        onWispr?.(true);
+      });
+      return;
+    }
     const bridge = speechBridge();
     if (!bridge) {
       toast({ text: speechErrorText("unavailable"), tone: "error" });
       return;
     }
-    if (listening || session.current) {
-      bridge.stop();
-      return;
-    }
     withField((blockId, field) => {
+      if (!holding.current || session.current) return;
       const pos = field.selectionEnd;
       session.current = { blockId, before: field.value.slice(0, pos), after: field.value.slice(pos), committed: "" };
       bridge.start();
     });
   };
+
+  const end = () => {
+    if (!holding.current) return;
+    holding.current = false;
+    setHeld(false);
+    if (Date.now() - pressedAt.current < 350) toast({ text: "Удерживайте кнопку, пока говорите, и отпустите в конце." });
+    if (dictation === "wispr") {
+      if (wisprDown.current) {
+        wisprDown.current = false;
+        onWispr?.(false);
+      }
+      return;
+    }
+    if (session.current) speechBridge()?.stop();
+  };
+
+  // Окно потеряло фокус посреди удержания — запись заканчивается, клавиши не «залипают».
+  useEffect(() => {
+    const onBlur = () => end();
+    window.addEventListener("blur", onBlur);
+    return () => window.removeEventListener("blur", onBlur);
+  });
 
   const replace = (id: string, patch: Partial<Block>) =>
     onChange(blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as Block) : b)));
@@ -265,16 +302,42 @@ export function BlockEditor({ blocks, onChange, readOnly, dictation, onWispr }: 
             <Button
               size="small"
               variant="primary"
-              className={listening ? "dictate is-listening" : "dictate"}
+              className={held || listening ? "dictate is-listening" : "dictate"}
               icon={<Icon name="mic" />}
-              aria-pressed={dictation === "speech" ? listening : undefined}
+              aria-pressed={held}
+              aria-describedby="dictate-hint"
               // Кнопка не забирает фокус: курсор остаётся в поле, куда вставляется текст.
-              onPointerDown={(e) => e.preventDefault()}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+                begin();
+              }}
+              onPointerUp={end}
+              onPointerCancel={end}
+              onLostPointerCapture={end}
               onMouseDown={(e) => e.preventDefault()}
-              onClick={dictate}
+              onContextMenu={(e) => e.preventDefault()}
+              onKeyDown={(e) => {
+                if ((e.key === " " || e.key === "Enter") && !e.repeat) {
+                  e.preventDefault();
+                  begin();
+                }
+              }}
+              onKeyUp={(e) => {
+                if (e.key === " " || e.key === "Enter") {
+                  e.preventDefault();
+                  end();
+                }
+              }}
+              onClick={(e) => e.preventDefault()}
             >
-              {listening ? "Остановить" : "Диктовать"}
+              {held ? "Слушаю — отпустите в конце" : "Диктовать"}
             </Button>
+          )}
+          {dictation && (
+            <span id="dictate-hint" className="isl-visually-hidden">
+              Нажмите и удерживайте, пока говорите.
+            </span>
           )}
         </div>
       )}

@@ -523,6 +523,13 @@ code {
 .block-actions .dictate {
   margin-left: auto;
 }
+/* Кнопка удерживается: без выделения текста, контекстного меню и прокрутки жестом. */
+.dictate {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
 /* Идёт запись: мигающая точка рядом с «Остановить» (о записи сообщает и текст кнопки). */
 .dictate.is-listening::before {
   content: "";
@@ -1049,5 +1056,40 @@ code {
   /* Экранная клавиатура: во время ввода нижняя навигация не занимает место над ней. */
   .app:has(.page :is(textarea, .isl-tokens__input, .isl-field__input):focus) .bottom-nav {
     display: none;
+  }
+}
+
+/* ─── Файлы ──────────────────────────────────────────────── */
+.files-send {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--isl-space-2) var(--isl-space-4);
+  margin: 0 0 var(--isl-space-5);
+}
+.files-send p {
+  margin: 0;
+}
+.files-progress {
+  max-width: 480px;
+  margin: 0 0 var(--isl-space-4);
+}
+.files-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--isl-space-3);
+}
+.files-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isl-space-1);
+}
+@media (max-width: 480px) {
+  .files-list .isl-file-card {
+    flex-wrap: wrap;
+  }
+  .files-list .isl-file-card__action {
+    flex-basis: 100%;
+    padding-left: 52px;
   }
 }

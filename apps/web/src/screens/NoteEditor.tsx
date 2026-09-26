@@ -20,7 +20,7 @@ import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, formatRelativeDate, formatTime, noteTitle, safeFileName } from "../state/format.ts";
 import { takeTitleFocus } from "../state/focus.ts";
 import { navigate, routeHref } from "../state/router.ts";
-import { dictationMode, dictationHint, shouldShowHint, startWispr } from "../state/dictation.ts";
+import { dictationMode, dictationHint, pressWispr, shouldShowHint } from "../state/dictation.ts";
 import { BlockEditor } from "./BlockEditor.tsx";
 
 /** Объединение нажатий перед локальной записью (ТЗ, раздел 4). */
@@ -67,13 +67,13 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
     }
   }, [note.id]);
 
-  // Диктовка: курсор уже в поле, запись включает Wispr Flow.
-  const dictate = async () => {
+  // Диктовка на компьютере: пока кнопка нажата, приложение держит сочетание записи Wispr Flow.
+  const wispr = async (down: boolean) => {
     try {
-      const outcome = await startWispr();
-      if (shouldShowHint(outcome)) toast({ text: dictationHint(outcome) });
+      const outcome = await pressWispr(down);
+      if (down && shouldShowHint(outcome)) toast({ text: dictationHint(outcome) });
     } catch {
-      toast({ text: "Не удалось включить Wispr Flow. Запустите его и нажмите «Диктовать» ещё раз." });
+      if (down) toast({ text: "Не удалось включить Wispr Flow. Запустите его и попробуйте ещё раз." });
     }
   };
 
@@ -262,7 +262,7 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
           readOnly={readOnly}
           onChange={(blocks) => change({ ...draftRef.current, blocks })}
           dictation={readOnly ? null : dictationMode()}
-          onWispr={() => void dictate()}
+          onWispr={(down) => void wispr(down)}
         />
       </article>
 
