@@ -117,4 +117,4 @@ jobs:
           tagName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && github.ref_name || '' }}
           releaseName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && 'Маяк __VERSION__' || '' }}
           releaseBody: Установщики «Маяка» для Windows, macOS и Linux.
-          releaseDraft: true
+          releaseDraft: false
