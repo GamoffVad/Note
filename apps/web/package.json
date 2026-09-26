@@ -27,7 +27,6 @@
     "@supabase/supabase-js": "^2.117.2",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-deep-link": "^2.4.10",
-    "@tauri-apps/plugin-http": "~2.5.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   }
