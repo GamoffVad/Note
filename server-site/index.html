@@ -3,18 +3,41 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Маяк · сервер синхронизации</title>
-    <style>
-      :root { color-scheme: light dark; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-      body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; }
-      main { max-width: 32rem; line-height: 1.5; }
-    </style>
+    <title>Маяк — скачать</title>
+    <meta name="description" content="Маяк — заметки и задачи на всех ваших устройствах. Скачайте приложение для Windows, macOS, Linux и Android." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/download.css" />
+    <script src="/download.js" defer></script>
   </head>
   <body>
-    <main>
-      <h1>Маяк · сервер синхронизации</h1>
-      <p>Здесь работает только API синхронизации заметок (<code>/api/v1</code>). Сами заметки открываются в приложении «Маяк» для Windows, macOS, Linux, Android и iOS.</p>
+    <main class="card">
+      <img class="icon" src="/icon.png" width="128" height="128" alt="" />
+      <h1>Маяк</h1>
+      <p class="lead">Заметки и задачи на всех ваших устройствах. Работает без интернета и синхронизируется, когда сеть появляется.</p>
+
+      <div id="primary" class="primary" aria-live="polite">
+        <p class="muted">Ищем последнюю версию…</p>
+      </div>
+
+      <div class="all">
+        <button type="button" id="toggle-all" class="link-button" aria-expanded="false" aria-controls="all">Другие системы</button>
+        <ul id="all" class="list" hidden></ul>
+      </div>
+
+      <section class="help" aria-labelledby="help-title">
+        <h2 id="help-title">Как установить</h2>
+        <dl>
+          <dt>Windows</dt>
+          <dd>Запустите файл. Если появится «Windows защитила ваш компьютер» — «Подробнее» → «Выполнить в любом случае».</dd>
+          <dt>macOS</dt>
+          <dd>Откройте файл и перетащите «Маяк» в «Программы». При первом запуске: «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть».</dd>
+          <dt>Android</dt>
+          <dd>Откройте скачанный файл и разрешите установку из этого источника.</dd>
+          <dt>Linux</dt>
+          <dd>AppImage: сделайте файл исполняемым и запустите. Ubuntu и Debian: <code>sudo apt install ./файл.deb</code>.</dd>
+        </dl>
+        <p class="muted">Войдите по почте в «Настройки → Аккаунт и синхронизация» — у каждого своё хранилище заметок.</p>
+      </section>
     </main>
   </body>
 </html>
