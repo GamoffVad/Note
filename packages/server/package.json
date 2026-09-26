@@ -1,0 +1,14 @@
+{
+  "name": "@mayak/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "dependencies": {
+    "@mayak/domain": "^0.1.0",
+    "pg": "^8.23.0"
+  }
+}
