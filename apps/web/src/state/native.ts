@@ -178,18 +178,27 @@ export async function listenForAuthLinks(onUrl: (url: string) => void): Promise<
 
 /**
  * fetch для сетевых запросов приложения (вход Supabase, синхронизация).
- * На Android запросы идут через модуль Tauri HTTP (Rust): во встроенном
- * WebView POST к внешнему серверу не доходит — в журнале Supabase видна
- * только предварительная проверка CORS (OPTIONS), сам запрос не приходит,
- * и вход зависал. Разрешённые адреса — capabilities/default.json.
+ * На Android запрос выполняется в Rust (команда native_fetch, src-tauri/src/net.rs)
+ * и ответ приходит целиком: во встроенном WebView POST к внешнему серверу не
+ * уходит (в журнале Supabase — только OPTIONS), а у модуля Tauri HTTP ответ не
+ * доходил до интерфейса — вход обрывался по таймауту при ответе сервера 200.
  * На компьютере и в браузере — обычный fetch.
  */
 export function appFetch(): typeof fetch {
-  if (isNativeApp() && nativePlatform() === "android") {
-    return (async (input: RequestInfo | URL, init?: RequestInit) => {
-      const { fetch: tauriFetch } = await import("@tauri-apps/plugin-http");
-      return tauriFetch(input, init);
-    }) as typeof fetch;
-  }
+  if (isNativeApp() && nativePlatform() === "android") return nativeFetch;
   return globalThis.fetch.bind(globalThis);
+}
+
+const NULL_BODY = new Set([101, 103, 204, 205, 304]);
+
+async function nativeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const request = new Request(input, init);
+  const body = request.method === "GET" || request.method === "HEAD" ? null : await request.text();
+  const response = await invoke<{ status: number; headers: Array<[string, string]>; body: string }>("native_fetch", {
+    request: { method: request.method, url: request.url, headers: [...request.headers.entries()], body },
+  });
+  return new Response(NULL_BODY.has(response.status) ? null : response.body, {
+    status: response.status,
+    headers: response.headers,
+  });
 }

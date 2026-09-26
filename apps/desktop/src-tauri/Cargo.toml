@@ -1,6 +1,6 @@
 [package]
 name = "mayak-desktop"
-version = "0.1.4"
+version = "0.1.5"
 description = "Маяк — заметки, задачи и файлы на всех устройствах"
 edition = "2021"
 rust-version = "1.88"
@@ -23,8 +23,7 @@ getrandom = "0.4"
 rusqlite = { version = "0.40", features = ["bundled"] }
 # Вход по ссылке из письма: ссылка io.github.gamoffvad.mayak://… открывает приложение.
 tauri-plugin-deep-link = "2.4"
-tauri-plugin-http = "~2.5.9"
-# Файлы: отправка и скачивание в хранилище Supabase из Rust (transfers.rs).
+# Сеть из Rust: запросы на Android (net.rs) и файлы в хранилище Supabase (transfers.rs).
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 
 # Системное хранилище секретов: Связка ключей macOS, Диспетчер учётных данных Windows,

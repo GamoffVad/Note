@@ -181,7 +181,9 @@ function SyncSection() {
 
 function authErrorText(error: { status?: number; code?: string; message?: string } | null): string {
   if (!error) return "Не удалось выполнить запрос.";
-  if (error.status === 429 || error.code === "over_email_send_rate_limit") return "Слишком много запросов. Подождите минуту и повторите.";
+  if (error.code === "over_email_send_rate_limit")
+    return "Лимит писем исчерпан: встроенная почта Supabase отправляет лишь несколько писем в час. Подождите около часа или используйте код из уже пришедшего письма.";
+  if (error.status === 429) return "Слишком много запросов. Подождите немного и повторите.";
   if (error.code === "otp_expired" || error.status === 403) return "Код неверный или устарел. Запросите новый.";
   if (error.status === 0 || /fetch|network/i.test(error.message ?? "")) return "Нет сети. Проверьте подключение и повторите.";
   return "Не удалось войти. Повторите позже.";

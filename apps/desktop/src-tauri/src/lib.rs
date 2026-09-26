@@ -1,6 +1,7 @@
 //! Настольное приложение «Маяк» на Tauri 2: интерфейс — сборка apps/web,
 //! заметки — в SQLite на устройстве, ключ сессии — в системном хранилище секретов.
 
+mod net;
 mod secrets;
 mod store;
 mod transfers;
@@ -42,6 +43,12 @@ fn wispr_press(down: bool) -> Result<wispr::Outcome, String> {
     wispr::press(down)
 }
 
+/// Сетевой запрос из Rust с ответом целиком (на Android вместо fetch WebView, см. net.rs).
+#[tauri::command]
+async fn native_fetch(request: net::Request) -> Result<net::Response, String> {
+    net::fetch(request).await
+}
+
 // ─── Файлы ───────────────────────────────────────────────────────────────
 
 /// Отправляет файл в хранилище передачи (см. transfers.rs); тело — содержимое файла.
@@ -76,8 +83,6 @@ pub fn run() {
     }
     builder
         .plugin(tauri_plugin_deep_link::init())
-        // Сетевые запросы из Rust: на Android POST из WebView не доходит до сервера (state/native.ts, appFetch).
-        .plugin(tauri_plugin_http::init())
         .setup(|app| {
             // Windows и Linux: схема ссылок регистрируется при установке; в Linux
             // (AppImage) и при разработке в Windows — ещё и при запуске.
@@ -104,6 +109,7 @@ pub fn run() {
             kv_drop,
             session_key,
             wispr_press,
+            native_fetch,
             transfer_upload,
             transfer_save
         ])
