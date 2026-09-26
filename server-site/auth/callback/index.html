@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Маяк — вход</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/download.css" />
+    <script src="/auth/callback.js" defer></script>
+  </head>
+  <body>
+    <main class="card">
+      <img class="icon" src="/icon.png" width="128" height="128" alt="" />
+      <h1 id="title">Вход в Маяк</h1>
+      <p class="lead" id="lead">Нажмите кнопку — откроется приложение, и вход завершится.</p>
+      <div class="primary">
+        <a class="button" id="open" href="io.github.gamoffvad.mayak://login-callback">Открыть Маяк</a>
+        <p class="muted" id="hint">Открывайте на том же устройстве, где запросили письмо.</p>
+      </div>
+    </main>
+  </body>
+</html>

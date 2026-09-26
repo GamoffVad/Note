@@ -149,6 +149,19 @@ export function appSessionStorage(): AsyncStorage {
 /** Адрес возврата из письма: ссылка открывает приложение (плагин deep-link Tauri). */
 export const AUTH_REDIRECT_URL = "io.github.gamoffvad.mayak://login-callback";
 
+/**
+ * Куда ведёт ссылка из письма входа. На Android — на страницу сайта
+ * (server-site/auth/callback): Supabase переводит браузер на адрес со схемой
+ * приложения без нажатия, и браузер телефона такой переход не выполнял —
+ * вход подтверждался, а приложение не открывалось (журнал Supabase Auth: /verify
+ * 303 без последующего /token). Страница открывает приложение кнопкой.
+ * На компьютере — сразу в приложение.
+ */
+export function authEmailRedirect(platform = nativePlatform(), apiBase = import.meta.env.VITE_API_BASE): string {
+  if (platform !== "android" || !apiBase || !/^https:\/\//.test(apiBase)) return AUTH_REDIRECT_URL;
+  return `${new URL(apiBase).origin}/auth/callback/`;
+}
+
 /** Событие окна с текстом ошибки входа по ссылке — его показывает форма входа. */
 export const AUTH_LINK_ERROR_EVENT = "mayak:auth-link-error";
 

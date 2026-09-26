@@ -11,6 +11,13 @@ on:
         description: "Опубликовать релиз (тег desktop-v<версия> создаётся автоматически)"
         type: boolean
         default: false
+      platforms:
+        description: "Для каких систем собрать"
+        type: choice
+        options:
+          - все
+          - Windows x64 и Android
+        default: все
   push:
     branches: [main, "claude/**"]
     tags: ["desktop-v*"]
@@ -144,19 +151,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: macOS (Apple Silicon)
-            platform: macos-latest
-            args: --target aarch64-apple-darwin
-          - name: macOS (Intel)
-            platform: macos-latest
-            args: --target x86_64-apple-darwin
-          - name: Linux
-            platform: ubuntu-22.04
-            args: ""
-          - name: Windows
-            platform: windows-latest
-            args: ""
+        # «Windows x64 и Android» в ручном запуске — выпуск только для них
+        # (Android собирается отдельным заданием ниже); иначе — все системы.
+        include: ${{ fromJSON(inputs.platforms == 'Windows x64 и Android' && '[{"name":"Windows","platform":"windows-latest","args":""}]' || '[{"name":"macOS (Apple Silicon)","platform":"macos-latest","args":"--target aarch64-apple-darwin"},{"name":"macOS (Intel)","platform":"macos-latest","args":"--target x86_64-apple-darwin"},{"name":"Linux","platform":"ubuntu-22.04","args":""},{"name":"Windows","platform":"windows-latest","args":""}]') }}
     runs-on: ${{ matrix.platform }}
     env:
       # Публичные параметры сборки: адрес API и Supabase задаются в
@@ -188,5 +185,5 @@ jobs:
           uploadWorkflowArtifacts: true
           tagName: ${{ (startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release) && 'desktop-v__VERSION__' || '' }}
           releaseName: ${{ (startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release) && 'Маяк __VERSION__' || '' }}
-          releaseBody: Установщики «Маяка» для Windows, macOS и Linux.
+          releaseBody: ${{ inputs.platforms == 'Windows x64 и Android' && 'Установщики «Маяка» для Windows (x64) и Android. Для macOS и Linux — предыдущий выпуск.' || 'Установщики «Маяка» для Windows, macOS, Linux и Android.' }}
           releaseDraft: false

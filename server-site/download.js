@@ -1,5 +1,5 @@
 // Страница скачивания: определяет систему и даёт ссылку на установщик из
-// последнего релиза GitHub (репозиторий GamoffVad/Note).
+// последнего подходящего релиза GitHub (репозиторий GamoffVad/Note).
 const REPO = "GamoffVad/Note";
 const RELEASES = `https://github.com/${REPO}/releases/latest`;
 
@@ -48,17 +48,25 @@ async function main() {
     list.hidden = !open;
   });
 
+  // Выпуск может быть не для всех систем (например, только Windows и Android):
+  // для каждой системы берём установщик из самого нового выпуска, где он есть.
   let assets = [];
-  let version = "";
   try {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { accept: "application/vnd.github+json" } });
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=20`, { headers: { accept: "application/vnd.github+json" } });
     if (!res.ok) throw new Error(String(res.status));
-    const release = await res.json();
-    version = release.tag_name ?? "";
-    assets = release.assets
-      .map((a) => ({ ...a, kind: kind(a.name) }))
-      .filter((a) => a.kind)
-      .sort((a, b) => a.kind.order - b.kind.order);
+    const seen = new Set();
+    for (const release of await res.json()) {
+      if (release.draft || release.prerelease) continue;
+      const version = (release.tag_name ?? "").replace(/^desktop-v/, "");
+      for (const a of release.assets) {
+        const k = kind(a.name);
+        if (!k || seen.has(k.os)) continue;
+        seen.add(k.os);
+        assets.push({ ...a, kind: k, version });
+      }
+    }
+    if (!assets.length) throw new Error("нет установщиков");
+    assets.sort((a, b) => a.kind.order - b.kind.order);
   } catch {
     primary.replaceChildren(
       el("a", { className: "button", href: RELEASES }, "Скачать Маяк"),
@@ -69,7 +77,7 @@ async function main() {
 
   for (const a of assets) {
     const link = el("a", { href: a.browser_download_url });
-    link.append(el("span", {}, a.kind.label), el("span", { className: "size" }, mb(a.size)));
+    link.append(el("span", {}, `${a.kind.label} · ${a.version}`), el("span", { className: "size" }, mb(a.size)));
     const item = el("li", {});
     item.append(link);
     list.append(item);
@@ -90,7 +98,7 @@ async function main() {
     nodes.push(el("p", {}, "Выберите версию для своей системы:"));
     toggle.click();
   }
-  if (version) nodes.push(el("p", { className: "muted" }, `Версия ${version.replace(/^desktop-v/, "")}`));
+  if (main?.version) nodes.push(el("p", { className: "muted" }, `Версия ${main.version}`));
   primary.replaceChildren(...nodes);
 }
 
