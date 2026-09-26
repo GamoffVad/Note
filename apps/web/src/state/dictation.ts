@@ -2,21 +2,26 @@ import { invoke } from "@tauri-apps/api/core";
 import { isNativeApp, nativePlatform } from "./native.ts";
 
 /**
- * Диктовка через Wispr Flow (https://wisprflow.ai). Своего распознавания нет:
- * кнопка «Диктовать» ставит курсор в поле, а на компьютере ещё и нажимает
- * сочетание Wispr Flow для записи без удержания (src-tauri/src/wispr.rs).
- * Текст вставляет Wispr Flow. На Android его кнопка появляется над клавиатурой,
- * когда курсор стоит в поле. В Linux Wispr Flow нет.
+ * Диктовка на компьютере — через Wispr Flow (https://wisprflow.ai): кнопка
+ * «Диктовать» ставит курсор в поле и нажимает сочетание Wispr Flow для записи
+ * без удержания (src-tauri/src/wispr.rs); текст вставляет Wispr Flow.
  */
 
 export type DictationOutcome = "sent" | "needs_permission" | "unsupported";
 
 export const WISPR_URL = "https://wisprflow.ai";
 
-/** Где кнопка «Диктовать» имеет смысл. */
-export function dictationAvailable(): boolean {
-  if (!isNativeApp()) return false;
-  return nativePlatform() !== "linux";
+/**
+ * Как работает «Диктовать»: на Android — встроенное распознавание телефона
+ * (state/speech.ts), на Windows и macOS — Wispr Flow. В браузере и в Linux
+ * диктовки нет: там нет ни моста к распознаванию, ни Wispr Flow.
+ */
+export function dictationMode(): "speech" | "wispr" | null {
+  if (!isNativeApp()) return null;
+  const platform = nativePlatform();
+  if (platform === "android" || platform === "ios") return "speech";
+  if (platform === "windows" || platform === "macos") return "wispr";
+  return null;
 }
 
 /** Включает запись Wispr Flow; на телефоне достаточно курсора в поле. */
@@ -30,9 +35,6 @@ export async function startWispr(): Promise<DictationOutcome> {
 export function dictationHint(outcome: DictationOutcome): string {
   if (outcome === "needs_permission") {
     return "Разрешите «Маяку» управление: Системные настройки → Конфиденциальность и безопасность → Универсальный доступ. Затем нажмите «Диктовать» ещё раз.";
-  }
-  if (nativePlatform() === "android") {
-    return "Нажмите кнопку Wispr Flow над клавиатурой. Если её нет — установите Wispr Flow из Google Play.";
   }
   return "Говорите — Wispr Flow вставит текст. Если запись не началась, установите Wispr Flow и войдите в него.";
 }

@@ -20,7 +20,7 @@ import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, formatRelativeDate, formatTime, noteTitle, safeFileName } from "../state/format.ts";
 import { takeTitleFocus } from "../state/focus.ts";
 import { navigate, routeHref } from "../state/router.ts";
-import { dictationAvailable, dictationHint, shouldShowHint, startWispr } from "../state/dictation.ts";
+import { dictationMode, dictationHint, shouldShowHint, startWispr } from "../state/dictation.ts";
 import { BlockEditor } from "./BlockEditor.tsx";
 
 /** Объединение нажатий перед локальной записью (ТЗ, раздел 4). */
@@ -260,7 +260,8 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
           blocks={draft.blocks}
           readOnly={readOnly}
           onChange={(blocks) => change({ ...draftRef.current, blocks })}
-          onDictate={dictationAvailable() ? () => void dictate() : undefined}
+          dictation={readOnly ? null : dictationMode()}
+          onWispr={() => void dictate()}
         />
       </article>
 

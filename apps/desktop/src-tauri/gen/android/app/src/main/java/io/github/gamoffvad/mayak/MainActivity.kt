@@ -2,11 +2,29 @@ package io.github.gamoffvad.mayak
 
 import android.os.Bundle
 import android.view.View
+import android.webkit.WebView
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
+  // Диктовка встроенным распознаванием Android (MayakSpeech.kt).
+  private val speech = MayakSpeech(this)
+
+  override fun onWebViewCreate(webView: WebView) {
+    speech.attach(webView)
+  }
+
+  override fun onPause() {
+    speech.pause()
+    super.onPause()
+  }
+
+  override fun onDestroy() {
+    speech.destroy()
+    super.onDestroy()
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)

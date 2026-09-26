@@ -1,15 +1,21 @@
-import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { newId, type Block } from "@mayak/domain";
-import { Button, Checkbox, IconButton } from "@mayak/ui";
+import { Button, Checkbox, IconButton, useToast } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
+import { composeDictation, joinPhrases, onSpeech, speechBridge, speechErrorText } from "../state/speech.ts";
 
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
   readOnly: boolean;
-  /** Вызывается, когда курсор уже стоит в поле: текст вставит Wispr Flow. */
-  onDictate?: () => void;
+  /**
+   * Диктовка: "speech" — встроенное распознавание телефона, текст вставляется
+   * по мере речи; "wispr" — на компьютере курсор ставится в поле и вызывается
+   * onWispr (текст вставит Wispr Flow); null — кнопки нет.
+   */
+  dictation: "speech" | "wispr" | null;
+  onWispr?: () => void;
 }
 
 type FocusRequest = { id: string; at: "start" | "end"; dictate?: boolean } | null;
@@ -19,7 +25,7 @@ type FocusRequest = { id: string; at: "start" | "end"; dictate?: boolean } | nul
  * задача — флажок библиотеки и однострочное поле. Каждый элемент привязан к id блока,
  * поэтому при наборе блоки не пересоздаются.
  */
-export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
+export function BlockEditor({ blocks, onChange, readOnly, dictation, onWispr }: Props) {
   const [focus, setFocus] = useState<FocusRequest>(null);
   const root = useRef<HTMLDivElement>(null);
   // Последнее поле с курсором: туда «Диктовать» вернёт фокус.
@@ -37,28 +43,29 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
       field.focus();
       const pos = focus.at === "start" ? 0 : field.value.length;
       field.setSelectionRange(pos, pos);
-      if (focus.dictate) onDictate?.();
+      if (focus.dictate) afterFocus.current?.(focus.id, field);
     }
     setFocus(null);
-  }, [focus, onDictate]);
+  }, [focus]);
 
-  /** Курсор в поле: активное, последнее с курсором, последний текстовый блок или новый. */
-  const dictate = () => {
+  /** Ставит курсор в поле (активное, последнее с курсором, последний текстовый блок или новый) и вызывает then. */
+  const afterFocus = useRef<((blockId: string, field: HTMLTextAreaElement) => void) | null>(null);
+  const withField = (then: (blockId: string, field: HTMLTextAreaElement) => void) => {
+    const fieldOf = (id: string) => root.current?.querySelector<HTMLTextAreaElement>(`[data-block-id="${id}"] [data-field]`);
     const active = document.activeElement;
     if (active instanceof HTMLTextAreaElement && root.current?.contains(active)) {
-      onDictate?.();
-      return;
+      const id = active.closest<HTMLElement>("[data-block-id]")?.dataset.blockId;
+      if (id) return then(id, active);
     }
     const remembered = lastField.current;
-    const field = (id: string) => root.current?.querySelector<HTMLTextAreaElement>(`[data-block-id="${id}"] [data-field]`);
-    const target = remembered && field(remembered.blockId);
+    const target = remembered && fieldOf(remembered.blockId);
     if (target && remembered) {
       target.focus();
       const pos = Math.min(remembered.position, target.value.length);
       target.setSelectionRange(pos, pos);
-      onDictate?.();
-      return;
+      return then(remembered.blockId, target);
     }
+    afterFocus.current = then;
     const last = [...blocks].reverse().find((b) => b.type === "markdown");
     if (last) {
       setFocus({ id: last.id, at: "end", dictate: true });
@@ -67,6 +74,71 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
       onChange([...blocks, block]);
       setFocus({ id: block.id, at: "start", dictate: true });
     }
+  };
+
+  // ─── Диктовка распознаванием телефона ───
+  const toast = useToast();
+  const [listening, setListening] = useState(false);
+  const session = useRef<{ blockId: string; before: string; after: string; committed: string } | null>(null);
+  const latest = useRef({ blocks, onChange });
+  latest.current = { blocks, onChange };
+  const caretAfter = useRef<{ id: string; at: number } | null>(null);
+
+  useEffect(() => {
+    if (dictation !== "speech") return;
+    const off = onSpeech((event) => {
+      if (event.type === "listening") {
+        setListening(event.value);
+        if (!event.value) session.current = null;
+        return;
+      }
+      if (event.type === "error") {
+        toast({ text: speechErrorText(event.code), tone: "error" });
+        return;
+      }
+      const current = session.current;
+      if (!current) return;
+      const spoken = joinPhrases(current.committed, event.text);
+      if (event.type === "final") current.committed = spoken;
+      const { text, caret } = composeDictation(current.before, spoken, current.after);
+      const { blocks: now, onChange: emit } = latest.current;
+      if (!now.some((b) => b.id === current.blockId)) return;
+      caretAfter.current = { id: current.blockId, at: caret };
+      emit(now.map((b) => (b.id === current.blockId ? ({ ...b, text } as Block) : b)));
+    });
+    return () => {
+      off();
+      // Ушли из заметки — запись останавливается.
+      if (session.current) speechBridge()?.stop();
+      session.current = null;
+    };
+  }, [dictation, toast]);
+
+  // Курсор — сразу после продиктованного текста.
+  useLayoutEffect(() => {
+    const target = caretAfter.current;
+    if (!target) return;
+    caretAfter.current = null;
+    const field = root.current?.querySelector<HTMLTextAreaElement>(`[data-block-id="${target.id}"] [data-field]`);
+    if (field && document.activeElement === field) field.setSelectionRange(target.at, target.at);
+  }, [blocks]);
+
+  const dictate = () => {
+    if (dictation === "wispr") return withField(() => onWispr?.());
+    const bridge = speechBridge();
+    if (!bridge) {
+      toast({ text: speechErrorText("unavailable"), tone: "error" });
+      return;
+    }
+    if (listening || session.current) {
+      bridge.stop();
+      return;
+    }
+    withField((blockId, field) => {
+      const pos = field.selectionEnd;
+      session.current = { blockId, before: field.value.slice(0, pos), after: field.value.slice(pos), committed: "" };
+      bridge.start();
+    });
   };
 
   const replace = (id: string, patch: Partial<Block>) =>
@@ -189,16 +261,18 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
           >
             Задача
           </Button>
-          {onDictate && (
+          {dictation && (
             <Button
               size="small"
+              variant={listening ? "primary" : undefined}
               icon={<Icon name="mic" />}
-              // Кнопка не забирает фокус: курсор остаётся в поле, куда Wispr Flow вставит текст.
+              aria-pressed={dictation === "speech" ? listening : undefined}
+              // Кнопка не забирает фокус: курсор остаётся в поле, куда вставляется текст.
               onPointerDown={(e) => e.preventDefault()}
               onMouseDown={(e) => e.preventDefault()}
               onClick={dictate}
             >
-              Диктовать
+              {listening ? "Остановить" : "Диктовать"}
             </Button>
           )}
         </div>

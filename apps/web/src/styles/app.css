@@ -1053,37 +1053,3 @@ code {
     display: none;
   }
 }
-
-/* ─── Диктовка ───────────────────────────────────────────── */
-.dictation {
-  display: grid;
-  gap: 12px;
-  min-width: min(100%, 22rem);
-}
-.dictation p {
-  margin: 0;
-}
-.dictation__listening {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-/* Кружок микрофона: ореол растёт с громкостью (--level 0–1), состояние дублируется текстом. */
-.dictation__mic {
-  --level: 0;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  color: var(--text-on-accent);
-  background: var(--danger);
-  box-shadow: 0 0 0 calc(4px + var(--level) * 14px) color-mix(in srgb, var(--danger) 25%, transparent);
-  transition: box-shadow 100ms linear;
-}
-@media (prefers-reduced-motion: reduce) {
-  .dictation__mic {
-    transition: none;
-  }
-}
