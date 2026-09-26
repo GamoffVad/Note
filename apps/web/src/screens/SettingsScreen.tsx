@@ -186,6 +186,30 @@ function authErrorText(error: { status?: number; code?: string; message?: string
   return "Не удалось войти. Повторите позже.";
 }
 
+/** Не ждать сервер входа бесконечно: через 20 с — понятная ошибка вместо «Отправляем…». */
+const AUTH_TIMEOUT_MS = 20_000;
+
+async function withTimeout<T>(promise: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(Object.assign(new Error("Сервер входа не ответил за 20 секунд"), { name: "Timeout" })), AUTH_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Техническая строка для скриншота: по ней видно причину на конкретном устройстве. */
+function errorDetail(error: unknown): string {
+  if (!error || typeof error !== "object") return String(error);
+  const e = error as { name?: string; message?: string; status?: number; code?: string };
+  return [e.name, e.code, e.status, e.message].filter((x) => x !== undefined && x !== "").join(" · ");
+}
+
 /** Вход по email: письмо с кодом (или ссылкой для этого браузера). Пароль не нужен. */
 function SignInForm() {
   const { setSyncConfig, status, workspace } = useMayak();
@@ -194,6 +218,7 @@ function SignInForm() {
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState<string | null>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const pending = status.pendingCount + status.failedCount;
 
@@ -209,16 +234,33 @@ function SignInForm() {
     if (!supabase) return;
     setBusy(true);
     setError(null);
-    const { error: e } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      // В приложении ссылка из письма открывает «Маяк» (deep link) и выполняет вход.
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: isNativeApp() ? AUTH_REDIRECT_URL : `${location.origin}${location.pathname}`,
-      },
-    });
+    setDetail(null);
+    let e: Parameters<typeof authErrorText>[0] = null;
+    try {
+      ({ error: e } = await withTimeout(
+        supabase.auth.signInWithOtp({
+          email: email.trim(),
+          // В приложении ссылка из письма открывает «Маяк» (deep link) и выполняет вход.
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: isNativeApp() ? AUTH_REDIRECT_URL : `${location.origin}${location.pathname}`,
+          },
+        }),
+      ));
+    } catch (thrown) {
+      setBusy(false);
+      setDetail(errorDetail(thrown));
+      return setError(
+        (thrown as Error)?.name === "Timeout"
+          ? "Сервер входа не ответил за 20 секунд. Проверьте интернет и повторите."
+          : "Не удалось отправить письмо. Повторите позже.",
+      );
+    }
     setBusy(false);
-    if (e) return setError(authErrorText(e));
+    if (e) {
+      setDetail(errorDetail(e));
+      return setError(authErrorText(e));
+    }
     setStep("code");
     requestAnimationFrame(() => codeRef.current?.focus());
   };
@@ -305,6 +347,7 @@ function SignInForm() {
           </div>
         </form>
       )}
+      {detail && <p className="mk-caption settings-note">Подробности для разработчика: {detail}</p>}
       <p className="mk-caption settings-note">
         Вход обслуживает Supabase Auth: он хранит ваш email и отправляет письма. Сквозного шифрования нет.
       </p>
