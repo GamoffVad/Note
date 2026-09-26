@@ -5,7 +5,11 @@ import {
   PROTOCOL_VERSION,
   type ApiErrorBody,
   type BootstrapResponse,
+  type DeviceInfo,
   type ErrorCode,
+  type HistoryResponse,
+  type MutationResult,
+  type RestoreRequest,
   type PullResponse,
   type PushRequest,
   type PushResponse,
@@ -63,6 +67,25 @@ export class HttpTransport implements SyncTransport {
 
   pull(cursor: string): Promise<PullResponse> {
     return this.request("GET", `/sync/pull?cursor=${encodeURIComponent(cursor)}`);
+  }
+
+  async listDevices(): Promise<DeviceInfo[]> {
+    const body = await this.request<{ devices: DeviceInfo[] }>("GET", "/devices");
+    return body.devices;
+  }
+
+  async revokeDevice(deviceId: string): Promise<void> {
+    await this.request("DELETE", `/devices/${encodeURIComponent(deviceId)}/session`);
+  }
+
+  history(noteId: string, before?: number): Promise<HistoryResponse> {
+    const query = before === undefined ? "" : `?before=${before}`;
+    return this.request("GET", `/notes/${encodeURIComponent(noteId)}/history${query}`);
+  }
+
+  /** Восстановление версии; конфликт ревизии приходит как TransportError 409. */
+  restore(noteId: string, request: RestoreRequest): Promise<MutationResult> {
+    return this.request("POST", `/notes/${encodeURIComponent(noteId)}/restore`, request);
   }
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
