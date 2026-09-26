@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defaultClientConditions, defineConfig, loadEnv, type Plugin } from "vite";
@@ -43,6 +44,13 @@ export default defineConfig(({ mode }) => {
   // Сборка для настольного приложения (apps/desktop, Tauri 2): страницы открываются
   // с tauri://localhost, поэтому адрес API должен быть абсолютным.
   const desktop = mode === "desktop";
+  if (desktop) {
+    // Публичные параметры приложения лежат в репозитории; VITE_* из окружения важнее.
+    const file = JSON.parse(readFileSync(new URL("../desktop/mayak.config.json", import.meta.url), "utf8")) as Record<string, string>;
+    env.VITE_API_BASE ||= file.apiBase ?? "";
+    env.VITE_SUPABASE_URL ||= file.supabaseUrl ?? "";
+    env.VITE_SUPABASE_PUBLISHABLE_KEY ||= file.supabasePublishableKey ?? "";
+  }
   if (desktop && !/^https:\/\//.test(env.VITE_API_BASE ?? "")) {
     console.warn("VITE_API_BASE не задан (https://…/api/v1): приложение будет работать только на устройстве, без синхронизации.");
   }
@@ -52,6 +60,12 @@ export default defineConfig(({ mode }) => {
   if (env.VITE_API_BASE && /^https?:/.test(env.VITE_API_BASE)) origins.push(new URL(env.VITE_API_BASE).origin);
   return {
     plugins: [react(), contentSecurityPolicy(origins)],
+    // Значения из mayak.config.json для сборки приложения; в браузерной сборке — как в окружении.
+    define: desktop
+      ? Object.fromEntries(
+          ["VITE_API_BASE", "VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY"].map((k) => [`import.meta.env.${k}`, JSON.stringify(env[k] || undefined)]),
+        )
+      : {},
     // Пакеты монорепозитория: исходники .ts по условию «source».
     resolve: { conditions: ["source", ...defaultClientConditions] },
     server: { port: 5173, proxy: { "/api": apiTarget } },

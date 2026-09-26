@@ -2,6 +2,7 @@ export * from "./auth.ts";
 export * from "./cors.ts";
 export * from "./cursor.ts";
 export * from "./db.ts";
+export * from "./supabase-ca.ts";
 export * from "./errors.ts";
 export * from "./http.ts";
 export * from "./migrate.ts";

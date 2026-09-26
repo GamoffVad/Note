@@ -67,10 +67,11 @@ npm run dev -w @mayak/desktop        # режим разработки с гор
 лежат в артефактах запуска (вкладка **Actions**); тег `desktop-v*` создаёт
 черновик релиза с ними.
 
-Параметры сборки задаются в **Settings → Secrets and variables → Actions →
-Variables** репозитория: `MAYAK_API_BASE`, `MAYAK_SUPABASE_URL`,
-`MAYAK_SUPABASE_PUBLISHABLE_KEY` (публикуемый ключ Supabase можно встраивать
-в клиент; секретный — никогда).
+Публичные параметры сборки (адрес API, адрес и публикуемый ключ Supabase)
+лежат в `apps/desktop/mayak.config.json`. Переменные репозитория
+`MAYAK_API_BASE`, `MAYAK_SUPABASE_URL`, `MAYAK_SUPABASE_PUBLISHABLE_KEY`
+(Settings → Secrets and variables → Actions → Variables) необязательны и
+имеют приоритет над файлом.
 
 ## Подпись
 

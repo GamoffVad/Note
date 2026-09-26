@@ -1,0 +1,6 @@
+{
+  "$comment": "Публичные параметры сборки приложения (не секреты). Переменные окружения VITE_* при сборке имеют приоритет.",
+  "apiBase": "https://mayak-pied-theta.vercel.app/api/v1",
+  "supabaseUrl": "",
+  "supabasePublishableKey": ""
+}

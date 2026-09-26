@@ -1,4 +1,5 @@
 import pg, { type Pool, type PoolClient } from "pg";
+import { SUPABASE_ROOT_CA } from "./supabase-ca.ts";
 
 export type Db = Pool;
 
@@ -21,14 +22,26 @@ export function createPool(env: PoolEnv): Pool {
   const max = Number(env.DATABASE_POOL_MAX ?? 10);
   if (!Number.isInteger(max) || max < 1) throw new Error("DATABASE_POOL_MAX должен быть целым числом ≥ 1");
   const config: pg.PoolConfig = { connectionString: env.DATABASE_URL, max, idleTimeoutMillis: 10_000 };
-  if (env.DATABASE_CA_CERT) {
+  const ca = serverCaFor(env);
+  if (ca) {
     // Параметры sslmode из строки подключения перекрыли бы этот объект — убираем их.
     const url = new URL(env.DATABASE_URL);
     for (const key of ["sslmode", "sslrootcert", "sslcert", "sslkey", "uselibpqcompat"]) url.searchParams.delete(key);
     config.connectionString = url.toString();
-    config.ssl = { ca: env.DATABASE_CA_CERT.replace(/\\n/g, "\n"), rejectUnauthorized: true };
+    config.ssl = { ca, rejectUnauthorized: true };
   }
   return new pg.Pool(config);
+}
+
+/**
+ * Сертификат для проверки сервера БД: DATABASE_CA_CERT, а для адресов Supabase
+ * без него — встроенный корневой сертификат Supabase.
+ */
+export function serverCaFor(env: PoolEnv): string | null {
+  if (env.DATABASE_CA_CERT) return env.DATABASE_CA_CERT.replace(/\\n/g, "\n");
+  if (!env.DATABASE_URL) return null;
+  const host = new URL(env.DATABASE_URL).hostname;
+  return host.endsWith(".supabase.com") || host.endsWith(".supabase.co") ? SUPABASE_ROOT_CA : null;
 }
 
 /** Выполняет fn в транзакции; ответ возвращается только после COMMIT. */
