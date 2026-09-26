@@ -1,0 +1,66 @@
+name: Запуск на macOS (диагностика)
+
+# Скачивает опубликованный .dmg, проверяет подпись и запускает приложение
+# на настоящем Mac, как это делает пользователь; печатает журнал и отчёт о сбое.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Версия, например 0.1.3"
+        required: true
+  push:
+    branches: ["claude/**"]
+    paths:
+      - ".github/workflows/macos-launch.yml"
+
+jobs:
+  launch:
+    name: Запуск · ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            runner: macos-latest
+          - arch: x64
+            runner: macos-13
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Скачать и установить
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version || '0.1.3' }}
+        run: |
+          sw_vers; uname -m
+          gh release download "desktop-v${VERSION}" -R "${{ github.repository }}" -p "Mayak_${VERSION}_${{ matrix.arch }}.dmg" -D "$RUNNER_TEMP"
+          hdiutil attach -nobrowse -mountpoint /Volumes/Mayak "$RUNNER_TEMP"/*.dmg
+          ls -la /Volumes/Mayak
+          cp -R /Volumes/Mayak/*.app /Applications/
+          ls /Applications | grep -i mayak
+          # Как у пользователя: приложение скачано из интернета.
+          xattr -w com.apple.quarantine "0081;$(printf %x $(date +%s));Safari;" /Applications/Mayak.app || true
+      - name: Подпись
+        run: |
+          codesign -dv --verbose=4 /Applications/Mayak.app 2>&1 || true
+          codesign --verify --deep --strict --verbose=2 /Applications/Mayak.app 2>&1 || true
+          spctl -a -vvv -t execute /Applications/Mayak.app 2>&1 || true
+          plutil -p /Applications/Mayak.app/Contents/Info.plist
+          file /Applications/Mayak.app/Contents/MacOS/*
+          otool -L /Applications/Mayak.app/Contents/MacOS/* | head -40
+      - name: Запуск
+        run: |
+          xattr -dr com.apple.quarantine /Applications/Mayak.app
+          BIN=$(ls /Applications/Mayak.app/Contents/MacOS/* | head -1)
+          RUST_BACKTRACE=1 "$BIN" > "$RUNNER_TEMP/out.log" 2>&1 &
+          PID=$!
+          sleep 15
+          if kill -0 $PID 2>/dev/null; then echo "Приложение работает 15 с (PID $PID)"; kill $PID; else wait $PID; echo "Приложение завершилось с кодом $?"; fi
+          echo "--- вывод ---"; cat "$RUNNER_TEMP/out.log"
+          echo "--- открытие через open ---"
+          open -W -n /Applications/Mayak.app & OPEN=$!; sleep 10; pgrep -fl Mayak || echo "процесса нет"; pkill -f Mayak.app || true
+      - name: Отчёты о сбоях
+        if: always()
+        run: |
+          ls -la ~/Library/Logs/DiagnosticReports/ 2>/dev/null || true
+          for f in ~/Library/Logs/DiagnosticReports/*ayak* ~/Library/Logs/DiagnosticReports/*mayak*; do [ -f "$f" ] && { echo "=== $f"; head -120 "$f"; }; done
+          log show --last 3m --predicate 'process == "mayak-desktop" OR eventMessage CONTAINS[c] "mayak"' --style compact 2>/dev/null | tail -80 || true
