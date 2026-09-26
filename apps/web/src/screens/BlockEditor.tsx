@@ -4,11 +4,17 @@ import { Button, Checkbox, IconButton } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
 
+/** Куда вставить продиктованный текст: блок и позиция курсора в нём. */
+export interface CaretTarget {
+  blockId: string;
+  position: number;
+}
+
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
   readOnly: boolean;
-  onDictate: () => void;
+  onDictate: (target: CaretTarget | null) => void;
 }
 
 type FocusRequest = { id: string; at: "start" | "end" } | null;
@@ -21,6 +27,11 @@ type FocusRequest = { id: string; at: "start" | "end" } | null;
 export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
   const [focus, setFocus] = useState<FocusRequest>(null);
   const root = useRef<HTMLDivElement>(null);
+  // Последняя позиция курсора: нажатие «Диктовать» забирает фокус у поля.
+  const caret = useRef<CaretTarget | null>(null);
+  const remember = (blockId: string) => (event: { currentTarget: HTMLTextAreaElement }) => {
+    caret.current = { blockId, position: event.currentTarget.selectionEnd };
+  };
 
   useLayoutEffect(() => {
     if (!focus) return;
@@ -91,6 +102,7 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
                 placeholder={blocks.length === 1 ? "Запишите мысль…" : ""}
                 onChange={(text) => replace(block.id, { text })}
                 onKeyDown={(e) => onTextKey(e, block)}
+                onCaret={remember(block.id)}
               />
             </div>
           );
@@ -115,6 +127,7 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
                 // Задача — одна строка: переносы из вставленного текста заменяются пробелом.
                 onChange={(text) => replace(block.id, { text: text.replace(/\s*\n\s*/g, " ") })}
                 onKeyDown={(e) => onTaskKey(e, block)}
+                onCaret={remember(block.id)}
               />
               {!readOnly && (
                 <IconButton
@@ -153,7 +166,11 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
           >
             Задача
           </Button>
-          <Button size="small" icon={<Icon name="mic" />} onClick={onDictate}>
+          <Button
+            size="small"
+            icon={<Icon name="mic" />}
+            onClick={() => onDictate(caret.current && blocks.some((b) => b.id === caret.current!.blockId) ? caret.current : null)}
+          >
             Диктовать
           </Button>
         </div>
@@ -170,6 +187,7 @@ function AutoTextarea(props: {
   placeholder: string;
   onChange: (value: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
+  onCaret: (event: { currentTarget: HTMLTextAreaElement }) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useAutoHeight(ref, props.value);
@@ -185,6 +203,10 @@ function AutoTextarea(props: {
       placeholder={props.placeholder}
       onChange={(e) => props.onChange(e.target.value)}
       onKeyDown={props.onKeyDown}
+      onSelect={props.onCaret}
+      onKeyUp={props.onCaret}
+      onClick={props.onCaret}
+      onBlur={props.onCaret}
     />
   );
 }

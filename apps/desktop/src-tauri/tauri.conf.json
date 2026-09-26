@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Mayak",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "io.github.gamoffvad.mayak",
   "build": {
     "beforeDevCommand": {
@@ -45,7 +45,8 @@
       "icons/icon.ico"
     ],
     "macOS": {
-      "signingIdentity": "-"
+      "signingIdentity": "-",
+      "minimumSystemVersion": "11.0"
     }
   },
   "plugins": {

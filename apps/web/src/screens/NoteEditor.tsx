@@ -20,7 +20,9 @@ import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, formatRelativeDate, formatTime, noteTitle, safeFileName } from "../state/format.ts";
 import { takeTitleFocus } from "../state/focus.ts";
 import { navigate, routeHref } from "../state/router.ts";
-import { BlockEditor } from "./BlockEditor.tsx";
+import { DictationSheet } from "../components/DictationSheet.tsx";
+import { insertAt } from "../state/dictation.ts";
+import { BlockEditor, type CaretTarget } from "./BlockEditor.tsx";
 
 /** Объединение нажатий перед локальной записью (ТЗ, раздел 4). */
 const SAVE_DELAY_MS = 150;
@@ -65,6 +67,27 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
       if (!(error instanceof LocalWriteError)) console.error("Ошибка сохранения заметки");
     }
   }, [note.id]);
+
+  // Куда вставить продиктованный текст (запоминается при нажатии «Диктовать»).
+  const dictationTarget = useRef<CaretTarget | null>(null);
+  const insertDictation = (text: string) => {
+    const doc = draftRef.current;
+    const target = dictationTarget.current;
+    const block = target ? doc.blocks.find((b) => b.id === target.blockId && b.type !== "attachment") : undefined;
+    let blocks;
+    if (block && target) {
+      const { value } = insertAt(block.text, target.position, block.type === "task" ? text.replace(/\s*\n\s*/g, " ") : text);
+      blocks = doc.blocks.map((b) => (b.id === block.id ? { ...b, text: value } : b));
+    } else {
+      // Курсора не было: в конец последнего текстового блока или новым блоком.
+      const last = [...doc.blocks].reverse().find((b) => b.type === "markdown");
+      blocks = last
+        ? doc.blocks.map((b) => (b.id === last.id ? { ...b, text: insertAt(b.text, b.text.length, text).value } : b))
+        : [...doc.blocks, { id: newId(), type: "markdown" as const, text }];
+    }
+    change({ ...doc, blocks });
+    toast({ text: "Текст вставлен" });
+  };
 
   const change = (next: NoteDocument) => {
     draftRef.current = next;
@@ -249,14 +272,17 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
           blocks={draft.blocks}
           readOnly={readOnly}
           onChange={(blocks) => change({ ...draftRef.current, blocks })}
-          onDictate={() => setPanel("dictation")}
+          onDictate={(target) => {
+            dictationTarget.current = target;
+            setPanel("dictation");
+          }}
         />
       </article>
 
       {panel === "conflict" && conflict && <ConflictDialog note={note} conflict={conflict} onClose={() => setPanel(null)} />}
       {panel === "history" && <HistoryDialog note={note} pending={dirty || !!outbox || !!conflict} onClose={() => setPanel(null)} />}
       {panel === "sync" && <SyncDialog onClose={() => setPanel(null)} />}
-      {panel === "dictation" && <DictationDialog onClose={() => setPanel(null)} />}
+      {panel === "dictation" && <DictationSheet onClose={() => setPanel(null)} onText={insertDictation} />}
     </>
   );
 }
@@ -374,18 +400,6 @@ function HistoryDialog({ note, pending, onClose }: { note: LocalNote; pending: b
         <p className="mk-caption">Восстановление станет доступно, когда изменения этой заметки будут отправлены.</p>
       )}
       <p className="mk-caption">Восстановление создаёт новую версию; прежние версии не удаляются.</p>
-    </Sheet>
-  );
-}
-
-function DictationDialog({ onClose }: { onClose: () => void }) {
-  return (
-    <Sheet title="Диктовка пока недоступна" onClose={onClose} actions={<Button variant="primary" onClick={onClose}>Понятно</Button>}>
-      <p>
-        Голосовой ввод на русском языке будет работать локально, без отправки аудио в облако. Движок распознавания
-        (Whisper) в этой версии ещё не подключён, поэтому микрофон не включается.
-      </p>
-      <p className="mk-secondary">Текст можно вводить с клавиатуры или системной диктовкой вашего устройства.</p>
     </Sheet>
   );
 }

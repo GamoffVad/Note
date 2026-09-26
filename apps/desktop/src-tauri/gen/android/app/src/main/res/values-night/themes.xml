@@ -1,6 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.mayak_desktop" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+        <!-- Фон за строкой состояния и панелью навигации — цвет окна приложения (токен bg-window). -->
+        <item name="android:windowBackground">@color/mayak_window</item>
     </style>
 </resources>

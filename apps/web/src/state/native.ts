@@ -108,7 +108,12 @@ let sessionStorageAdapter: Promise<AsyncStorage | null> | null = null;
  * браузере — в хранилище окна без шифрования.
  */
 export function nativeSessionStorage(): Promise<AsyncStorage | null> {
-  sessionStorageAdapter ??= invoke<string>("session_key")
+  // Не дольше 3 с: если система не ответит, вход не должен зависнуть.
+  const key = Promise.race([
+    invoke<string>("session_key"),
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error("session_key: нет ответа за 3 с")), 3000)),
+  ]);
+  sessionStorageAdapter ??= key
     .then(importSessionKey)
     .then((key) => encryptedStorage(key, localStorage))
     .catch((error: unknown) => {
