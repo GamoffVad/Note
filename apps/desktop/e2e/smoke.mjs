@@ -73,11 +73,6 @@ await app.click(`(//button[@aria-label="Создать заметку" or normal
 await app.type(`//*[@aria-label="Заголовок заметки"]`, title);
 await app.find(`//*[contains(@class,"save-state") and contains(., "Сохранено")]`);
 assert(true, "заметка создана и сохранена на устройстве");
-// Диктовка в приложении: модуль распознавания отвечает и предлагает скачать модель.
-await app.click(`//button[normalize-space()="Диктовать"]`);
-await app.find(`//dialog//button[contains(., "Скачать модель")]`);
-assert(true, "диктовка готова: предлагает скачать модель распознавания");
-await app.click(`//dialog//button[normalize-space()="Не сейчас"]`);
 await new Promise((r) => setTimeout(r, 500));
 await app.close();
 

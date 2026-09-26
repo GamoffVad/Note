@@ -4,20 +4,15 @@ import { Button, Checkbox, IconButton } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
 
-/** Куда вставить продиктованный текст: блок и позиция курсора в нём. */
-export interface CaretTarget {
-  blockId: string;
-  position: number;
-}
-
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
   readOnly: boolean;
-  onDictate: (target: CaretTarget | null) => void;
+  /** Вызывается, когда курсор уже стоит в поле: текст вставит Wispr Flow. */
+  onDictate?: () => void;
 }
 
-type FocusRequest = { id: string; at: "start" | "end" } | null;
+type FocusRequest = { id: string; at: "start" | "end"; dictate?: boolean } | null;
 
 /**
  * Редактор блоков (docs/adr/0003-editor.md): текстовый блок — растущее поле,
@@ -27,10 +22,10 @@ type FocusRequest = { id: string; at: "start" | "end" } | null;
 export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
   const [focus, setFocus] = useState<FocusRequest>(null);
   const root = useRef<HTMLDivElement>(null);
-  // Последняя позиция курсора: нажатие «Диктовать» забирает фокус у поля.
-  const caret = useRef<CaretTarget | null>(null);
+  // Последнее поле с курсором: туда «Диктовать» вернёт фокус.
+  const lastField = useRef<{ blockId: string; position: number } | null>(null);
   const remember = (blockId: string) => (event: { currentTarget: HTMLTextAreaElement }) => {
-    caret.current = { blockId, position: event.currentTarget.selectionEnd };
+    lastField.current = { blockId, position: event.currentTarget.selectionEnd };
   };
 
   useLayoutEffect(() => {
@@ -42,9 +37,37 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
       field.focus();
       const pos = focus.at === "start" ? 0 : field.value.length;
       field.setSelectionRange(pos, pos);
+      if (focus.dictate) onDictate?.();
     }
     setFocus(null);
-  }, [focus]);
+  }, [focus, onDictate]);
+
+  /** Курсор в поле: активное, последнее с курсором, последний текстовый блок или новый. */
+  const dictate = () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLTextAreaElement && root.current?.contains(active)) {
+      onDictate?.();
+      return;
+    }
+    const remembered = lastField.current;
+    const field = (id: string) => root.current?.querySelector<HTMLTextAreaElement>(`[data-block-id="${id}"] [data-field]`);
+    const target = remembered && field(remembered.blockId);
+    if (target && remembered) {
+      target.focus();
+      const pos = Math.min(remembered.position, target.value.length);
+      target.setSelectionRange(pos, pos);
+      onDictate?.();
+      return;
+    }
+    const last = [...blocks].reverse().find((b) => b.type === "markdown");
+    if (last) {
+      setFocus({ id: last.id, at: "end", dictate: true });
+    } else {
+      const block: Block = { id: newId(), type: "markdown", text: "" };
+      onChange([...blocks, block]);
+      setFocus({ id: block.id, at: "start", dictate: true });
+    }
+  };
 
   const replace = (id: string, patch: Partial<Block>) =>
     onChange(blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as Block) : b)));
@@ -166,13 +189,18 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
           >
             Задача
           </Button>
-          <Button
-            size="small"
-            icon={<Icon name="mic" />}
-            onClick={() => onDictate(caret.current && blocks.some((b) => b.id === caret.current!.blockId) ? caret.current : null)}
-          >
-            Диктовать
-          </Button>
+          {onDictate && (
+            <Button
+              size="small"
+              icon={<Icon name="mic" />}
+              // Кнопка не забирает фокус: курсор остаётся в поле, куда Wispr Flow вставит текст.
+              onPointerDown={(e) => e.preventDefault()}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={dictate}
+            >
+              Диктовать
+            </Button>
+          )}
         </div>
       )}
     </div>

@@ -118,28 +118,10 @@ test("экспорт заметки в Markdown", async ({ page }) => {
   expect(Buffer.concat(content).toString("utf8")).toBe("# Отчёт: итоги\n\nПервый абзац\n\n- [x] Готово\n");
 });
 
-test("диктовка в браузере объясняет, что работает в приложении, и не трогает микрофон", async ({ page }) => {
-  await page.addInitScript(() => {
-    const w = window as unknown as { micRequests: number };
-    w.micRequests = 0;
-    const original = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
-    if (navigator.mediaDevices) {
-      navigator.mediaDevices.getUserMedia = (c) => {
-        w.micRequests++;
-        return original!(c);
-      };
-    }
-  });
-  await page.reload();
+test("в браузере нет кнопки «Диктовать»: диктовка работает через Wispr Flow в приложении", async ({ page }) => {
   await createNote(page, "Голос");
-  await page.getByRole("button", { name: "Диктовать" }).click();
-  const dialog = page.getByRole("dialog", { name: "Диктовка" });
-  await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("работает в приложении «Маяк»");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-  await expect(page.getByRole("button", { name: "Диктовать" })).toBeFocused();
-  expect(await page.evaluate(() => (window as unknown as { micRequests: number }).micRequests)).toBe(0);
+  await expect(page.getByRole("button", { name: "Текст" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Диктовать" })).toHaveCount(0);
 });
 
 test("внешний вид: тёмная тема и размер редактора сохраняются, сброс возвращает значения", async ({ page }) => {
