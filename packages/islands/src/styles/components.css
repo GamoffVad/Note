@@ -1015,6 +1015,8 @@
 }
 .isl-banner__icon {
   display: inline-flex;
+  align-self: start;
+  margin-top: 1px;
   color: var(--mayak-text-secondary);
 }
 .isl-banner__icon svg {
@@ -1102,6 +1104,11 @@
 }
 .isl-disclosure__content {
   padding: var(--isl-space-2) 0 0 var(--isl-space-5);
+}
+@media (max-width: 599px) {
+  .isl-disclosure__content {
+    padding-left: 0;
+  }
 }
 
 /* ─── Группы настроек ────────────────────────────────────── */
@@ -1695,10 +1702,13 @@
   flex: 1;
   min-width: 0;
 }
+/* Длинное название файла — до двух строк, затем многоточие. */
 .isl-file-card__name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   font-weight: 700;
 }
 .isl-file-card__details {
@@ -1707,6 +1717,19 @@
 }
 .isl-file-card__action {
   flex-shrink: 0;
+}
+/* Узкое место: действия под названием, выровнены по тексту. */
+@media (max-width: 480px) {
+  .isl-file-card {
+    flex-wrap: wrap;
+  }
+  .isl-file-card__text {
+    flex-basis: calc(100% - 52px);
+  }
+  .isl-file-card__action {
+    flex-basis: 100%;
+    padding-left: 52px;
+  }
 }
 
 /* Поверхность-карточка. */

@@ -1101,12 +1101,3 @@ code {
   align-items: center;
   gap: var(--isl-space-1);
 }
-@media (max-width: 480px) {
-  .files-list .isl-file-card {
-    flex-wrap: wrap;
-  }
-  .files-list .isl-file-card__action {
-    flex-basis: 100%;
-    padding-left: 52px;
-  }
-}
