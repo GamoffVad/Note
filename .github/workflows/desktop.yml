@@ -2,9 +2,15 @@ name: Настольное приложение
 
 # Сборка «Маяка» для Windows, macOS (Apple Silicon и Intel) и Linux.
 # Обычный запуск — установщики в артефактах сборки (вкладка Actions).
-# Тег desktop-v* — черновик релиза GitHub с установщиками.
+# Тег desktop-v* или ручной запуск с «Опубликовать релиз» — публичный релиз
+# GitHub с установщиками; его ссылки использует страница скачивания.
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Опубликовать релиз (тег desktop-v<версия> создаётся автоматически)"
+        type: boolean
+        default: false
   push:
     branches: [main, "claude/**"]
     tags: ["desktop-v*"]
@@ -122,10 +128,12 @@ jobs:
           name: android-apk
           path: out/*.apk
       - name: В релиз
-        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        if: startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$GITHUB_REF_NAME" out/*.apk --clobber
+        run: |
+          version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          gh release upload "desktop-v${version}" out/*.apk --clobber
 
   build:
     name: Сборка · ${{ matrix.name }}
@@ -177,7 +185,7 @@ jobs:
           projectPath: apps/desktop
           args: ${{ matrix.args }}
           uploadWorkflowArtifacts: true
-          tagName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && github.ref_name || '' }}
-          releaseName: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && 'Маяк __VERSION__' || '' }}
+          tagName: ${{ (startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release) && 'desktop-v__VERSION__' || '' }}
+          releaseName: ${{ (startsWith(github.ref, 'refs/tags/desktop-v') || inputs.release) && 'Маяк __VERSION__' || '' }}
           releaseBody: Установщики «Маяка» для Windows, macOS и Linux.
           releaseDraft: false
