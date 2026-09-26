@@ -162,9 +162,6 @@ export function authEmailRedirect(platform = nativePlatform(), apiBase = import.
   return `${new URL(apiBase).origin}/auth/callback/`;
 }
 
-/** Событие окна с текстом ошибки входа по ссылке — его показывает форма входа. */
-export const AUTH_LINK_ERROR_EVENT = "mayak:auth-link-error";
-
 /** Разбор ссылки возврата: код PKCE в параметрах или ошибка Supabase Auth. */
 export function parseAuthLink(url: string): { code: string } | { error: string } | null {
   if (!url.startsWith(AUTH_REDIRECT_URL)) return null;
