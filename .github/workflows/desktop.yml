@@ -42,6 +42,28 @@ jobs:
         working-directory: apps/desktop/src-tauri
         run: cargo test
 
+  window-test:
+    name: Окно приложения (Linux, WebDriver)
+    needs: test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Системные библиотеки, WebKitWebDriver и Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf webkit2gtk-driver xvfb dbus-x11
+      - run: npm ci
+      - run: cargo install tauri-driver --locked
+      - name: Сборка программы без установщиков
+        run: npm run tauri -w @mayak/desktop -- build --no-bundle
+      - name: Заметка переживает перезапуск и хранится в SQLite
+        run: xvfb-run -a dbus-run-session -- sh -c 'tauri-driver & sleep 2; node apps/desktop/e2e/smoke.mjs'
+
   build:
     name: Сборка · ${{ matrix.name }}
     needs: test

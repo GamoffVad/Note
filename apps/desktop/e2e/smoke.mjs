@@ -30,7 +30,8 @@ async function wd(method, path, body) {
   return json.value;
 }
 
-const ELEMENT = "element-6066-11e4-a6ab-4a3f5b3e8f63";
+/** Ссылка на элемент W3C: объект с единственным ключом element-6066-…; берём значение. */
+const elementId = (ref) => Object.values(ref)[0];
 
 async function session() {
   const { sessionId } = await wd("POST", "/session", {
@@ -41,7 +42,7 @@ async function session() {
     const until = Date.now() + timeout;
     for (;;) {
       try {
-        return (await s("POST", "/element", { using: "xpath", value: xpath }))[ELEMENT];
+        return elementId(await s("POST", "/element", { using: "xpath", value: xpath }));
       } catch (error) {
         if (Date.now() > until) throw error;
         await new Promise((r) => setTimeout(r, 250));
