@@ -18,6 +18,7 @@ import { useAppearance } from "../state/AppearanceContext.tsx";
 import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope, type ThemeChoice } from "../state/appearance.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, plural, safeFileName } from "../state/format.ts";
+import { isNativeApp } from "../state/native.ts";
 import { getSupabase, isValidEmail, normalizeOtp, supabaseConfigured } from "../state/supabase.ts";
 import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/workspace.ts";
 
@@ -203,7 +204,10 @@ function SignInForm() {
     setError(null);
     const { error: e } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: true, emailRedirectTo: `${location.origin}${location.pathname}` },
+      // В приложении ссылка из письма не открывается внутри него: вход только по коду.
+      options: isNativeApp()
+        ? { shouldCreateUser: true }
+        : { shouldCreateUser: true, emailRedirectTo: `${location.origin}${location.pathname}` },
     });
     setBusy(false);
     if (e) return setError(authErrorText(e));
@@ -262,8 +266,10 @@ function SignInForm() {
           }}
         >
           <p role="status">
-            Письмо отправлено на <strong>{email.trim()}</strong>. Введите код из письма или откройте ссылку из него в этом
-            же браузере.
+            Письмо отправлено на <strong>{email.trim()}</strong>.{" "}
+            {isNativeApp()
+              ? "Введите код из письма."
+              : "Введите код из письма или откройте ссылку из него в этом же браузере."}
           </p>
           <TextField
             ref={codeRef}
@@ -473,7 +479,9 @@ function StorageSection() {
         <FormRow
           label={`На этом устройстве: ${alive} ${plural(alive, "заметка", "заметки", "заметок")}`}
           hint={
-            persisted === true
+            isNativeApp()
+              ? "Заметки хранятся в базе приложения на этом устройстве."
+              : persisted === true
               ? "Браузер подтвердил постоянное хранилище."
               : persisted === false
                 ? "Браузер не подтвердил постоянное хранилище и может очистить данные сайта при нехватке места. Регулярно делайте экспорт или включите синхронизацию."
