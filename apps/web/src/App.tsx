@@ -64,6 +64,30 @@ export function App() {
 
   useEffect(() => setDrawer(false), [route.section, route.noteId, route.tag]);
 
+  // Телефон: нижняя навигация прячется, только пока открыта экранная клавиатура
+  // (высота окна заметно меньше обычной при фокусе в поле). Прятать её по одному
+  // фокусу нельзя: при нажатии кнопки поле теряет фокус, навигация возвращается,
+  // содержимое сдвигается, и нажатие приходится уже мимо кнопки.
+  useEffect(() => {
+    const view = window.visualViewport;
+    let full = view?.height ?? window.innerHeight;
+    const update = () => {
+      const height = view?.height ?? window.innerHeight;
+      const typing = document.activeElement instanceof HTMLElement && document.activeElement.matches("input, textarea");
+      if (!typing) full = height;
+      else full = Math.max(full, height);
+      document.documentElement.toggleAttribute("data-keyboard", typing && height < full * 0.8);
+    };
+    view?.addEventListener("resize", update);
+    window.addEventListener("resize", update);
+    document.addEventListener("focusout", update);
+    return () => {
+      view?.removeEventListener("resize", update);
+      window.removeEventListener("resize", update);
+      document.removeEventListener("focusout", update);
+    };
+  }, []);
+
   useEffect(() => {
     document.title = selected ? `${noteTitle(selected.document)} — Маяк` : `${SECTION_TITLE[route.section]} — Маяк`;
   }, [selected, route.section]);

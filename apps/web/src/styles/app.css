@@ -53,6 +53,9 @@ code {
 .skip-link:focus {
   top: 8px;
 }
+.skip-link {
+  min-height: 44px;
+}
 .plain-list {
   list-style: none;
   margin: 0;
@@ -585,7 +588,11 @@ code {
 .task-group__title {
   margin: 0 0 var(--isl-space-2) var(--isl-space-1);
 }
-.task-group__title a {
+.task-group__title a,
+.trash-item__text a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--mayak-text-primary);
   text-decoration: none;
 }
@@ -654,8 +661,10 @@ code {
   min-width: 0;
 }
 .trash-item__text a {
-  color: var(--mayak-text-primary);
   font-weight: 600;
+}
+.trash-item__text a:hover {
+  text-decoration: underline;
 }
 .trash-item__text .isl-caption {
   overflow-wrap: anywhere;
@@ -983,20 +992,27 @@ code {
     display: inline-flex;
     flex-shrink: 0;
   }
-  /* Очень узкий экран: у «Назад» остаётся стрелка, подпись — для чтения с экрана. */
+  /* У «Назад» — стрелка, подпись «Заметки» — для чтения с экрана: пять действий помещаются от 320 px. */
+  .mobile-back {
+    padding: 0;
+    width: var(--isl-hit);
+    border-color: transparent;
+    background: transparent;
+    color: var(--mayak-action-primary);
+  }
+  .mobile-back svg {
+    width: 24px;
+    height: 24px;
+  }
+  .mobile-back .isl-button__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
   @media (max-width: 400px) {
-    .mobile-back {
-      padding: 0;
-      width: var(--isl-hit);
-    }
-    .mobile-back .isl-button__label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
-    }
     .tools .isl-icon-button {
       width: 44px;
     }
@@ -1036,7 +1052,8 @@ code {
     background: var(--mayak-surface-raised);
   }
   .note-title {
-    font-size: calc(var(--editor-size) * 1.6);
+    font-size: calc(var(--editor-size) * 1.35);
+    line-height: 1.25;
   }
   .intro {
     font-size: var(--isl-text-body);
@@ -1053,8 +1070,8 @@ code {
     grid-row: 2;
     display: grid;
   }
-  /* Экранная клавиатура: во время ввода нижняя навигация не занимает место над ней. */
-  .app:has(.page :is(textarea, .isl-tokens__input, .isl-field__input):focus) .bottom-nav {
+  /* Открыта экранная клавиатура (App.tsx, data-keyboard): навигация не занимает место над ней. */
+  :root[data-keyboard] .bottom-nav {
     display: none;
   }
 }
