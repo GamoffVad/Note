@@ -4,9 +4,15 @@
   "version": "0.1.0",
   "identifier": "io.github.gamoffvad.mayak",
   "build": {
-    "beforeDevCommand": { "script": "npm run dev:desktop", "cwd": "../../web" },
+    "beforeDevCommand": {
+      "script": "npm run dev:desktop",
+      "cwd": "../../web"
+    },
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": { "script": "npm run build:desktop", "cwd": "../../web" },
+    "beforeBuildCommand": {
+      "script": "npm run build:desktop",
+      "cwd": "../../web"
+    },
     "frontendDist": "../../web/dist-desktop"
   },
   "app": {
@@ -37,6 +43,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-"
+    }
   }
 }

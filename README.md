@@ -89,6 +89,7 @@ MAYAK_E2E_DATABASE_URL=postgres://…/mayak_e2e_test npm run e2e  # плюс с�
 - [Подключение Supabase](docs/supabase-setup.md)
 - [Развёртывание на Vercel](docs/deploy-vercel.md)
 - [Настольное приложение](docs/desktop.md)
+- [Что сделать владельцу: пошаговая инструкция](docs/owner-setup.md)
 - [Дизайн-система](docs/design-system.md)
 - [Формат Markdown](docs/markdown-format.md)
 - [Приёмочные сценарии](docs/acceptance.md)

@@ -1,0 +1,34 @@
+name: Миграции базы данных
+
+# Запускается вручную: Actions → «Миграции базы данных» → Run workflow.
+# Создаёт и обновляет таблицы Маяка в схеме mayak базы Supabase.
+# Нужны секреты репозитория (Settings → Secrets and variables → Actions → Secrets):
+#   MIGRATION_DATABASE_URL — строка Session pooler (порт 5432) из кнопки Connect в Supabase;
+#   DATABASE_CA_CERT — корневой сертификат из Database Settings → SSL (необязательно, но рекомендуется).
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    name: Применить миграции
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Проверка секрета
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: |
+          if [ -z "$MIGRATION_DATABASE_URL" ]; then
+            echo "::error::Не задан секрет MIGRATION_DATABASE_URL (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+      - name: Миграции
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          DATABASE_CA_CERT: ${{ secrets.DATABASE_CA_CERT }}
+        run: npm run db:migrate
