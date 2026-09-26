@@ -44,10 +44,23 @@ a:hover {
   outline: none;
 }
 /* Фокус-кольцо macOS: сплошное кольцо цвета акцента вокруг элемента. */
-:focus-visible,
-.mk-focus-within:focus-within {
+:focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 1px;
+}
+/*
+ * Поле ввода внутри обёртки (текстовое поле, поиск, HEX): кольцо одно — у
+ * обёртки, по её скруглению; граница поля становится цветом акцента, вокруг —
+ * мягкий ореол, как у полей macOS. Собственная рамка вложенного поля убрана,
+ * иначе видны два кольца.
+ */
+.mk-focus-within:focus-within {
+  outline: 3px solid color-mix(in srgb, var(--focus-ring) 45%, transparent);
+  outline-offset: 0;
+}
+.mk-focus-within input:focus-visible,
+.mk-focus-within textarea:focus-visible {
+  outline: none;
 }
 
 /* Полосы прокрутки: тонкие, как «overlay scrollbars» macOS. */

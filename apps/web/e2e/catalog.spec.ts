@@ -50,3 +50,16 @@ test("каталог: стекло размывает фон и становит
   await page.emulateMedia({ contrast: "more" });
   expect((await style(".mk-toolbar-group")).filter).toBe("none");
 });
+
+test("каталог: у поля ввода одно кольцо фокуса — у обёртки, без рамки вложенного поля", async ({ page }) => {
+  for (const name of ["Email", "Найти заметку"]) {
+    const input = page.getByRole("textbox", { name }).first();
+    await input.focus();
+    await page.keyboard.press("End");
+    const rings = await input.evaluate((el) => {
+      const wrapper = el.closest(".mk-focus-within")!;
+      return { input: getComputedStyle(el).outlineStyle, wrapper: getComputedStyle(wrapper).outlineStyle };
+    });
+    expect(rings, name).toEqual({ input: "none", wrapper: "solid" });
+  }
+});

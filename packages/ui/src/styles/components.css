@@ -267,6 +267,9 @@ a.mk-icon-button:hover {
   background: var(--bg-field);
   color: var(--text-secondary);
 }
+.mk-search:focus-within {
+  border-color: var(--focus-ring);
+}
 .mk-search__icon {
   width: 14px;
   height: 14px;
