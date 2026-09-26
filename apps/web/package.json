@@ -23,6 +23,7 @@
     "@mayak/sync": "^0.1.0",
     "@supabase/supabase-js": "^2.117.2",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "@mayak/ui": "^0.1.0"
   }
 }

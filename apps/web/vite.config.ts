@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defaultClientConditions, defineConfig, loadEnv, type Plugin } from "vite";
 
@@ -48,6 +49,16 @@ export default defineConfig(({ mode }) => {
     resolve: { conditions: ["source", ...defaultClientConditions] },
     server: { port: 5173, proxy: { "/api": apiTarget } },
     preview: { port: 4173, proxy: { "/api": apiTarget } },
-    build: { target: "es2022", sourcemap: true },
+    build: {
+      target: "es2022",
+      sourcemap: true,
+      rolldownOptions: {
+        input: {
+          main: fileURLToPath(new URL("./index.html", import.meta.url)),
+          // Каталог компонентов — отдельная страница.
+          catalog: fileURLToPath(new URL("./catalog.html", import.meta.url)),
+        },
+      },
+    },
   };
 });
