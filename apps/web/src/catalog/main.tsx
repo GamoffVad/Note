@@ -6,6 +6,7 @@ import {
   Badge,
   Banner,
   Button,
+  ButtonLink,
   Checkbox,
   ColorWell,
   Disclosure,
@@ -13,6 +14,7 @@ import {
   FormGroup,
   FormRow,
   IconButton,
+  IconLink,
   MenuButton,
   PopUpButton,
   ProgressBar,
@@ -221,6 +223,11 @@ function Catalog() {
               Сохранить
             </Button>
           </Row>
+          <Row label="Ссылка-кнопка">
+            <ButtonLink href="#buttons" icon={<Icon name="back" />}>
+              К списку заметок
+            </ButtonLink>
+          </Row>
         </Section>
 
         <Section id="icon-buttons" title="Кнопки панели инструментов" note="Только значок: доступное имя и подсказка при наведении или фокусе.">
@@ -234,6 +241,11 @@ function Catalog() {
               <IconButton label="История" icon={<Icon name="history" />} />
               <IconButton label="Синхронизация" icon={<Icon name="sync" />} />
               <IconButton label="В корзину" icon={<Icon name="trash" />} />
+            </ToolbarGroup>
+          </Row>
+          <Row label="Ссылка">
+            <ToolbarGroup label="Окно">
+              <IconLink label="Настройки" href="#icon-buttons" icon={<Icon name="settings" />} />
             </ToolbarGroup>
           </Row>
           <Row label="Нажата / недоступна">
@@ -412,7 +424,7 @@ function Catalog() {
           <Disclosure label="Режим разработчика">
             <p className="mk-secondary">Содержимое раскрывающегося блока.</p>
           </Disclosure>
-          <EmptyState title="Запишите первую мысль" action={<Button variant="primary">Создать заметку</Button>}>
+          <EmptyState title="Запишите первую мысль" icon={<Icon name="notes" />} action={<Button variant="primary">Создать заметку</Button>}>
             Заметка сохранится на этом устройстве даже без интернета.
           </EmptyState>
         </Section>

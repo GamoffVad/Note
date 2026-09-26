@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Tooltip } from "./Tooltip.tsx";
 import { cx } from "./util.ts";
 
@@ -32,4 +32,26 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     </button>
   );
   return tooltip ? <Tooltip label={label}>{button}</Tooltip> : button;
+});
+
+export interface IconLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children"> {
+  /** Доступное имя и текст подсказки. */
+  label: string;
+  icon: ReactNode;
+  variant?: "toolbar" | "plain";
+  size?: "small" | "regular";
+  tooltip?: boolean;
+}
+
+/** Ссылка панели инструментов: выглядит как IconButton, но ведёт на другой экран (aria-current сохраняется). */
+export const IconLink = forwardRef<HTMLAnchorElement, IconLinkProps>(function IconLink(
+  { label, icon, variant = "toolbar", size = "regular", tooltip = true, className, ...rest },
+  ref,
+) {
+  const link = (
+    <a ref={ref} aria-label={label} className={cx("mk-icon-button", `mk-icon-button--${variant}`, `mk-icon-button--${size}`, className)} {...rest}>
+      {icon}
+    </a>
+  );
+  return tooltip ? <Tooltip label={label}>{link}</Tooltip> : link;
 });

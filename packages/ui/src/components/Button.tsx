@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { cx } from "./util.ts";
 
 export type ButtonVariant = "default" | "primary" | "destructive" | "plain";
@@ -33,5 +33,24 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       {loading ? <span className="mk-spinner mk-spinner--inline" aria-hidden="true" /> : icon}
       {children !== undefined && <span className="mk-button__label">{loading && loadingLabel ? loadingLabel : children}</span>}
     </button>
+  );
+});
+
+export interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+  variant?: ButtonVariant;
+  size?: ControlSize;
+  icon?: ReactNode;
+}
+
+/** Ссылка в виде кнопки-капсулы: переход по адресу, а не действие (например, «К списку заметок»). */
+export const ButtonLink = forwardRef<HTMLAnchorElement, ButtonLinkProps>(function ButtonLink(
+  { variant = "default", size = "regular", icon, className, children, ...rest },
+  ref,
+) {
+  return (
+    <a ref={ref} className={cx("mk-button", `mk-button--${variant}`, `mk-button--${size}`, className)} {...rest}>
+      {icon}
+      {children !== undefined && <span className="mk-button__label">{children}</span>}
+    </a>
   );
 });

@@ -122,6 +122,13 @@
   background: transparent;
   transition: background var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
 }
+a.mk-icon-button,
+a.mk-icon-button:hover {
+  text-decoration: none;
+}
+.mk-icon-button[aria-current="page"] {
+  color: var(--accent-text);
+}
 .mk-icon-button--small {
   width: var(--control-h-sm);
   height: var(--control-h-sm);
@@ -1107,6 +1114,10 @@
 .mk-form-row--stacked .mk-form-row__control {
   justify-content: flex-start;
 }
+/* Ползунок и поля в строке «друг под другом» занимают всю ширину. */
+.mk-form-row--stacked .mk-form-row__control > * {
+  flex: 1 1 auto;
+}
 @media (max-width: 599px) {
   .mk-form-row {
     flex-direction: column;
@@ -1166,6 +1177,10 @@
   font-size: var(--text-callout);
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
+}
+/* На подложке выделения вторичный цвет опускается ниже 4.5:1 — счётчик берёт основной. */
+.mk-sidebar-item.is-selected .mk-sidebar-item__count {
+  color: var(--text-primary);
 }
 
 /* ─── Жетоны ─────────────────────────────────────────────── */
@@ -1243,15 +1258,30 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
+.mk-empty__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+.mk-empty__icon svg {
+  width: 26px;
+  height: 26px;
+}
 .mk-empty .mk-button {
   margin-top: 8px;
 }
 
 /* ─── Уведомления ────────────────────────────────────────── */
+/* --mk-toast-offset: приложение поднимает уведомление над своей нижней панелью. */
 .mk-toast-region {
   position: fixed;
   left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  bottom: calc(var(--mk-toast-offset, 24px) + env(safe-area-inset-bottom));
   z-index: 950;
   transform: translateX(-50%);
   width: max-content;
