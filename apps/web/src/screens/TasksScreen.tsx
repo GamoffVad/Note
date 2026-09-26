@@ -1,5 +1,5 @@
 import { projectTasks } from "@mayak/domain";
-import { Button, EmptyState } from "@mayak/ui";
+import { Button, EmptyState } from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 import { TaskItem } from "../components/TaskItem.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
@@ -19,7 +19,7 @@ export function TasksScreen() {
   return (
     <article className="page">
       <header className="page-header">
-        <h1 className="page-title">Ваши задачи</h1>
+        <h1 className="page-title">Задачи</h1>
         <p className="page-subtitle">По одному шагу</p>
       </header>
       {groups.length === 0 ? (
@@ -39,7 +39,7 @@ export function TasksScreen() {
           <p className="intro">{open ? `Осталось сделать: ${open}.` : "Всё сделано. Отличная работа."}</p>
           {groups.map(({ note, tasks }) => (
             <section key={note.id} className="task-group" aria-labelledby={`tg-${note.id}`}>
-              <h2 id={`tg-${note.id}`} className="task-group__title mk-headline">
+              <h2 id={`tg-${note.id}`} className="task-group__title isl-headline">
                 <a href={routeHref({ section: "notes", noteId: note.id })}>{noteTitle(note.document)}</a>
               </h2>
               <div className="card task-group__card">

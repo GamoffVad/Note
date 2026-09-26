@@ -4,7 +4,7 @@ import { chooseOption, createNote, expectNoHorizontalScroll } from "./helpers.ts
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Все заметки" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Заметки", exact: true })).toBeVisible();
 });
 
 test("заметка сохраняется на устройстве и переживает перезагрузку", async ({ page }) => {
@@ -15,7 +15,7 @@ test("заметка сохраняется на устройстве и пер�
   await page.keyboard.press("Enter");
   await page.keyboard.type("Созвониться");
   await expect(page.locator(".save-state")).toHaveText("Сохранено на устройстве");
-  await expect(page.getByRole("contentinfo")).toContainText("Сохранено на устройстве · синхронизация не настроена");
+  await expect(page.locator(".titlebar .sync-status")).toContainText("Сохранено на устройстве · синхронизация не настроена");
 
   await page.reload();
   await expect(page.getByLabel("Заголовок заметки")).toHaveValue("Планы на осень");
@@ -46,7 +46,7 @@ test("отметка в разделе «Задачи» меняет задач�
   await expect(page.locator(".save-state")).toHaveText("Сохранено на устройстве");
 
   await page.getByRole("navigation", { name: "Основная навигация" }).getByRole("link", { name: /Задачи/ }).click();
-  await expect(page.getByRole("heading", { name: "Ваши задачи" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Задачи", exact: true })).toBeVisible();
   await page.getByRole("checkbox", { name: "Купить билеты" }).check();
   await expect(page.getByText("Всё сделано. Отличная работа.")).toBeVisible();
 
@@ -57,7 +57,7 @@ test("отметка в разделе «Задачи» меняет задач�
 test("поиск, пустой результат и Esc", async ({ page }) => {
   await createNote(page, "Поездка", "Паспорт и билеты");
   await createNote(page, "Работа", "Отчёт");
-  const search = page.getByLabel("Поиск заметок");
+  const search = page.getByLabel("Поиск по заметкам");
   await search.fill("паспорт");
   await expect(page.locator(".note-item")).toHaveCount(1);
   await expect(page.locator(".note-item")).toContainText("Поездка");
@@ -101,7 +101,7 @@ test("сочетания клавиш: Ctrl+Alt+N и Ctrl+K", async ({ page }) =
   await expect(page.getByLabel("Заголовок заметки")).toBeFocused();
   await page.keyboard.type("С клавиатуры");
   await page.keyboard.press("Control+KeyK");
-  await expect(page.getByLabel("Поиск заметок")).toBeFocused();
+  await expect(page.getByLabel("Поиск по заметкам")).toBeFocused();
   await expect(page.locator(".note-item")).toContainText("С клавиатуры");
 });
 
@@ -118,34 +118,16 @@ test("экспорт заметки в Markdown", async ({ page }) => {
   expect(Buffer.concat(content).toString("utf8")).toBe("# Отчёт: итоги\n\nПервый абзац\n\n- [x] Готово\n");
 });
 
-test("диктовка в браузере объясняет, что работает в приложении, и не трогает микрофон", async ({ page }) => {
-  await page.addInitScript(() => {
-    const w = window as unknown as { micRequests: number };
-    w.micRequests = 0;
-    const original = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices);
-    if (navigator.mediaDevices) {
-      navigator.mediaDevices.getUserMedia = (c) => {
-        w.micRequests++;
-        return original!(c);
-      };
-    }
-  });
-  await page.reload();
+test("в браузере нет кнопки «Диктовать»: диктовка работает через Wispr Flow в приложении", async ({ page }) => {
   await createNote(page, "Голос");
-  await page.getByRole("button", { name: "Диктовать" }).click();
-  const dialog = page.getByRole("dialog", { name: "Диктовка" });
-  await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("работает в приложении «Маяк»");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-  await expect(page.getByRole("button", { name: "Диктовать" })).toBeFocused();
-  expect(await page.evaluate(() => (window as unknown as { micRequests: number }).micRequests)).toBe(0);
+  await expect(page.getByRole("button", { name: "Текст" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Диктовать" })).toHaveCount(0);
 });
 
 test("внешний вид: тёмная тема и размер редактора сохраняются, сброс возвращает значения", async ({ page }) => {
   await page.getByRole("link", { name: "Настройки" }).first().click();
   await chooseOption(page, "Тема оформления", "Тёмная");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-mayak-theme", "dark");
   // Ползунок библиотеки (role="slider"): стрелка вправо — шаг 1 px, с 17 до 22.
   const editorSize = page.getByRole("group", { name: "Шрифт редактора" }).getByRole("slider");
   await editorSize.focus();
@@ -153,11 +135,11 @@ test("внешний вид: тёмная тема и размер редакт�
   await expect(editorSize).toHaveAttribute("aria-valuenow", "22");
   await expect(page.getByText("Оформление сохранено на устройстве.")).toBeVisible();
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-mayak-theme", "dark");
   expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--editor-size"))).toBe("22px");
 
   await page.getByRole("button", { name: "Сбросить оформление" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).toHaveAttribute("data-mayak-theme", "light");
   expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--editor-size"))).toBe("17px");
 });
 
@@ -178,17 +160,17 @@ test("внешний вид: предупреждение о низком кон
 
   await page.evaluate(() => localStorage.setItem("mayak.appearance.v2", "{испорчено"));
   await page.reload();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).toHaveAttribute("data-mayak-theme", "light");
   await expect(page.getByRole("combobox", { name: "Тема оформления" })).toContainText("Светлая");
 });
 
-test("тема «Как в системе» следует настройке ОС без перезагрузки", async ({ page }) => {
+test("тема «Системная» следует настройке ОС без перезагрузки", async ({ page }) => {
   await page.goto("/#/settings");
-  await chooseOption(page, "Тема оформления", "Как в системе");
+  await chooseOption(page, "Тема оформления", "Системная");
   await page.emulateMedia({ colorScheme: "dark" });
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).toHaveAttribute("data-mayak-theme", "dark");
   await page.emulateMedia({ colorScheme: "light" });
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).toHaveAttribute("data-mayak-theme", "light");
 });
 
 for (const width of [320, 390, 768, 1280, 1440]) {
@@ -242,10 +224,10 @@ test("на экранах нет стандартных элементов бр�
             "details",
             "summary",
             "body [title]",
-            "dialog:not(.mk-sheet)",
+            "dialog:not(.isl-sheet)",
             // Нативные флажки и радиокнопки допустимы только скрытыми внутри компонентов библиотеки.
-            'input[type="checkbox"]:not(.mk-check__input)',
-            'input[type="radio"]:not(.mk-radio__input)',
+            'input[type="checkbox"]:not(.isl-check__input)',
+            'input[type="radio"]:not(.isl-radio__input)',
           ].join(", "),
         ),
       ].map((el) => el.outerHTML.slice(0, 80)),

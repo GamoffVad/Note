@@ -1,25 +1,33 @@
 import { StrictMode, useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import "@mayak/ui/styles.css";
+import "@mayak/islands/styles.css";
 import "./catalog.css";
 import {
   Badge,
   Banner,
+  BottomNav,
+  BottomNavItem,
   Button,
   ButtonLink,
+  Card,
   Checkbox,
   ColorWell,
   Disclosure,
   EmptyState,
+  FileCard,
   FormGroup,
   FormRow,
+  Hero,
   IconButton,
   IconLink,
   MenuButton,
+  NoteCard,
   PopUpButton,
   ProgressBar,
   RadioGroup,
+  ScreenTitle,
   SearchField,
+  SectionLabel,
   SegmentedControl,
   Sheet,
   SidebarItem,
@@ -28,29 +36,33 @@ import {
   Slider,
   Spinner,
   Switch,
+  SyncStatus,
   TextArea,
   TextField,
   ToastProvider,
   TokenField,
   ToolbarGroup,
   useToast,
-} from "@mayak/ui";
+} from "@mayak/islands";
+import art from "@mayak/islands/art.webp";
+import artSmall from "@mayak/islands/art-small.webp";
 import { Icon } from "../components/Icon.tsx";
 
 /**
- * Каталог компонентов: каждый компонент во всех состояниях из
- * docs/design-system.md, в светлой и тёмной теме. Страница — источник
- * истины для внешнего вида и для автотестов доступности.
+ * Каталог библиотеки @mayak/islands («Острова идей»): каждый компонент во
+ * всех состояниях из docs/design-system.md, в светлой, тёмной и контрастной
+ * теме. Страница — источник истины для внешнего вида и для автотестов
+ * доступности.
  */
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "contrast";
 
 function Section({ id, title, children, note }: { id: string; title: string; children: ReactNode; note?: ReactNode }) {
   return (
     <section className="cat-section" aria-labelledby={id}>
-      <h2 id={id} className="mk-title2">
+      <h2 id={id} className="isl-title2">
         {title}
       </h2>
-      {note && <p className="mk-caption cat-note">{note}</p>}
+      {note && <p className="isl-caption cat-note">{note}</p>}
       <div className="cat-demo">{children}</div>
     </section>
   );
@@ -59,25 +71,25 @@ function Section({ id, title, children, note }: { id: string; title: string; chi
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="cat-row">
-      <div className="cat-row__label mk-caption">{label}</div>
+      <div className="cat-row__label isl-caption">{label}</div>
       <div className="cat-row__items">{children}</div>
     </div>
   );
 }
 
 const COLOR_TOKENS = [
-  ["--text-primary", "Основной текст"],
-  ["--text-secondary", "Вторичный текст"],
-  ["--accent", "Акцент (заливка)"],
-  ["--accent-text", "Акцент (текст)"],
-  ["--danger-text", "Ошибка"],
-  ["--success-text", "Успех"],
-  ["--warning-text", "Внимание"],
-  ["--bg-window", "Фон окна"],
-  ["--bg-content", "Содержимое"],
-  ["--bg-sidebar-solid", "Боковая панель"],
-  ["--separator", "Разделитель"],
-  ["--border-control", "Граница полей"],
+  ["--mayak-text-primary", "Основной текст"],
+  ["--mayak-text-secondary", "Вторичный текст"],
+  ["--mayak-action-primary", "Основное действие"],
+  ["--mayak-status-success", "Успех"],
+  ["--mayak-status-warning", "Внимание"],
+  ["--mayak-status-danger", "Ошибка"],
+  ["--mayak-map-route", "Маршрутный акцент"],
+  ["--mayak-surface-page", "Страница"],
+  ["--mayak-surface-panel", "Панель"],
+  ["--mayak-surface-raised", "Поднятая поверхность"],
+  ["--mayak-surface-soft", "Мягкая поверхность"],
+  ["--mayak-border-subtle", "Граница"],
 ] as const;
 
 function luminance(rgb: string): number {
@@ -97,7 +109,7 @@ function ColorTable({ theme }: { theme: Theme }) {
       probe.style.color = `var(${token})`;
       return getComputedStyle(probe).color;
     };
-    const content = resolve("--bg-content");
+    const content = resolve("--mayak-surface-raised");
     setRows(
       COLOR_TOKENS.map(([token, name]) => {
         const value = resolve(token);
@@ -110,13 +122,13 @@ function ColorTable({ theme }: { theme: Theme }) {
   }, [theme]);
   return (
     <table className="cat-colors">
-      <caption className="mk-visually-hidden">Цветовые токены и контраст с фоном содержимого</caption>
+      <caption className="isl-visually-hidden">Цветовые токены и контраст с поднятой поверхностью</caption>
       <thead>
         <tr>
           <th scope="col">Образец</th>
           <th scope="col">Токен</th>
           <th scope="col">Значение</th>
-          <th scope="col">Контраст к содержимому</th>
+          <th scope="col">Контраст к поверхности</th>
         </tr>
       </thead>
       <tbody>
@@ -148,10 +160,11 @@ function Catalog() {
   const [radio, setRadio] = useState<"notes" | "tasks" | "files">("notes");
   const [sw, setSw] = useState({ a: true, b: false });
   const [seg, setSeg] = useState<"light" | "dark" | "system">("light");
+  const [nav, setNav] = useState("notes");
   const [font, setFont] = useState("system");
   const [weight, setWeight] = useState(400);
   const [size, setSize] = useState(17);
-  const [color, setColor] = useState("#1d1d1f");
+  const [color, setColor] = useState("#173b3f");
   const [tokens, setTokens] = useState(["Личное", "Работа"]);
   const [sheet, setSheet] = useState(false);
   const [progress, setProgress] = useState(40);
@@ -159,15 +172,15 @@ function Catalog() {
 
   // До эффектов дочерних компонентов: таблица цветов читает значения уже новой темы.
   useLayoutEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.mayakTheme = theme;
   }, [theme]);
 
   return (
     <div className="cat">
-      <header className="cat-header mk-material">
+      <header className="cat-header">
         <div>
-          <h1 className="mk-large-title">Маяк · компоненты</h1>
-          <p className="mk-secondary">Стиль macOS 27 · Liquid Glass · дизайн-система 2.1</p>
+          <h1 className="isl-large-title">Маяк · компоненты</h1>
+          <p className="isl-secondary">@mayak/islands · «Острова идей» · дизайн-система 1.0</p>
         </div>
         <SegmentedControl
           label="Тема каталога"
@@ -176,23 +189,23 @@ function Catalog() {
           segments={[
             { value: "light", label: "Светлая" },
             { value: "dark", label: "Тёмная" },
+            { value: "contrast", label: "Контрастная" },
           ]}
         />
       </header>
 
       <main className="cat-main">
-        <Section id="type" title="Типографика" note="Шкала текстовых стилей macOS (HIG «Typography»); подписи не мельче 12 px (ТЗ).">
-          <p className="mk-large-title">Large Title · 26</p>
-          <p className="mk-title1">Title 1 · 22</p>
-          <p className="mk-title2">Title 2 · 17</p>
-          <p className="mk-title3">Title 3 · 15</p>
-          <p className="mk-headline">Headline · 13, полужирный</p>
-          <p className="mk-body">Body · 13 — основной текст интерфейса</p>
-          <p className="mk-callout">Callout · 12</p>
-          <p className="mk-caption">Caption · 12 (в macOS 10 pt)</p>
+        <Section id="type" title="Типографика" note="Роли раздела 4 дизайн-системы; размеры в rem — следуют настройке размера интерфейса.">
+          <p className="isl-large-title">Заголовок экрана · 32 (40 на компьютере)</p>
+          <p className="isl-title1">Заголовок секции · 22</p>
+          <p className="isl-title3">Название заметки · 18</p>
+          <p className="isl-headline">Текст интерфейса · 16, жирный</p>
+          <p className="isl-body">Текст интерфейса · 16</p>
+          <p className="isl-caption">Подписи · 14</p>
+          <SectionLabel as="p">Метка секции · 14, заглавные</SectionLabel>
         </Section>
 
-        <Section id="colors" title="Цвета" note="Акцент и статусы — значения HIG «Increased contrast»; контраст считается по фактическому фону.">
+        <Section id="colors" title="Цвета" note="Семантические токены tokens.json; контраст считается по фактическому фону поднятой поверхности.">
           <ColorTable theme={theme} />
         </Section>
 
@@ -230,13 +243,13 @@ function Catalog() {
           </Row>
         </Section>
 
-        <Section id="icon-buttons" title="Кнопки панели инструментов" note="Только значок: доступное имя и подсказка при наведении или фокусе.">
+        <Section id="icon-buttons" title="Кнопки-значки" note="Только значок: доступное имя и подсказка при наведении или фокусе; зона касания 48 px на сенсорном экране.">
           <Row label="Обычные">
             <IconButton label="История" icon={<Icon name="history" />} />
             <IconButton label="Синхронизация" icon={<Icon name="sync" />} />
             <IconButton label="В корзину" icon={<Icon name="trash" />} />
           </Row>
-          <Row label="Группа на стекле">
+          <Row label="Группа">
             <ToolbarGroup label="Действия с заметкой">
               <IconButton label="История" icon={<Icon name="history" />} />
               <IconButton label="Синхронизация" icon={<Icon name="sync" />} />
@@ -280,7 +293,7 @@ function Catalog() {
               <SearchField label="Найти заметку" value={query} onChange={setQuery} />
             </div>
           </Row>
-          <Row label="Жетоны">
+          <Row label="Метки">
             <TokenField label="Теги" tokens={tokens} onChange={setTokens} placeholder="+ тег" prefix="# " />
           </Row>
         </Section>
@@ -322,7 +335,7 @@ function Catalog() {
               segments={[
                 { value: "light", label: "Светлая" },
                 { value: "dark", label: "Тёмная" },
-                { value: "system", label: "Как в системе" },
+                { value: "system", label: "Системная" },
               ]}
             />
           </Row>
@@ -342,11 +355,11 @@ function Catalog() {
               label="Толщина"
               value={weight}
               onChange={setWeight}
-              options={[300, 400, 500, 600, 700].map((w) => ({ value: w, label: String(w) }))}
+              options={[400, 500, 600, 700].map((w) => ({ value: w, label: String(w) }))}
             />
             <PopUpButton label="Недоступна" value="a" onChange={() => undefined} options={[{ value: "a", label: "Единственный" }]} disabled />
-            <Slider label="Размер текста" value={size} onChange={setSize} min={14} max={24} format={(v) => `${v} px`} />
-            <Slider label="Недоступен" value={16} onChange={() => undefined} min={14} max={24} disabled />
+            <Slider label="Размер текста" value={size} onChange={setSize} min={14} max={28} format={(v) => `${v} px`} />
+            <Slider label="Недоступен" value={16} onChange={() => undefined} min={14} max={28} disabled />
             <ColorWell label="Цвет текста" value={color} onChange={setColor} />
           </div>
         </Section>
@@ -382,12 +395,100 @@ function Catalog() {
               <ProgressBar label="Подготовка" value={null} />
             </div>
           </Row>
-          <Row label="Уведомление и лист">
+          <Row label="Уведомление и диалог">
             <Button onClick={() => toast({ text: "Заметка перемещена в корзину", action: { label: "Отменить", run: () => undefined } })}>
               Показать уведомление
             </Button>
-            <Button onClick={() => setSheet(true)}>Открыть лист…</Button>
+            <Button onClick={() => setSheet(true)}>Открыть диалог…</Button>
           </Row>
+        </Section>
+
+        <Section id="islands" title="Экран «Острова идей»" note="Заголовок экрана, поиск, изображение-герой, метка секции, карточки заметок, файл и статус синхронизации (раздел 6).">
+          <div className="cat-phone">
+            <ScreenTitle
+              as="h3"
+              actions={
+                <>
+                  <IconButton label="Записать голосом" icon={<Icon name="mic" />} />
+                  <IconButton label="Создать заметку" icon={<Icon name="plus" />} />
+                </>
+              }
+            >
+              Заметки
+            </ScreenTitle>
+            <SearchField label="Поиск по заметкам" placeholder="Поиск по заметкам" value={query} onChange={setQuery} />
+            <Hero src={artSmall} srcSet={`${artSmall} 960w, ${art} 1600w`} title="24 записи" caption="Идеи на своей карте" />
+            <SectionLabel as="h4">Ваши записи</SectionLabel>
+            <div className="cat-stack">
+              <NoteCard href="#islands" onClick={(e) => e.preventDefault()} title="Планы на осень" snippet="Собрать всё важное в одном месте" meta="Сегодня" pinned selected />
+              <NoteCard href="#islands" onClick={(e) => e.preventDefault()} title="После встречи" snippet="Решения и следующие шаги" meta="Вчера" badges={<Badge tone="info">Отправляется</Badge>} />
+              <NoteCard
+                href="#islands"
+                onClick={(e) => e.preventDefault()}
+                title="Очень длинное название заметки, которое не помещается в одну строку карточки"
+                snippet="Наброски, ссылки и файлы. Длинный фрагмент текста переносится на вторую строку и обрезается многоточием, чтобы карточки оставались одной высоты."
+                meta="22 сент. · # Работа"
+                badges={<Badge tone="danger">Ошибка отправки</Badge>}
+              />
+            </div>
+            <BottomNav label="Разделы (пример)">
+              {(
+                [
+                  ["notes", "Заметки"],
+                  ["tasks", "Задачи"],
+                  ["files", "Файлы"],
+                  ["devices", "Устройства"],
+                ] as const
+              ).map(([id, label]) => (
+                <BottomNavItem
+                  key={id}
+                  href="#islands"
+                  icon={<Icon name={id} />}
+                  label={label}
+                  selected={nav === id}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setNav(id);
+                  }}
+                />
+              ))}
+            </BottomNav>
+          </div>
+          <Row label="Статус синхронизации">
+            <SyncStatus tone="local" icon={<Icon name="check" />}>
+              Сохранено на устройстве
+            </SyncStatus>
+            <SyncStatus tone="syncing" icon={<Icon name="sync" />}>
+              Синхронизируется
+            </SyncStatus>
+            <SyncStatus tone="synced" icon={<Icon name="check" />}>
+              Синхронизировано
+            </SyncStatus>
+            <SyncStatus tone="action" icon={<Icon name="warning" />}>
+              Требуется действие
+            </SyncStatus>
+          </Row>
+          <FileCard
+            icon={<Icon name="files" />}
+            name="Материалы проекта.pdf"
+            details="PDF · 2,4 МБ"
+            status="на этом устройстве"
+            action={<Button size="small" variant="plain">Открыть</Button>}
+          />
+          <div className="cat-grid">
+            <Card>
+              <strong>Поднятая поверхность</strong>
+              <p className="isl-secondary">Заметка, диалог, поиск.</p>
+            </Card>
+            <Card tone="soft">
+              <strong>Мягкая поверхность</strong>
+              <p className="isl-secondary">Вложения, пояснения.</p>
+            </Card>
+            <Card tone="panel">
+              <strong>Панель</strong>
+              <p className="isl-secondary">Список, навигация.</p>
+            </Card>
+          </div>
         </Section>
 
         <Section id="layout" title="Группы, боковая панель, раскрытие">
@@ -407,7 +508,7 @@ function Catalog() {
                 />
               </FormRow>
               <FormRow label="Цвет из темы" hint="Иначе — собственный цвет">
-                <Switch size="mini" checked={sw.a} onChange={(v) => setSw({ ...sw, a: v })} label={<span className="mk-visually-hidden">Цвет из темы</span>} />
+                <Switch size="mini" checked={sw.a} onChange={(v) => setSw({ ...sw, a: v })} label={<span className="isl-visually-hidden">Цвет из темы</span>} />
               </FormRow>
             </FormGroup>
             <SidebarPanel className="cat-sidebar" aria-label="Боковая панель">
@@ -422,7 +523,7 @@ function Catalog() {
             </SidebarPanel>
           </div>
           <Disclosure label="Режим разработчика">
-            <p className="mk-secondary">Содержимое раскрывающегося блока.</p>
+            <p className="isl-secondary">Содержимое раскрывающегося блока.</p>
           </Disclosure>
           <EmptyState title="Запишите первую мысль" icon={<Icon name="notes" />} action={<Button variant="primary">Создать заметку</Button>}>
             Заметка сохранится на этом устройстве даже без интернета.

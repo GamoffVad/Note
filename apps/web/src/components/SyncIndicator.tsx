@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Banner, Button, Sheet } from "@mayak/ui";
+import { Banner, Button, Sheet, SyncStatus, type SyncTone } from "@mayak/islands";
 import { describeSyncStatus, pluralChanges, type StatusText } from "@mayak/sync";
 import { useMayak } from "../state/MayakContext.tsx";
 import { formatTime } from "../state/format.ts";
@@ -18,15 +18,23 @@ export function useSyncText(): StatusText & { icon: IconName } {
   return { ...text, icon };
 }
 
-/** Строка состояния внизу окна; по нажатию — подробности и повтор. */
+const SYNC_TONE: Record<StatusText["tone"], SyncTone> = {
+  neutral: "local",
+  success: "synced",
+  warning: "action",
+  danger: "action",
+};
+
+/** Статус синхронизации в верхней панели (значок и текст); по нажатию — подробности и повтор. */
 export function SyncFooter() {
   const [open, setOpen] = useState(false);
   const text = useSyncText();
   return (
     <>
-      <button type="button" className={`sync-status tone-${text.tone}`} onClick={() => setOpen(true)}>
-        <Icon name={text.icon} size={14} />
-        <span>{text.text}</span>
+      <button type="button" className="sync-status" onClick={() => setOpen(true)}>
+        <SyncStatus tone={SYNC_TONE[text.tone]} icon={<Icon name={text.icon} size={18} />}>
+          {text.text}
+        </SyncStatus>
       </button>
       {open && <SyncDialog onClose={() => setOpen(false)} />}
     </>
@@ -112,20 +120,20 @@ export function SyncDialog({ onClose }: { onClose: () => void }) {
       </dl>
       {failed.length > 0 && (
         <>
-          <h3 className="mk-headline">Не удалось отправить</h3>
+          <h3 className="isl-headline">Не удалось отправить</h3>
           <ul className="plain-list">
             {failed.map((entry) => (
               <li key={entry.entityId}>
                 <strong>{titleOf(entry.entityId)}</strong>
                 <br />
-                <span className="mk-secondary">{entry.failure!.message}. Текст сохранён на устройстве.</span>
+                <span className="isl-secondary">{entry.failure!.message}. Текст сохранён на устройстве.</span>
               </li>
             ))}
           </ul>
         </>
       )}
       {!connected && (
-        <p className="mk-secondary">
+        <p className="isl-secondary">
           Заметки хранятся в браузере этого устройства. Чтобы продолжать работу на другом устройстве, нужна
           синхронизация с аккаунтом.
         </p>

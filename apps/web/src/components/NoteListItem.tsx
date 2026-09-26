@@ -1,8 +1,7 @@
-import { Badge, type Tone } from "@mayak/ui";
+import { Badge, NoteCard, type Tone } from "@mayak/islands";
 import { noteSyncState, type ConflictRecord, type LocalNote, type OutboxEntry } from "@mayak/sync";
 import { formatRelativeDate, notePreview, noteTitle } from "../state/format.ts";
 import { routeHref } from "../state/router.ts";
-import { Icon } from "./Icon.tsx";
 
 /** Состояние синхронизации заметки: подпись и тон значка. */
 const STATE_BADGE: Record<ReturnType<typeof noteSyncState>, { label: string; tone: Tone } | null> = {
@@ -21,35 +20,23 @@ interface Props {
   showSyncState: boolean;
 }
 
-/** Элемент списка заметок: скруглённое выделение, Enter открывает (ссылка). */
+/** Карточка заметки в списке: заголовок, фрагмент, дата и тег; Enter открывает (ссылка). */
 export function NoteListItem({ note, outbox, conflict, selected, showSyncState }: Props) {
   const state = noteSyncState(note, outbox, conflict);
   const badge = state === "conflict" || state === "failed" || showSyncState ? STATE_BADGE[state] : null;
   const tag = note.document.tags[0];
+  const preview = notePreview(note.document);
   return (
-    <a
-      className={`note-item${selected ? " selected" : ""}`}
+    <NoteCard
+      className="note-item"
       href={routeHref({ section: "notes", noteId: note.id })}
-      aria-current={selected ? "page" : undefined}
       data-note-id={note.id}
-    >
-      <strong className="note-item__title">
-        {note.document.pinned && (
-          <span className="note-item__pin">
-            <Icon name="pin" size={14} />
-            <span className="mk-visually-hidden">Закреплена. </span>
-          </span>
-        )}
-        <span>{noteTitle(note.document)}</span>
-      </strong>
-      <span className="note-item__preview">{notePreview(note.document)}</span>
-      <small className="note-item__meta">
-        <span>
-          {formatRelativeDate(note.updatedAt)}
-          {tag ? ` · ${tag}` : ""}
-        </span>
-        {badge && <Badge tone={badge.tone}>{badge.label}</Badge>}
-      </small>
-    </a>
+      selected={selected}
+      pinned={note.document.pinned}
+      title={noteTitle(note.document)}
+      snippet={preview || undefined}
+      meta={`${formatRelativeDate(note.updatedAt)}${tag ? ` · # ${tag}` : ""}`}
+      badges={badge && <Badge tone={badge.tone}>{badge.label}</Badge>}
+    />
   );
 }

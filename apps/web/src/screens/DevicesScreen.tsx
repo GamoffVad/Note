@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DeviceInfo } from "@mayak/domain";
-import { Badge, Banner, Button, Sheet, useToast } from "@mayak/ui";
+import { Badge, Banner, Button, Sheet, useToast } from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 import { Loading } from "../components/Loading.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
@@ -38,7 +38,7 @@ export function DevicesScreen() {
     <article className="page">
       <header className="page-header page-header--actions">
         <div>
-          <h1 className="page-title">Ваши устройства</h1>
+          <h1 className="page-title">Устройства</h1>
           <p className="page-subtitle">Связь между устройствами</p>
         </div>
         {transport && (
@@ -57,7 +57,7 @@ export function DevicesScreen() {
             </li>
           </ul>
           <div className="explain">
-            <h2 className="mk-headline">Второе устройство</h2>
+            <h2 className="isl-headline">Второе устройство</h2>
             <p>
               Чтобы продолжить работу на другом устройстве, войдите в тот же аккаунт на обоих. Сейчас заметки хранятся
               только в этом браузере.
@@ -96,7 +96,7 @@ export function DevicesScreen() {
       )}
       {transport && (
         <div className="explain">
-          <h2 className="mk-headline">Где хранятся данные</h2>
+          <h2 className="isl-headline">Где хранятся данные</h2>
           <p>
             Заметки сохраняются на каждом устройстве и на сервере синхронизации. Отзыв устройства закрывает ему доступ к
             аккаунту, но не удаляет то, что уже сохранено на нём.
@@ -147,7 +147,7 @@ function DeviceCard(props: { name: string; detail: string; badge: string | null;
       </span>
       <div className="device__text">
         <strong>{props.name}</strong>
-        <small className="mk-caption">{props.detail}</small>
+        <small className="isl-caption">{props.detail}</small>
       </div>
       {props.badge && <Badge tone="info">{props.badge}</Badge>}
       {props.revoked && <Badge>Отозвано</Badge>}

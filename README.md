@@ -20,14 +20,14 @@
 - локальное хранилище с атомарными транзакциями: в памяти и на IndexedDB;
 - клиентский движок синхронизации: outbox, идемпотентные повторы, pull по курсору, явные конфликты, полная ресинхронизация после 410;
 - сервер API `/api/v1` на PostgreSQL: bootstrap, push, pull, история, восстановление версии, устройства и их отзыв;
-- веб-клиент `apps/web` на библиотеке компонентов `@mayak/ui` в стиле macOS 27 (Liquid Glass, см. [`docs/design-system.md`](docs/design-system.md)): заметки и редактор блоков, задачи, корзина, история версий, конфликты, устройства, настройки внешнего вида, светлая и тёмная темы, раскладки для компьютера, планшета и телефона;
+- веб-клиент `apps/web` на библиотеке компонентов `@mayak/islands` — дизайн-система «Острова идей» (см. [`docs/design-system.md`](docs/design-system.md)): заметки и редактор блоков, задачи, корзина, история версий, конфликты, устройства, настройки внешнего вида, светлая, тёмная и контрастная темы, раскладки для компьютера, планшета и телефона;
 - вход через Supabase Auth по email (код из письма или ссылка): сервер проверяет токены по JWKS проекта, отзыв устройства закрывает и его сессию; таблицы в закрытой схеме `mayak`, не видимой Data API Supabase — [ADR 0004](docs/adr/0004-auth.md), [инструкция по настройке](docs/supabase-setup.md);
 - модульные тесты (в том числе сквозные на PostgreSQL), браузерные тесты Playwright (синхронизация двух браузеров, вход через имитацию Supabase Auth, доступность axe), тест настоящего окна приложения через WebDriver и распознавание речи в CI;
 - развёртывание API на Vercel — [docs/deploy-vercel.md](docs/deploy-vercel.md);
-- библиотека компонентов `packages/ui` в стиле macOS 27 (Liquid Glass) — [docs/design-system.md](docs/design-system.md);
+- библиотека компонентов `packages/islands` («Острова идей», без стандартных элементов управления) — [docs/design-system.md](docs/design-system.md);
 - приложения на Tauri 2 для Windows, macOS, Linux и Android: заметки в SQLite на устройстве, ключ сессии в системном хранилище секретов, вход по ссылке из письма, сборка и публикация установщиков в GitHub Actions — [docs/desktop.md](docs/desktop.md);
 - база и вход на Supabase (проект `mayak`, eu-west-1), API на Vercel с автопроверкой после развёртывания;
-- голосовой ввод: локальное распознавание русской речи Whisper (small на компьютерах, tiny на телефонах), модель скачивается по нажатию с проверкой SHA-256.
+- голосовой ввод: на Android — встроенное распознавание речи телефона, текст появляется по мере речи; на Windows и macOS кнопка «Диктовать» включает установленный [Wispr Flow](https://wisprflow.ai).
 
 Не сделано: своя почта (SMTP) — без неё письма входа приходят только владельцу проекта; приложение для iPhone (нужен Apple Developer Program); подпись установщиков macOS и Windows; проверка диктовки на живом микрофоне; файлы и передача копий; импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
 
@@ -38,7 +38,7 @@ packages/domain       типы, схемы (zod), лимиты, протокол
 packages/local-store  LocalStore: память, IndexedDB, SQLite через KvBackend
 packages/sync         SyncEngine, HttpTransport, планировщик, тексты статусов
 packages/server       SyncService, HTTP-обработчик (Fetch API), CORS, миграции SQL
-packages/ui           библиотека компонентов в стиле macOS 27 (Liquid Glass)
+packages/islands      библиотека компонентов «Острова идей»
 apps/web              интерфейс: React + Vite, тесты Playwright; сборка desktop — для приложения
 apps/desktop          настольное приложение Tauri 2: SQLite, хранилище секретов, установщики
 docs/adr              решения: хранение, синхронизация, редактор

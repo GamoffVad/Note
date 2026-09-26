@@ -4,7 +4,7 @@ import {
   DEFAULT_APPEARANCE,
   loadAppearance,
   lowContrastScopes,
-  resolveDark,
+  resolveTheme,
   saveAppearance,
   STORAGE_KEY,
   SURFACES,
@@ -25,7 +25,7 @@ describe("настройки оформления", () => {
 
   it("заменяет повреждённые и выходящие за границы значения безопасными", () => {
     const v = validateAppearance({ theme: "neon", uiSize: 40, editorSize: 14, uiWeight: 450, editor: "mono", uiColor: "red" });
-    expect(v).toMatchObject({ theme: "light", uiSize: 16, editorSize: 14, uiWeight: 400, editor: "mono", uiColor: "#182538" });
+    expect(v).toMatchObject({ theme: "light", uiSize: 16, editorSize: 14, uiWeight: 400, editor: "mono", uiColor: "#173b3f" });
     expect(loadAppearance(memoryStorage({ [STORAGE_KEY]: "{битый json" }))).toEqual(DEFAULT_APPEARANCE);
   });
 
@@ -47,10 +47,11 @@ describe("настройки оформления", () => {
     expect(JSON.parse(ok.data[STORAGE_KEY]!)).toEqual(DEFAULT_APPEARANCE);
   });
 
-  it("«Как в системе» следует системной теме", () => {
-    expect(resolveDark("system", true)).toBe(true);
-    expect(resolveDark("system", false)).toBe(false);
-    expect(resolveDark("light", true)).toBe(false);
+  it("«Системная» следует теме ОС, ручной выбор — нет", () => {
+    expect(resolveTheme("system", true)).toBe("dark");
+    expect(resolveTheme("system", false)).toBe("light");
+    expect(resolveTheme("light", true)).toBe("light");
+    expect(resolveTheme("contrast", true)).toBe("contrast");
   });
 });
 
@@ -61,11 +62,11 @@ describe("контраст", () => {
   });
 
   it("основной и вторичный текст обеих тем не ниже 4.5:1 на всех поверхностях", () => {
-    // --text-secondary из токенов @mayak/ui.
-    const secondary = { light: "#6c6c70", dark: "#aeaeb2" };
-    for (const theme of ["light", "dark"] as const) {
+    // --mayak-text-secondary из islands-tokens.css.
+    const secondary = { light: "#4e6b6c", dark: "#b3cecb", contrast: "#143d42" };
+    for (const theme of ["light", "dark", "contrast"] as const) {
       const s = SURFACES[theme];
-      for (const bg of [s.page, s.panel, s.navigation]) {
+      for (const bg of [s.page, s.panel, s.raised]) {
         expect(contrastRatio(s.text, bg)).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(secondary[theme], bg)).toBeGreaterThanOrEqual(4.5);
       }
@@ -74,8 +75,8 @@ describe("контраст", () => {
 
   it("предупреждает о собственном цвете ниже 4.5:1 и не меняет выбор сам", () => {
     const pale = { ...DEFAULT_APPEARANCE, uiAuto: false, uiColor: "#dddddd", editorAuto: false, editorColor: "#222222" };
-    expect(lowContrastScopes(pale, false)).toEqual(["ui"]);
-    expect(lowContrastScopes(pale, true)).toEqual(["editor"]);
+    expect(lowContrastScopes(pale, "light")).toEqual(["ui"]);
+    expect(lowContrastScopes(pale, "dark")).toEqual(["editor"]);
     expect(pale.uiColor).toBe("#dddddd");
   });
 });

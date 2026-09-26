@@ -1,4 +1,4 @@
-import { Button, EmptyState, useToast } from "@mayak/ui";
+import { Button, EmptyState, useToast } from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
 import { formatRelativeDate, notePreview, noteTitle } from "../state/format.ts";
@@ -27,7 +27,7 @@ export function TrashScreen() {
                 <a href={routeHref({ section: "notes", noteId: note.id })}>
                   <strong>{noteTitle(note.document)}</strong>
                 </a>
-                <span className="mk-caption">
+                <span className="isl-caption">
                   Удалена {formatRelativeDate(note.updatedAt).toLocaleLowerCase("ru")} · {notePreview(note.document)}
                 </span>
               </div>

@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { projectTasks } from "@mayak/domain";
-import { ButtonLink, EmptyState, IconButton, IconLink, SidebarItem, SidebarPanel, SidebarSection, ToolbarGroup } from "@mayak/ui";
+import {
+  BottomNav,
+  BottomNavItem,
+  ButtonLink,
+  EmptyState,
+  Hero,
+  IconButton,
+  IconLink,
+  SidebarItem,
+  SidebarPanel,
+  SidebarSection,
+} from "@mayak/islands";
+import art from "@mayak/islands/art.webp";
+import artSmall from "@mayak/islands/art-small.webp";
 import { BrandMark, Icon, type IconName } from "./components/Icon.tsx";
 import { SyncFooter } from "./components/SyncIndicator.tsx";
 import { useMayak } from "./state/MayakContext.tsx";
@@ -100,8 +113,9 @@ export function App() {
     );
   else
     content = (
-      <div className="page page--center">
-        <EmptyState as="h1" title="Начните здесь" icon={<BrandMark />}>
+      <div className="page page--overview">
+        <Hero src={art} srcSet={`${artSmall} 960w, ${art} 1600w`} />
+        <EmptyState as="h1" title="Начните здесь">
           Продолжите на любом устройстве. Выберите заметку в списке или создайте новую.
         </EmptyState>
       </div>
@@ -130,18 +144,17 @@ export function App() {
         />
         <a className="brand" href={routeHref({ section: "notes" })} aria-label="Маяк — все заметки">
           <BrandMark />
-          <span aria-hidden="true">маяк</span>
+          <span aria-hidden="true">Маяк</span>
         </a>
         <div className="titlebar__meta">
+          <SyncFooter />
           <span className="mode-label">{modeLabel}</span>
-          <ToolbarGroup label="Окно">
-            <IconLink
-              label="Настройки"
-              icon={<Icon name="settings" />}
-              href={routeHref({ section: "settings" })}
-              aria-current={route.section === "settings" ? "page" : undefined}
-            />
-          </ToolbarGroup>
+          <IconLink
+            label="Настройки"
+            icon={<Icon name="settings" />}
+            href={routeHref({ section: "settings" })}
+            aria-current={route.section === "settings" ? "page" : undefined}
+          />
         </div>
       </header>
 
@@ -155,30 +168,18 @@ export function App() {
         {content}
       </main>
 
-      <footer className="footer">
-        <SyncFooter />
-        <span className="footer-note">
-          {workspace.config.mode === "dev"
-            ? "Вход разработчика без проверки личности"
-            : workspace.config.mode === "account"
-              ? "Синхронизация через ваш аккаунт"
-              : "Данные не покидают это устройство"}
-        </span>
-      </footer>
-
-      <nav className="bottom-nav mk-glass" aria-label="Основные разделы">
+      <BottomNav className="bottom-nav" label="Основные разделы">
         {MAIN_SECTIONS.map((item) => (
-          <a
+          <BottomNavItem
             key={item.section}
+            className="nav"
             href={routeHref({ section: item.section })}
-            className={`nav${route.section === item.section ? " active" : ""}`}
-            aria-current={route.section === item.section ? "page" : undefined}
-          >
-            <Icon name={item.icon} />
-            <span>{item.label}</span>
-          </a>
+            icon={<Icon name={item.icon} />}
+            label={item.label}
+            selected={route.section === item.section}
+          />
         ))}
-      </nav>
+      </BottomNav>
     </div>
   );
 }
@@ -194,10 +195,6 @@ function Sidebar({ route }: { route: Route }) {
 
   return (
     <SidebarPanel className="sidebar" id="sidebar" aria-label="Навигация">
-      <div className="workspace">
-        <span className="mk-headline">Моё пространство</span>
-        <span className="mk-caption">Заметки всегда с вами</span>
-      </div>
       <SidebarSection label="Основная навигация">
         {MAIN_SECTIONS.map((item) => (
           <SidebarItem
@@ -242,7 +239,7 @@ function Sidebar({ route }: { route: Route }) {
       <div className="sync-card">
         {connected ? (
           <>
-            <strong>На одной волне</strong>
+            <strong>На этом устройстве</strong>
             <p>
               {status.lastSyncedAt ? `Последний обмен — ${formatTime(status.lastSyncedAt)}` : "Обмена ещё не было"}
               <br />
@@ -251,8 +248,8 @@ function Sidebar({ route }: { route: Route }) {
           </>
         ) : (
           <>
-            <strong>Только это устройство</strong>
-            <p>Синхронизация не настроена</p>
+            <strong>На этом устройстве</strong>
+            <p>Сохранено локально · синхронизация не настроена</p>
             <ButtonLink size="small" href={routeHref({ section: "settings" })}>
               Настроить
             </ButtonLink>

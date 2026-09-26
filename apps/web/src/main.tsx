@@ -1,9 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-// Токены, базовые стили и компоненты @mayak/ui — единственный источник цветов, радиусов и материалов.
-import "@mayak/ui/styles.css";
+// Токены, базовые стили и компоненты @mayak/islands («Острова идей») — единственный источник цветов, радиусов и размеров.
+import "@mayak/islands/styles.css";
 import "./styles/app.css";
-import { Button, EmptyState, Spinner, ToastProvider } from "@mayak/ui";
+import { Button, EmptyState, Spinner, ToastProvider } from "@mayak/islands";
 import { App } from "./App.tsx";
 import { AppearanceProvider } from "./state/AppearanceContext.tsx";
 import { MayakProvider } from "./state/MayakContext.tsx";

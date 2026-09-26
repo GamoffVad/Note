@@ -1,0 +1,20 @@
+{
+  "name": "@mayak/islands",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Библиотека компонентов Маяка «Острова идей»: все элементы управления собственные, без стандартных элементов браузера",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./styles.css": "./src/styles/index.css",
+    "./art.webp": "./src/assets/islands-art-1600.webp",
+    "./art-small.webp": "./src/assets/islands-art-960.webp"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "@mayak/domain": "^0.1.0",
+    "@mayak/islands": "^1.0.0",
     "@mayak/local-store": "^0.1.0",
     "@mayak/sync": "^0.1.0",
-    "@mayak/ui": "^0.1.0",
     "@supabase/supabase-js": "^2.117.2",
     "@tauri-apps/api": "^2.11.1",
     "@tauri-apps/plugin-deep-link": "^2.4.10",

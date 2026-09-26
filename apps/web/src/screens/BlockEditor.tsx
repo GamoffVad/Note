@@ -1,36 +1,37 @@
-import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { newId, type Block } from "@mayak/domain";
-import { Button, Checkbox, IconButton } from "@mayak/ui";
+import { Button, Checkbox, IconButton, useToast } from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
-
-/** Куда вставить продиктованный текст: блок и позиция курсора в нём. */
-export interface CaretTarget {
-  blockId: string;
-  position: number;
-}
+import { composeDictation, joinPhrases, onSpeech, speechBridge, speechErrorText } from "../state/speech.ts";
 
 interface Props {
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
   readOnly: boolean;
-  onDictate: (target: CaretTarget | null) => void;
+  /**
+   * Диктовка: "speech" — встроенное распознавание телефона, текст вставляется
+   * по мере речи; "wispr" — на компьютере курсор ставится в поле и вызывается
+   * onWispr (текст вставит Wispr Flow); null — кнопки нет.
+   */
+  dictation: "speech" | "wispr" | null;
+  onWispr?: () => void;
 }
 
-type FocusRequest = { id: string; at: "start" | "end" } | null;
+type FocusRequest = { id: string; at: "start" | "end"; dictate?: boolean } | null;
 
 /**
  * Редактор блоков (docs/adr/0003-editor.md): текстовый блок — растущее поле,
  * задача — флажок библиотеки и однострочное поле. Каждый элемент привязан к id блока,
  * поэтому при наборе блоки не пересоздаются.
  */
-export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
+export function BlockEditor({ blocks, onChange, readOnly, dictation, onWispr }: Props) {
   const [focus, setFocus] = useState<FocusRequest>(null);
   const root = useRef<HTMLDivElement>(null);
-  // Последняя позиция курсора: нажатие «Диктовать» забирает фокус у поля.
-  const caret = useRef<CaretTarget | null>(null);
+  // Последнее поле с курсором: туда «Диктовать» вернёт фокус.
+  const lastField = useRef<{ blockId: string; position: number } | null>(null);
   const remember = (blockId: string) => (event: { currentTarget: HTMLTextAreaElement }) => {
-    caret.current = { blockId, position: event.currentTarget.selectionEnd };
+    lastField.current = { blockId, position: event.currentTarget.selectionEnd };
   };
 
   useLayoutEffect(() => {
@@ -42,9 +43,103 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
       field.focus();
       const pos = focus.at === "start" ? 0 : field.value.length;
       field.setSelectionRange(pos, pos);
+      if (focus.dictate) afterFocus.current?.(focus.id, field);
     }
     setFocus(null);
   }, [focus]);
+
+  /** Ставит курсор в поле (активное, последнее с курсором, последний текстовый блок или новый) и вызывает then. */
+  const afterFocus = useRef<((blockId: string, field: HTMLTextAreaElement) => void) | null>(null);
+  const withField = (then: (blockId: string, field: HTMLTextAreaElement) => void) => {
+    const fieldOf = (id: string) => root.current?.querySelector<HTMLTextAreaElement>(`[data-block-id="${id}"] [data-field]`);
+    const active = document.activeElement;
+    if (active instanceof HTMLTextAreaElement && root.current?.contains(active)) {
+      const id = active.closest<HTMLElement>("[data-block-id]")?.dataset.blockId;
+      if (id) return then(id, active);
+    }
+    const remembered = lastField.current;
+    const target = remembered && fieldOf(remembered.blockId);
+    if (target && remembered) {
+      target.focus();
+      const pos = Math.min(remembered.position, target.value.length);
+      target.setSelectionRange(pos, pos);
+      return then(remembered.blockId, target);
+    }
+    afterFocus.current = then;
+    const last = [...blocks].reverse().find((b) => b.type === "markdown");
+    if (last) {
+      setFocus({ id: last.id, at: "end", dictate: true });
+    } else {
+      const block: Block = { id: newId(), type: "markdown", text: "" };
+      onChange([...blocks, block]);
+      setFocus({ id: block.id, at: "start", dictate: true });
+    }
+  };
+
+  // ─── Диктовка распознаванием телефона ───
+  const toast = useToast();
+  const [listening, setListening] = useState(false);
+  const session = useRef<{ blockId: string; before: string; after: string; committed: string } | null>(null);
+  const latest = useRef({ blocks, onChange });
+  latest.current = { blocks, onChange };
+  const caretAfter = useRef<{ id: string; at: number } | null>(null);
+
+  useEffect(() => {
+    if (dictation !== "speech") return;
+    const off = onSpeech((event) => {
+      if (event.type === "listening") {
+        setListening(event.value);
+        if (!event.value) session.current = null;
+        return;
+      }
+      if (event.type === "error") {
+        toast({ text: speechErrorText(event.code), tone: "error" });
+        return;
+      }
+      const current = session.current;
+      if (!current) return;
+      const spoken = joinPhrases(current.committed, event.text);
+      if (event.type === "final") current.committed = spoken;
+      const { text, caret } = composeDictation(current.before, spoken, current.after);
+      const { blocks: now, onChange: emit } = latest.current;
+      if (!now.some((b) => b.id === current.blockId)) return;
+      caretAfter.current = { id: current.blockId, at: caret };
+      emit(now.map((b) => (b.id === current.blockId ? ({ ...b, text } as Block) : b)));
+    });
+    return () => {
+      off();
+      // Ушли из заметки — запись останавливается.
+      if (session.current) speechBridge()?.stop();
+      session.current = null;
+    };
+  }, [dictation, toast]);
+
+  // Курсор — сразу после продиктованного текста.
+  useLayoutEffect(() => {
+    const target = caretAfter.current;
+    if (!target) return;
+    caretAfter.current = null;
+    const field = root.current?.querySelector<HTMLTextAreaElement>(`[data-block-id="${target.id}"] [data-field]`);
+    if (field && document.activeElement === field) field.setSelectionRange(target.at, target.at);
+  }, [blocks]);
+
+  const dictate = () => {
+    if (dictation === "wispr") return withField(() => onWispr?.());
+    const bridge = speechBridge();
+    if (!bridge) {
+      toast({ text: speechErrorText("unavailable"), tone: "error" });
+      return;
+    }
+    if (listening || session.current) {
+      bridge.stop();
+      return;
+    }
+    withField((blockId, field) => {
+      const pos = field.selectionEnd;
+      session.current = { blockId, before: field.value.slice(0, pos), after: field.value.slice(pos), committed: "" };
+      bridge.start();
+    });
+  };
 
   const replace = (id: string, patch: Partial<Block>) =>
     onChange(blocks.map((b) => (b.id === id ? ({ ...b, ...patch } as Block) : b)));
@@ -149,7 +244,7 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
             </span>
             <div>
               <strong>{block.text || "Вложение"}</strong>
-              <small className="mk-caption">Файлы появятся в следующей версии: содержимое пока недоступно</small>
+              <small className="isl-caption">Файлы появятся в следующей версии: содержимое пока недоступно</small>
             </div>
           </div>
         );
@@ -166,13 +261,21 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
           >
             Задача
           </Button>
-          <Button
-            size="small"
-            icon={<Icon name="mic" />}
-            onClick={() => onDictate(caret.current && blocks.some((b) => b.id === caret.current!.blockId) ? caret.current : null)}
-          >
-            Диктовать
-          </Button>
+          {dictation && (
+            <Button
+              size="small"
+              variant="primary"
+              className={listening ? "dictate is-listening" : "dictate"}
+              icon={<Icon name="mic" />}
+              aria-pressed={dictation === "speech" ? listening : undefined}
+              // Кнопка не забирает фокус: курсор остаётся в поле, куда вставляется текст.
+              onPointerDown={(e) => e.preventDefault()}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={dictate}
+            >
+              {listening ? "Остановить" : "Диктовать"}
+            </Button>
+          )}
         </div>
       )}
     </div>

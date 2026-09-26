@@ -3,15 +3,17 @@ import {
   applyAppearance,
   DEFAULT_APPEARANCE,
   loadAppearance,
-  resolveDark,
+  resolveTheme,
   saveAppearance,
   type Appearance,
   type StorageLike,
+  type Theme,
 } from "./appearance.ts";
 
 interface AppearanceState {
   appearance: Appearance;
-  dark: boolean;
+  /** Тема, которая действует сейчас. */
+  theme: Theme;
   /** false — сохранить не удалось, выбор действует только в текущем сеансе. */
   saved: boolean | null;
   update(patch: Partial<Appearance>): void;
@@ -41,7 +43,7 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
   const [systemDark, setSystemDark] = useState(() => media?.matches ?? false);
   const [saved, setSaved] = useState<boolean | null>(null);
 
-  // Режим «Как в системе» реагирует на смену темы ОС без перезапуска.
+  // Тема «Системная» реагирует на смену темы ОС без перезапуска.
   useEffect(() => {
     if (!media) return;
     const onChange = () => setSystemDark(media.matches);
@@ -49,8 +51,8 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     return () => media.removeEventListener("change", onChange);
   }, []);
 
-  const dark = resolveDark(appearance.theme, systemDark);
-  useEffect(() => applyAppearance(document.documentElement, appearance, dark), [appearance, dark]);
+  const theme = resolveTheme(appearance.theme, systemDark);
+  useEffect(() => applyAppearance(document.documentElement, appearance, theme), [appearance, theme]);
 
   const value = useMemo<AppearanceState>(() => {
     const commit = (next: Appearance) => {
@@ -59,12 +61,12 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     };
     return {
       appearance,
-      dark,
+      theme,
       saved,
       update: (patch) => commit({ ...appearance, ...patch }),
       reset: () => commit({ ...DEFAULT_APPEARANCE }),
     };
-  }, [appearance, dark, saved]);
+  }, [appearance, theme, saved]);
 
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

@@ -12,7 +12,7 @@ import {
   Slider,
   Switch,
   TextField,
-} from "@mayak/ui";
+} from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 import { useAppearance } from "../state/AppearanceContext.tsx";
 import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope, type ThemeChoice } from "../state/appearance.ts";
@@ -25,13 +25,14 @@ import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/wo
 const THEMES: Array<{ value: ThemeChoice; label: string }> = [
   { value: "light", label: "Светлая" },
   { value: "dark", label: "Тёмная" },
-  { value: "system", label: "Как в системе" },
+  { value: "contrast", label: "Повышенная контрастность" },
+  { value: "system", label: "Системная" },
 ];
 
 const FONT_OPTIONS = (Object.keys(FONTS) as FontFamily[]).map((value) => ({
   value,
   label: FONTS[value].label,
-  // Образец шрифта прямо в списке, как в меню шрифтов macOS.
+  // Образец шрифта прямо в списке.
   render: <span style={{ fontFamily: FONTS[value].stack }}>{FONTS[value].label}</span>,
 }));
 
@@ -52,8 +53,8 @@ export function SettingsScreen() {
 }
 
 function AppearanceSection() {
-  const { appearance: a, dark, saved, update, reset } = useAppearance();
-  const warnings = lowContrastScopes(a, dark);
+  const { appearance: a, theme, saved, update, reset } = useAppearance();
+  const warnings = lowContrastScopes(a, theme);
   return (
     <section className="settings-section" aria-labelledby="appearance-title">
       <h2 id="appearance-title" className="settings-section__title">
@@ -81,7 +82,7 @@ function AppearanceSection() {
           )}
           <div className="settings-actions">
             <Button onClick={reset}>Сбросить оформление</Button>
-            <p role="status" className="mk-caption">
+            <p role="status" className="isl-caption">
               {saved === false
                 ? "Сохранить не удалось: выбор действует только в текущем сеансе."
                 : saved
@@ -91,7 +92,7 @@ function AppearanceSection() {
           </div>
         </div>
         <div className="preview-card" role="group" aria-label="Предпросмотр">
-          <p className="mk-headline">Предпросмотр заметки</p>
+          <p className="isl-headline">Предпросмотр заметки</p>
           <div className="preview-editor">
             <p className="preview-editor__title">Мысли под рукой</p>
             <p>Запишите идею, составьте план и вернитесь к нему на любом устройстве.</p>
@@ -137,7 +138,7 @@ function FontGroup({ scope, title }: { scope: Scope; title: string }) {
       <FormRow label="Цвет из темы" hint="Подстраивается под светлую и тёмную тему">
         <Switch
           checked={auto}
-          label={<span className="mk-visually-hidden">Цвет из темы</span>}
+          label={<span className="isl-visually-hidden">Цвет из темы</span>}
           onChange={(value) => update({ [`${scope}Auto`]: value })}
         />
       </FormRow>
@@ -347,8 +348,8 @@ function SignInForm() {
           </div>
         </form>
       )}
-      {detail && <p className="mk-caption settings-note">Подробности для разработчика: {detail}</p>}
-      <p className="mk-caption settings-note">
+      {detail && <p className="isl-caption settings-note">Подробности для разработчика: {detail}</p>}
+      <p className="isl-caption settings-note">
         Вход обслуживает Supabase Auth: он хранит ваш email и отправляет письма. Сквозного шифрования нет.
       </p>
     </>
@@ -414,7 +415,7 @@ function SignedIn({ email }: { email: string }) {
             disabled={pending > 0}
             onChange={(e) => setWipe(e.target.checked)}
           />
-          {pending > 0 && <p className="mk-caption">Удаление недоступно, пока есть неотправленные изменения.</p>}
+          {pending > 0 && <p className="isl-caption">Удаление недоступно, пока есть неотправленные изменения.</p>}
         </Sheet>
       )}
     </>
