@@ -1,9 +1,9 @@
 import { forwardRef, useMemo } from "react";
 import { emptyDocument, newId } from "@mayak/domain";
 import type { LocalNote } from "@mayak/sync";
+import { Button, EmptyState, IconButton, SearchField, Tooltip } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
 import { NoteListItem } from "../components/NoteListItem.tsx";
-import { SearchField } from "../components/SearchField.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
 import { searchableText } from "../state/format.ts";
 import { requestTitleFocus } from "../state/focus.ts";
@@ -64,60 +64,64 @@ export const NotesList = forwardRef<HTMLInputElement, Props>(function NotesList(
   return (
     <section className="list" aria-label="Список заметок">
       <div className="list-header">
-        <h2>{tag ? `# ${tag}` : "Все заметки"}</h2>
-        <button type="button" className="new" onClick={() => void create()} aria-label="Создать заметку" title="Новая заметка (Ctrl+Alt+N)">
-          <Icon name="plus" />
-        </button>
+        <h2 className="mk-title2">{tag ? `# ${tag}` : "Все заметки"}</h2>
+        <Tooltip label="Новая заметка · Ctrl+Alt+N">
+          <IconButton className="new" label="Создать заметку" tooltip={false} icon={<Icon name="plus" />} onClick={() => void create()} />
+        </Tooltip>
       </div>
-      <SearchField ref={searchRef} value={query} onChange={onQuery} />
+      <SearchField ref={searchRef} className="list-search" label="Поиск заметок" placeholder="Найти заметку" value={query} onChange={onQuery} />
       {tag && (
-        <p className="filter-line">
+        <p className="filter-line mk-caption">
           Показаны заметки с тегом «{tag}».{" "}
-          <button type="button" className="link-button" onClick={() => navigate({ section: "notes" })}>
+          <Button variant="plain" size="small" onClick={() => navigate({ section: "notes" })}>
             Показать все
-          </button>
+          </Button>
         </p>
       )}
 
       {total === 0 ? (
-        <div className="empty">
-          <strong>Запишите первую мысль</strong>
-          <p>Заметка сохранится на этом устройстве даже без интернета.</p>
-          <button type="button" className="button primary" onClick={() => void create()}>
-            Создать заметку
-          </button>
-        </div>
+        <EmptyState
+          title="Запишите первую мысль"
+          action={
+            <Button variant="primary" onClick={() => void create()}>
+              Создать заметку
+            </Button>
+          }
+        >
+          Заметка сохранится на этом устройстве даже без интернета.
+        </EmptyState>
       ) : visible.length === 0 ? (
-        <div className="empty">
-          <strong>{q ? `Ничего не найдено по запросу «${query.trim()}»` : "Нет заметок с этим тегом"}</strong>
-          <p>Попробуйте другое слово или сбросьте фильтры.</p>
-          <button
-            type="button"
-            className="button"
-            onClick={() => {
-              onQuery("");
-              if (tag) navigate({ section: "notes" });
-            }}
-          >
-            Очистить поиск
-          </button>
-        </div>
+        <EmptyState
+          title={q ? `Ничего не найдено по запросу «${query.trim()}»` : "Нет заметок с этим тегом"}
+          action={
+            <Button
+              onClick={() => {
+                onQuery("");
+                if (tag) navigate({ section: "notes" });
+              }}
+            >
+              Очистить поиск
+            </Button>
+          }
+        >
+          Попробуйте другое слово или сбросьте фильтры.
+        </EmptyState>
       ) : (
         <>
           {q && (
-            <p className="visually-hidden" role="status">
+            <p className="mk-visually-hidden" role="status">
               Найдено: {visible.length}
             </p>
           )}
           {pinned.length > 0 && (
             <>
-              <div className="list-label">Закреплённые</div>
+              <h3 className="list-label">Закреплённые</h3>
               <ul className="note-list">{renderItems(pinned)}</ul>
             </>
           )}
           {recent.length > 0 && (
             <>
-              <div className="list-label">{q ? "Результаты поиска" : "Недавние записи"}</div>
+              <h3 className="list-label">{q ? "Результаты поиска" : "Недавние записи"}</h3>
               <ul className="note-list">{renderItems(recent)}</ul>
             </>
           )}

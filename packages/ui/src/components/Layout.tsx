@@ -1,21 +1,64 @@
-import { type AnchorHTMLAttributes, type ReactNode } from "react";
+import { useId, type AnchorHTMLAttributes, type ReactNode } from "react";
 import { cx } from "./util.ts";
 
-/** Группа настроек в стиле «Системных настроек» macOS: скруглённая карточка со строками. */
-export function FormGroup({ title, description, children }: { title?: string; description?: ReactNode; children: ReactNode }) {
+/**
+ * Группа настроек в стиле «Системных настроек» macOS: скруглённая карточка со строками.
+ * Семантика — группа (role="group"), названная заголовком или меткой label.
+ */
+export function FormGroup({
+  title,
+  label,
+  description,
+  children,
+  className,
+}: {
+  title?: string;
+  /** Доступное имя группы без видимого заголовка. */
+  label?: string;
+  description?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  const id = useId();
   return (
-    <section className="mk-form-group" aria-label={title}>
-      {title && <h3 className="mk-form-group__title mk-headline">{title}</h3>}
+    <div
+      role="group"
+      className={cx("mk-form-group", className)}
+      aria-labelledby={title ? `${id}-title` : undefined}
+      aria-label={title ? undefined : label}
+      aria-describedby={description ? `${id}-description` : undefined}
+    >
+      {title && (
+        <h3 id={`${id}-title`} className="mk-form-group__title mk-headline">
+          {title}
+        </h3>
+      )}
       <div className="mk-form-group__card">{children}</div>
-      {description && <p className="mk-form-group__description mk-caption">{description}</p>}
-    </section>
+      {description && (
+        <p id={`${id}-description`} className="mk-form-group__description mk-caption">
+          {description}
+        </p>
+      )}
+    </div>
   );
 }
 
 /** Строка группы: подпись слева, элемент управления справа; на узком экране — друг под другом. */
-export function FormRow({ label, hint, children, stacked }: { label?: ReactNode; hint?: ReactNode; children: ReactNode; stacked?: boolean }) {
+export function FormRow({
+  label,
+  hint,
+  children,
+  stacked,
+  className,
+}: {
+  label?: ReactNode;
+  hint?: ReactNode;
+  children: ReactNode;
+  stacked?: boolean;
+  className?: string;
+}) {
   return (
-    <div className={cx("mk-form-row", stacked && "mk-form-row--stacked")}>
+    <div className={cx("mk-form-row", stacked && "mk-form-row--stacked", className)}>
       {label !== undefined && (
         <div className="mk-form-row__label">
           <span>{label}</span>
@@ -59,10 +102,31 @@ export function SidebarSection({ title, children, label }: { title?: string; chi
 }
 
 /** Пустое состояние: что здесь будет и первое действие. */
-export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  children,
+  action,
+  icon,
+  as: Title = "p",
+  className,
+}: {
+  title: string;
+  children?: ReactNode;
+  action?: ReactNode;
+  /** Крупный значок над заголовком (декоративный). */
+  icon?: ReactNode;
+  /** Элемент заголовка: на отдельной странице пустое состояние — её заголовок. */
+  as?: "p" | "h1" | "h2" | "h3";
+  className?: string;
+}) {
   return (
-    <div className="mk-empty">
-      <p className="mk-empty__title mk-title3">{title}</p>
+    <div className={cx("mk-empty", className)}>
+      {icon && (
+        <span className="mk-empty__icon" aria-hidden="true">
+          {icon}
+        </span>
+      )}
+      <Title className="mk-empty__title mk-title3">{title}</Title>
       {children && <p className="mk-empty__text mk-secondary">{children}</p>}
       {action}
     </div>

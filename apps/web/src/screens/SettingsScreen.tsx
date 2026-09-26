@@ -1,17 +1,48 @@
-import { useId, useRef, useState } from "react";
-import { Dialog } from "../components/Dialog.tsx";
+import { useRef, useState } from "react";
+import {
+  Banner,
+  Button,
+  Checkbox,
+  ColorWell,
+  Disclosure,
+  FormGroup,
+  FormRow,
+  PopUpButton,
+  Sheet,
+  Slider,
+  Switch,
+  TextField,
+} from "@mayak/ui";
+import { Icon } from "../components/Icon.tsx";
 import { useAppearance } from "../state/AppearanceContext.tsx";
-import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope } from "../state/appearance.ts";
+import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope, type ThemeChoice } from "../state/appearance.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, plural, safeFileName } from "../state/format.ts";
 import { getSupabase, isValidEmail, normalizeOtp, supabaseConfigured } from "../state/supabase.ts";
 import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/workspace.ts";
 
+const THEMES: Array<{ value: ThemeChoice; label: string }> = [
+  { value: "light", label: "Светлая" },
+  { value: "dark", label: "Тёмная" },
+  { value: "system", label: "Как в системе" },
+];
+
+const FONT_OPTIONS = (Object.keys(FONTS) as FontFamily[]).map((value) => ({
+  value,
+  label: FONTS[value].label,
+  // Образец шрифта прямо в списке, как в меню шрифтов macOS.
+  render: <span style={{ fontFamily: FONTS[value].stack }}>{FONTS[value].label}</span>,
+}));
+
+const WEIGHT_OPTIONS = WEIGHTS.map((w) => ({ value: w.value as number, label: w.label }));
+
 export function SettingsScreen() {
   return (
-    <article className="sheet settings">
-      <div className="eyebrow accent">Маяк · настройки этого устройства</div>
-      <h1 className="page-title">Настройки</h1>
+    <article className="page settings">
+      <header className="page-header">
+        <h1 className="page-title">Настройки</h1>
+        <p className="page-subtitle">Маяк · настройки этого устройства</p>
+      </header>
       <AppearanceSection />
       <SyncSection />
       <StorageSection />
@@ -24,114 +55,101 @@ function AppearanceSection() {
   const warnings = lowContrastScopes(a, dark);
   return (
     <section className="settings-section" aria-labelledby="appearance-title">
-      <h2 id="appearance-title">Внешний вид</h2>
-      <p className="muted">Выбор применяется сразу и сохраняется только на этом устройстве. Текст заметок не меняется.</p>
+      <h2 id="appearance-title" className="settings-section__title">
+        Внешний вид
+      </h2>
+      <p className="settings-section__intro">
+        Выбор применяется сразу и сохраняется только на этом устройстве. Текст заметок не меняется.
+      </p>
       <div className="settings-grid">
-        <div>
-          <label className="field-label" htmlFor="theme">
-            Тема оформления
-          </label>
-          <select id="theme" value={a.theme} onChange={(e) => update({ theme: e.target.value as typeof a.theme })}>
-            <option value="light">Тихая ясность / Светлая</option>
-            <option value="dark">Тихая ясность / Тёмная</option>
-            <option value="system">Как в системе</option>
-          </select>
-          <FontFieldset scope="ui" legend="Шрифт интерфейса" />
-          <FontFieldset scope="editor" legend="Шрифт редактора" />
-          <button type="button" className="button" onClick={reset}>
-            Сбросить оформление
-          </button>
-          <p role="status" className="muted small">
-            {saved === false
-              ? "Сохранить не удалось: выбор действует только в текущем сеансе."
-              : saved
-                ? "Оформление сохранено на устройстве."
-                : ""}
-          </p>
+        <div className="settings-grid__controls">
+          <FormGroup label="Тема">
+            <FormRow label="Тема оформления">
+              <PopUpButton hideLabel label="Тема оформления" value={a.theme} options={THEMES} onChange={(theme) => update({ theme })} />
+            </FormRow>
+          </FormGroup>
+          <FontGroup scope="ui" title="Шрифт интерфейса" />
+          <FontGroup scope="editor" title="Шрифт редактора" />
           {warnings.length > 0 && (
-            <p role="status" className="warning-text">
-              Низкий контраст текста {warnings.map((s) => (s === "ui" ? "интерфейса" : "редактора")).join(" и ")}.
-              Выберите более контрастный цвет или включите «Цвет из темы».
-            </p>
+            <Banner tone="warning" role="status" icon={<Icon name="warning" />}>
+              <p>
+                Низкий контраст текста {warnings.map((s) => (s === "ui" ? "интерфейса" : "редактора")).join(" и ")}.
+                Выберите более контрастный цвет или включите «Цвет из темы».
+              </p>
+            </Banner>
           )}
+          <div className="settings-actions">
+            <Button onClick={reset}>Сбросить оформление</Button>
+            <p role="status" className="mk-caption">
+              {saved === false
+                ? "Сохранить не удалось: выбор действует только в текущем сеансе."
+                : saved
+                  ? "Оформление сохранено на устройстве."
+                  : ""}
+            </p>
+          </div>
         </div>
-        <div className="preview-card" aria-label="Предпросмотр">
-          <div className="eyebrow">Предпросмотр заметки</div>
+        <div className="preview-card" role="group" aria-label="Предпросмотр">
+          <p className="mk-headline">Предпросмотр заметки</p>
           <div className="preview-editor">
-            <h3>Мысли под рукой</h3>
+            <p className="preview-editor__title">Мысли под рукой</p>
             <p>Запишите идею, составьте план и вернитесь к нему на любом устройстве.</p>
-            <label className="checkrow">
-              <input type="checkbox" /> <span>Подготовить материалы проекта</span>
-            </label>
+            <Checkbox strike label="Подготовить материалы проекта" />
           </div>
           <p className="preview-ui">Так выглядят подписи интерфейса.</p>
-          <button type="button" className="button primary" tabIndex={-1} aria-hidden="true">
+          <Button variant="primary" tabIndex={-1} aria-hidden="true">
             Пример действия
-          </button>
+          </Button>
         </div>
       </div>
     </section>
   );
 }
 
-function FontFieldset({ scope, legend }: { scope: Scope; legend: string }) {
+function FontGroup({ scope, title }: { scope: Scope; title: string }) {
   const { appearance: a, update } = useAppearance();
-  const id = useId();
-  const family = a[scope];
-  const size = a[`${scope}Size`];
-  const weight = a[`${scope}Weight`];
   const auto = a[`${scope}Auto`];
-  const color = a[`${scope}Color`];
   return (
-    <fieldset>
-      <legend>{legend}</legend>
-      <label className="field-label" htmlFor={`${id}-family`}>
-        Семейство
-      </label>
-      <select id={`${id}-family`} value={family} onChange={(e) => update({ [scope]: e.target.value as FontFamily })}>
-        {Object.entries(FONTS).map(([value, f]) => (
-          <option key={value} value={value}>
-            {f.label}
-          </option>
-        ))}
-      </select>
-      <label className="field-label" htmlFor={`${id}-size`}>
-        Размер: <output htmlFor={`${id}-size`}>{size}</output> px
-      </label>
-      <input
-        id={`${id}-size`}
-        type="range"
-        min={MIN_SIZE}
-        max={MAX_SIZE}
-        step={1}
-        value={size}
-        onChange={(e) => update({ [`${scope}Size`]: Number(e.target.value) })}
-      />
-      <label className="field-label" htmlFor={`${id}-weight`}>
-        Толщина
-      </label>
-      <select id={`${id}-weight`} value={weight} onChange={(e) => update({ [`${scope}Weight`]: Number(e.target.value) })}>
-        {WEIGHTS.map((w) => (
-          <option key={w.value} value={w.value}>
-            {w.label}
-          </option>
-        ))}
-      </select>
-      <label className="checkline">
-        <input type="checkbox" checked={auto} onChange={(e) => update({ [`${scope}Auto`]: e.target.checked })} /> Цвет из
-        темы
-      </label>
-      <label className="field-label" htmlFor={`${id}-color`}>
-        Свой цвет текста
-      </label>
-      <input
-        id={`${id}-color`}
-        type="color"
-        value={color}
-        disabled={auto}
-        onChange={(e) => update({ [`${scope}Color`]: e.target.value.toLowerCase() })}
-      />
-    </fieldset>
+    <FormGroup title={title}>
+      <FormRow label="Семейство">
+        <PopUpButton hideLabel label="Семейство" value={a[scope]} options={FONT_OPTIONS} onChange={(family) => update({ [scope]: family })} />
+      </FormRow>
+      <FormRow stacked>
+        <Slider
+          label="Размер"
+          value={a[`${scope}Size`]}
+          min={MIN_SIZE}
+          max={MAX_SIZE}
+          format={(v) => `${v} px`}
+          onChange={(size) => update({ [`${scope}Size`]: size })}
+        />
+      </FormRow>
+      <FormRow label="Толщина">
+        <PopUpButton
+          hideLabel
+          label="Толщина"
+          value={a[`${scope}Weight`]}
+          options={WEIGHT_OPTIONS}
+          onChange={(weight) => update({ [`${scope}Weight`]: weight })}
+        />
+      </FormRow>
+      <FormRow label="Цвет из темы" hint="Подстраивается под светлую и тёмную тему">
+        <Switch
+          checked={auto}
+          label={<span className="mk-visually-hidden">Цвет из темы</span>}
+          onChange={(value) => update({ [`${scope}Auto`]: value })}
+        />
+      </FormRow>
+      <FormRow label="Свой цвет текста">
+        <ColorWell
+          hideLabel
+          label="Свой цвет текста"
+          value={a[`${scope}Color`]}
+          disabled={auto}
+          onChange={(hex) => update({ [`${scope}Color`]: hex })}
+        />
+      </FormRow>
+    </FormGroup>
   );
 }
 
@@ -139,7 +157,9 @@ function SyncSection() {
   const { workspace } = useMayak();
   return (
     <section className="settings-section" aria-labelledby="sync-title">
-      <h2 id="sync-title">Аккаунт и синхронизация</h2>
+      <h2 id="sync-title" className="settings-section__title">
+        Аккаунт и синхронизация
+      </h2>
       {supabaseConfigured() ? (
         workspace.config.mode === "account" ? (
           <SignedIn email={workspace.config.email} />
@@ -147,7 +167,7 @@ function SyncSection() {
           <SignInForm />
         )
       ) : (
-        <p className="muted">
+        <p className="settings-section__intro">
           Вход через аккаунт не настроен в этой сборке: не заданы адрес проекта Supabase и публикуемый ключ. Заметки
           хранятся только на этом устройстве.
         </p>
@@ -204,38 +224,38 @@ function SignInForm() {
 
   return (
     <>
-      <p>
+      <p className="settings-section__intro">
         Войдите по email, чтобы заметки синхронизировались между вашими устройствами.
         {workspace.config.mode === "local" && pending > 0 && " Заметки, созданные на этом устройстве, будут отправлены в аккаунт."}
       </p>
       {step === "email" ? (
         <form
-          className="sync-form"
+          className="card form-card"
           onSubmit={(e) => {
             e.preventDefault();
             if (isValidEmail(email)) void requestCode();
           }}
         >
-          <label className="field-label" htmlFor="auth-email">
-            Email
-          </label>
-          <input
+          <TextField
             id="auth-email"
+            label="Email"
             type="email"
             autoComplete="email"
             inputMode="email"
+            placeholder="name@example.com"
             value={email}
+            error={error}
             onChange={(e) => setEmail(e.target.value)}
           />
           <div className="form-actions">
-            <button type="submit" className="button primary" disabled={!isValidEmail(email) || busy} aria-busy={busy}>
-              {busy ? "Отправляем…" : "Получить код"}
-            </button>
+            <Button type="submit" variant="primary" disabled={!isValidEmail(email)} loading={busy} loadingLabel="Отправляем…">
+              Получить код
+            </Button>
           </div>
         </form>
       ) : (
         <form
-          className="sync-form"
+          className="card form-card"
           onSubmit={(e) => {
             e.preventDefault();
             if (normalizeOtp(code).length >= 6) void verify();
@@ -245,24 +265,21 @@ function SignInForm() {
             Письмо отправлено на <strong>{email.trim()}</strong>. Введите код из письма или откройте ссылку из него в этом
             же браузере.
           </p>
-          <label className="field-label" htmlFor="auth-code">
-            Код из письма
-          </label>
-          <input
+          <TextField
             ref={codeRef}
             id="auth-code"
+            label="Код из письма"
             inputMode="numeric"
             autoComplete="one-time-code"
             value={code}
+            error={error}
             onChange={(e) => setCode(e.target.value)}
           />
           <div className="form-actions">
-            <button type="submit" className="button primary" disabled={normalizeOtp(code).length < 6 || busy} aria-busy={busy}>
-              {busy ? "Проверяем…" : "Войти"}
-            </button>
-            <button
-              type="button"
-              className="button"
+            <Button type="submit" variant="primary" disabled={normalizeOtp(code).length < 6} loading={busy} loadingLabel="Проверяем…">
+              Войти
+            </Button>
+            <Button
               onClick={() => {
                 setStep("email");
                 setCode("");
@@ -270,16 +287,11 @@ function SignInForm() {
               }}
             >
               Другой email
-            </button>
+            </Button>
           </div>
         </form>
       )}
-      {error && (
-        <p role="alert" className="error-text">
-          {error}
-        </p>
-      )}
-      <p className="muted small">
+      <p className="mk-caption settings-note">
         Вход обслуживает Supabase Auth: он хранит ваш email и отправляет письма. Сквозного шифрования нет.
       </p>
     </>
@@ -295,43 +307,38 @@ function SignedIn({ email }: { email: string }) {
 
   return (
     <>
-      <p>
+      <p className="settings-section__intro">
         Вы вошли как <strong>{email}</strong>. Заметки синхронизируются между устройствами этого аккаунта.
       </p>
       {sessionLost && (
-        <div className="banner banner-warning" role="alert">
+        <Banner tone="warning" role="alert" icon={<Icon name="warning" />}>
           <p>
             {status.lastError?.code === "DEVICE_REVOKED" || status.lastError?.code === "SESSION_REVOKED"
               ? "Доступ этого устройства отозван с другого устройства. Изменения сохранены здесь; войдите снова, чтобы продолжить синхронизацию."
               : "Сессия завершилась. Изменения сохранены на устройстве; войдите снова, чтобы продолжить синхронизацию."}
           </p>
-        </div>
+        </Banner>
       )}
       {sessionLost && <SignInForm />}
       <div className="form-actions">
-        <button type="button" className="button" onClick={() => setConfirm(true)}>
-          Выйти на этом устройстве
-        </button>
+        <Button onClick={() => setConfirm(true)}>Выйти на этом устройстве</Button>
       </div>
       {confirm && (
-        <Dialog
+        <Sheet
           title="Выйти из аккаунта?"
           onClose={() => setConfirm(false)}
           actions={
             <>
-              <button type="button" className="button" onClick={() => setConfirm(false)}>
-                Отмена
-              </button>
-              <button
-                type="button"
-                className="button primary"
+              <Button onClick={() => setConfirm(false)}>Отмена</Button>
+              <Button
+                variant="primary"
                 onClick={async () => {
                   setConfirm(false);
                   await signOut({ wipe: wipe && pending === 0 });
                 }}
               >
                 Выйти
-              </button>
+              </Button>
             </>
           }
         >
@@ -344,12 +351,14 @@ function SignedIn({ email }: { email: string }) {
           ) : (
             <p>Все изменения отправлены. Выход завершит сессию только на этом устройстве.</p>
           )}
-          <label className="checkline">
-            <input type="checkbox" checked={wipe} disabled={pending > 0} onChange={(e) => setWipe(e.target.checked)} />
-            Удалить заметки этого аккаунта с устройства
-          </label>
-          {pending > 0 && <p className="muted small">Удаление недоступно, пока есть неотправленные изменения.</p>}
-        </Dialog>
+          <Checkbox
+            label="Удалить заметки этого аккаунта с устройства"
+            checked={wipe}
+            disabled={pending > 0}
+            onChange={(e) => setWipe(e.target.checked)}
+          />
+          {pending > 0 && <p className="mk-caption">Удаление недоступно, пока есть неотправленные изменения.</p>}
+        </Sheet>
       )}
     </>
   );
@@ -371,73 +380,59 @@ function DevSyncForm() {
   };
 
   return (
-    <details className="dev-sync" open={config.mode === "dev"}>
-      <summary>Режим разработчика</summary>
-      {config.mode === "dev" && (
-        <p>
-          Подключено к серверу разработки <code>{config.apiBase}</code> как «{config.account}».
-        </p>
-      )}
-      <div className="banner banner-warning">
-        <p>
-          Подключение к локальному серверу Маяка по имени, <strong>без пароля и проверки личности</strong>. Только для
-          разработки; не используйте его для личных данных.
-        </p>
-      </div>
-      <form
-        className="sync-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (valid) apply({ mode: "dev", account, apiBase: apiBase.trim() || DEFAULT_API_BASE });
-        }}
-      >
-        <label className="field-label" htmlFor="dev-account">
-          Имя аккаунта разработчика
-        </label>
-        <input
-          id="dev-account"
-          value={account}
-          autoComplete="off"
-          aria-describedby="dev-account-hint"
-          onChange={(e) => setAccount(e.target.value.trim())}
-        />
-        <small id="dev-account-hint" className="muted">
-          Латиница, цифры, «.», «_», «@», «-». На втором устройстве введите то же имя.
-        </small>
-        <label className="field-label" htmlFor="dev-api">
-          Адрес API
-        </label>
-        <input id="dev-api" value={apiBase} onChange={(e) => setApiBase(e.target.value)} />
-        <div className="form-actions">
-          <button type="submit" className="button primary" disabled={!valid}>
-            {config.mode === "dev" ? "Переподключить" : "Подключить"}
-          </button>
-          {config.mode === "dev" && (
-            <button type="button" className="button" onClick={() => apply({ mode: "local" })}>
-              Отключить синхронизацию
-            </button>
-          )}
-        </div>
-      </form>
+    <div className="dev-sync">
+      <Disclosure label="Режим разработчика" defaultOpen={config.mode === "dev"}>
+        {config.mode === "dev" && (
+          <p>
+            Подключено к серверу разработки <code>{config.apiBase}</code> как «{config.account}».
+          </p>
+        )}
+        <Banner tone="warning" icon={<Icon name="warning" />}>
+          <p>
+            Подключение к локальному серверу Маяка по имени, <strong>без пароля и проверки личности</strong>. Только для
+            разработки; не используйте его для личных данных.
+          </p>
+        </Banner>
+        <form
+          className="card form-card"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (valid) apply({ mode: "dev", account, apiBase: apiBase.trim() || DEFAULT_API_BASE });
+          }}
+        >
+          <TextField
+            id="dev-account"
+            label="Имя аккаунта разработчика"
+            autoComplete="off"
+            hint="Латиница, цифры, «.», «_», «@», «-». На втором устройстве введите то же имя."
+            value={account}
+            onChange={(e) => setAccount(e.target.value.trim())}
+          />
+          <TextField id="dev-api" label="Адрес API" value={apiBase} onChange={(e) => setApiBase(e.target.value)} />
+          <div className="form-actions">
+            <Button type="submit" variant="primary" disabled={!valid}>
+              {config.mode === "dev" ? "Переподключить" : "Подключить"}
+            </Button>
+            {config.mode === "dev" && <Button onClick={() => apply({ mode: "local" })}>Отключить синхронизацию</Button>}
+          </div>
+        </form>
+      </Disclosure>
       {confirm && (
-        <Dialog
+        <Sheet
           title="Есть неотправленные изменения"
           onClose={() => setConfirm(null)}
           actions={
             <>
-              <button type="button" className="button" onClick={() => setConfirm(null)}>
-                Отмена
-              </button>
-              <button
-                type="button"
-                className="button primary"
+              <Button onClick={() => setConfirm(null)}>Отмена</Button>
+              <Button
+                variant="primary"
                 onClick={() => {
                   setSyncConfig(confirm);
                   setConfirm(null);
                 }}
               >
                 Продолжить
-              </button>
+              </Button>
             </>
           }
         >
@@ -445,9 +440,9 @@ function DevSyncForm() {
             {pending} {plural(pending, "изменение не отправлено", "изменения не отправлены", "изменений не отправлено")}.
             Они останутся на этом устройстве и уйдут, когда вы снова подключитесь к этому аккаунту.
           </p>
-        </Dialog>
+        </Sheet>
       )}
-    </details>
+    </div>
   );
 }
 
@@ -468,19 +463,28 @@ function StorageSection() {
   };
   return (
     <section className="settings-section" aria-labelledby="storage-title">
-      <h2 id="storage-title">Хранилище и экспорт</h2>
-      <p>
-        На этом устройстве: {alive} {plural(alive, "заметка", "заметки", "заметок")}.{" "}
-        {persisted === true
-          ? "Браузер подтвердил постоянное хранилище."
-          : persisted === false
-            ? "Браузер не подтвердил постоянное хранилище и может очистить данные сайта при нехватке места. Регулярно делайте экспорт или включите синхронизацию."
-            : ""}
-      </p>
-      <button type="button" className="button" onClick={exportJson}>
-        Скачать все заметки (JSON)
-      </button>
-      <p className="muted small">JSON-архив сохраняет структуру, теги и идентификаторы. Импорт появится позже.</p>
+      <h2 id="storage-title" className="settings-section__title">
+        Хранилище и экспорт
+      </h2>
+      <FormGroup
+        label="Хранилище"
+        description="JSON-архив сохраняет структуру, теги и идентификаторы. Импорт появится позже."
+      >
+        <FormRow
+          label={`На этом устройстве: ${alive} ${plural(alive, "заметка", "заметки", "заметок")}`}
+          hint={
+            persisted === true
+              ? "Браузер подтвердил постоянное хранилище."
+              : persisted === false
+                ? "Браузер не подтвердил постоянное хранилище и может очистить данные сайта при нехватке места. Регулярно делайте экспорт или включите синхронизацию."
+                : undefined
+          }
+        >
+          <Button icon={<Icon name="download" />} onClick={exportJson}>
+            Скачать все заметки (JSON)
+          </Button>
+        </FormRow>
+      </FormGroup>
     </section>
   );
 }

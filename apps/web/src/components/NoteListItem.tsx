@@ -1,15 +1,17 @@
+import { Badge, type Tone } from "@mayak/ui";
 import { noteSyncState, type ConflictRecord, type LocalNote, type OutboxEntry } from "@mayak/sync";
 import { formatRelativeDate, notePreview, noteTitle } from "../state/format.ts";
 import { routeHref } from "../state/router.ts";
 import { Icon } from "./Icon.tsx";
 
-const STATE_LABEL = {
-  "local-saved": "Не отправлено",
-  syncing: "Отправляется",
-  conflict: "Конфликт версий",
-  failed: "Ошибка отправки",
+/** Состояние синхронизации заметки: подпись и тон значка. */
+const STATE_BADGE: Record<ReturnType<typeof noteSyncState>, { label: string; tone: Tone } | null> = {
+  "local-saved": { label: "Не отправлено", tone: "neutral" },
+  syncing: { label: "Отправляется", tone: "info" },
+  conflict: { label: "Конфликт версий", tone: "warning" },
+  failed: { label: "Ошибка отправки", tone: "danger" },
   "cloud-saved": null,
-} as const;
+};
 
 interface Props {
   note: LocalNote;
@@ -19,10 +21,10 @@ interface Props {
   showSyncState: boolean;
 }
 
-/** Элемент списка заметок: выделение цветом и полосой, Enter открывает (ссылка). */
+/** Элемент списка заметок: скруглённое выделение, Enter открывает (ссылка). */
 export function NoteListItem({ note, outbox, conflict, selected, showSyncState }: Props) {
   const state = noteSyncState(note, outbox, conflict);
-  const label = state === "conflict" || state === "failed" || showSyncState ? STATE_LABEL[state] : null;
+  const badge = state === "conflict" || state === "failed" || showSyncState ? STATE_BADGE[state] : null;
   const tag = note.document.tags[0];
   return (
     <a
@@ -31,20 +33,22 @@ export function NoteListItem({ note, outbox, conflict, selected, showSyncState }
       aria-current={selected ? "page" : undefined}
       data-note-id={note.id}
     >
-      <strong>
+      <strong className="note-item__title">
         {note.document.pinned && (
-          <span className="pin" title="Закреплена">
+          <span className="note-item__pin">
             <Icon name="pin" size={14} />
-            <span className="visually-hidden">Закреплена. </span>
+            <span className="mk-visually-hidden">Закреплена. </span>
           </span>
         )}
-        {noteTitle(note.document)}
+        <span>{noteTitle(note.document)}</span>
       </strong>
-      <p>{notePreview(note.document)}</p>
-      <small>
-        {formatRelativeDate(note.updatedAt)}
-        {tag ? ` · ${tag}` : ""}
-        {label && <span className={`badge badge-${state}`}>{label}</span>}
+      <span className="note-item__preview">{notePreview(note.document)}</span>
+      <small className="note-item__meta">
+        <span>
+          {formatRelativeDate(note.updatedAt)}
+          {tag ? ` · ${tag}` : ""}
+        </span>
+        {badge && <Badge tone={badge.tone}>{badge.label}</Badge>}
       </small>
     </a>
   );

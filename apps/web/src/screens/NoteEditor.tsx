@@ -10,11 +10,11 @@ import {
 } from "@mayak/domain";
 import { LocalWriteError } from "@mayak/local-store";
 import { noteSyncState, TransportError, type ConflictRecord, type LocalNote, type OutboxEntry } from "@mayak/sync";
+import { Badge, Banner, Button, ButtonLink, IconButton, Sheet, TokenField, ToolbarGroup, useToast, type Tone } from "@mayak/ui";
 import { ConflictDialog } from "../components/ConflictDialog.tsx";
-import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
+import { Loading } from "../components/Loading.tsx";
 import { SyncDialog } from "../components/SyncIndicator.tsx";
-import { useToast } from "../components/Toast.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, formatRelativeDate, formatTime, noteTitle, safeFileName } from "../state/format.ts";
@@ -122,6 +122,10 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
               ? "Сохранено на устройстве"
               : `Сохранено в облаке${note.cloudSavedAt ? ` · ${formatTime(new Date(note.cloudSavedAt))}` : ""}`;
 
+  const stateKey = saveError ? "failed" : dirty ? "dirty" : state;
+  const stateTone: Tone =
+    stateKey === "failed" ? "danger" : stateKey === "conflict" ? "warning" : stateKey === "cloud-saved" ? "success" : stateKey === "syncing" ? "info" : "neutral";
+
   const exportMarkdown = () => {
     const blob = new Blob([toMarkdown(draftRef.current)], { type: "text/markdown;charset=utf-8" });
     downloadBlob(blob, safeFileName(noteTitle(draftRef.current), "md"));
@@ -140,72 +144,72 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
   return (
     <>
       <div className="editor-toolbar">
-        <a className="mobile-back" href={routeHref({ section: "notes" })}>
-          <Icon name="back" /> Заметки
-        </a>
+        <ButtonLink className="mobile-back" href={routeHref({ section: "notes" })} icon={<Icon name="back" />}>
+          Заметки
+        </ButtonLink>
         <span className="crumb">Все заметки / {noteTitle(draft)}</span>
         <div className="tools">
-          {!readOnly && (
-            <button
-              type="button"
-              className="icon-button"
-              aria-pressed={draft.pinned}
-              aria-label={draft.pinned ? "Открепить заметку" : "Закрепить заметку"}
-              title={draft.pinned ? "Открепить" : "Закрепить"}
-              onClick={() => change({ ...draftRef.current, pinned: !draftRef.current.pinned })}
-            >
-              <Icon name="pin" />
-            </button>
-          )}
-          <button type="button" className="icon-button" aria-label="Скачать как Markdown" title="Скачать .md" onClick={exportMarkdown}>
-            <Icon name="download" />
-          </button>
-          <button type="button" className="icon-button" aria-label="История заметки" title="История" onClick={() => setPanel("history")}>
-            <Icon name="history" />
-          </button>
-          {!readOnly && (
-            <button type="button" className="icon-button" aria-label="В корзину" title="В корзину" onClick={() => void moveToTrash()}>
-              <Icon name="trash" />
-            </button>
-          )}
-          <button type="button" className="icon-button" aria-label="Состояние синхронизации" title="Синхронизация" onClick={() => setPanel("sync")}>
-            <Icon name="sync" />
-          </button>
+          <ToolbarGroup label="Действия с заметкой">
+            {!readOnly && (
+              <IconButton
+                label="Закрепить заметку"
+                pressed={draft.pinned}
+                icon={<Icon name="pin" />}
+                onClick={() => change({ ...draftRef.current, pinned: !draftRef.current.pinned })}
+              />
+            )}
+            <IconButton label="Скачать как Markdown" icon={<Icon name="download" />} onClick={exportMarkdown} />
+            <IconButton label="История заметки" icon={<Icon name="history" />} onClick={() => setPanel("history")} />
+            {!readOnly && <IconButton label="В корзину" icon={<Icon name="trash" />} onClick={() => void moveToTrash()} />}
+          </ToolbarGroup>
+          <ToolbarGroup label="Синхронизация">
+            <IconButton label="Состояние синхронизации" icon={<Icon name="sync" />} onClick={() => setPanel("sync")} />
+          </ToolbarGroup>
         </div>
       </div>
 
-      <article className="sheet">
+      <article className="page note-page">
         {saveError && (
-          <div className="banner banner-danger" role="alert">
-            <Icon name="warning" />
-            <p>
-              Не удалось сохранить на устройстве. Текст остаётся в редакторе — скачайте его, чтобы не потерять.
-            </p>
-            <button type="button" className="button" onClick={exportMarkdown}>
-              Скачать текст
-            </button>
-            <button type="button" className="button" onClick={() => void flush()}>
-              Повторить
-            </button>
-          </div>
+          <Banner
+            tone="danger"
+            role="alert"
+            icon={<Icon name="warning" />}
+            actions={
+              <>
+                <Button onClick={exportMarkdown}>Скачать текст</Button>
+                <Button onClick={() => void flush()}>Повторить</Button>
+              </>
+            }
+          >
+            <p>Не удалось сохранить на устройстве. Текст остаётся в редакторе — скачайте его, чтобы не потерять.</p>
+          </Banner>
         )}
         {conflict && (
-          <div className="banner banner-warning" role="alert">
-            <Icon name="warning" />
+          <Banner
+            tone="warning"
+            role="alert"
+            icon={<Icon name="warning" />}
+            actions={
+              <Button variant="primary" onClick={() => setPanel("conflict")}>
+                Сравнить
+              </Button>
+            }
+          >
             <p>Найдены изменения с другого устройства. Ваша версия сохранена на этом устройстве.</p>
-            <button type="button" className="button primary" onClick={() => setPanel("conflict")}>
-              Сравнить
-            </button>
-          </div>
+          </Banner>
         )}
         {note.deleted && (
-          <div className="banner" role="status">
-            <Icon name="trash" />
+          <Banner
+            role="status"
+            icon={<Icon name="trash" />}
+            actions={
+              <Button variant="primary" onClick={() => void setDeleted(note.id, false)}>
+                Восстановить
+              </Button>
+            }
+          >
             <p>Заметка в корзине. Восстановите её, чтобы редактировать.</p>
-            <button type="button" className="button primary" onClick={() => void setDeleted(note.id, false)}>
-              Восстановить
-            </button>
-          </div>
+          </Banner>
         )}
         {draft.conflictOf && (
           <p className="origin-note">
@@ -214,7 +218,6 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
           </p>
         )}
 
-        <div className="eyebrow accent">Место для ваших мыслей</div>
         <TitleField
           noteId={note.id}
           value={draft.title}
@@ -222,14 +225,24 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
           onChange={(title) => change({ ...draftRef.current, title })}
         />
         <div className="byline">
-          <span>{formatRelativeDate(note.updatedAt)}</span>
-          <TagEditor
-            tags={draft.tags}
+          <span className="byline__item">{formatRelativeDate(note.updatedAt)}</span>
+          <TokenField
+            className="byline__tags"
+            label="Теги"
+            tokens={draft.tags}
             readOnly={readOnly}
+            placeholder="+ тег"
+            prefix="# "
+            maxTokens={MAX_TAGS}
+            maxLength={MAX_TAG_LENGTH}
+            inputLabel="Добавить тег"
+            removeLabel={(tag) => `Убрать тег ${tag}`}
             onChange={(tags) => change({ ...draftRef.current, tags })}
           />
-          <span>Markdown</span>
-          <span className={`save-state state-${saveError ? "failed" : dirty ? "dirty" : state}`}>{statusText}</span>
+          <span className="byline__item">Markdown</span>
+          <Badge className={`save-state state-${stateKey}`} tone={stateTone}>
+            {statusText}
+          </Badge>
         </div>
 
         <BlockEditor
@@ -256,7 +269,7 @@ function TitleField(props: { noteId: string; value: string; readOnly: boolean; o
     if (takeTitleFocus(noteId)) ref.current?.focus();
   }, [noteId]);
   return (
-    <h1 className="title">
+    <h1 className="note-title">
       <textarea
         ref={ref}
         rows={1}
@@ -271,52 +284,11 @@ function TitleField(props: { noteId: string; value: string; readOnly: boolean; o
           if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             // Enter переводит к тексту заметки, а не вставляет перенос.
             e.preventDefault();
-            e.currentTarget.closest(".sheet")?.querySelector<HTMLElement>("[data-field]")?.focus();
+            e.currentTarget.closest(".page")?.querySelector<HTMLElement>("[data-field]")?.focus();
           }
         }}
       />
     </h1>
-  );
-}
-
-function TagEditor({ tags, readOnly, onChange }: { tags: string[]; readOnly: boolean; onChange: (tags: string[]) => void }) {
-  const [input, setInput] = useState("");
-  const add = () => {
-    const tag = input.trim().replace(/^#/, "").slice(0, MAX_TAG_LENGTH);
-    setInput("");
-    if (!tag || tags.includes(tag) || tags.length >= MAX_TAGS) return;
-    onChange([...tags, tag]);
-  };
-  return (
-    <>
-      {tags.map((tag) => (
-        <span className="tag-chip" key={tag}>
-          <span className="tag-text"># {tag}</span>
-          {!readOnly && (
-            <button type="button" aria-label={`Убрать тег ${tag}`} onClick={() => onChange(tags.filter((t) => t !== tag))}>
-              <Icon name="close" size={12} />
-            </button>
-          )}
-        </span>
-      ))}
-      {!readOnly && (
-        <input
-          className="tag-input"
-          value={input}
-          placeholder="+ тег"
-          aria-label="Добавить тег"
-          maxLength={MAX_TAG_LENGTH}
-          onChange={(e) => setInput(e.target.value)}
-          onBlur={add}
-          onKeyDown={(e) => {
-            if ((e.key === "Enter" || e.key === ",") && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              add();
-            }
-          }}
-        />
-      )}
-    </>
   );
 }
 
@@ -357,8 +329,13 @@ function HistoryDialog({ note, pending, onClose }: { note: LocalNote; pending: b
   let body;
   if (!transport) body = <p>История версий хранится на сервере и появится после подключения синхронизации.</p>;
   else if (note.serverRevision === 0) body = <p>Заметка ещё не отправлена на сервер — версий пока нет.</p>;
-  else if (error) body = <p role="alert">{error}</p>;
-  else if (!versions) body = <p aria-busy="true">Загружаем историю…</p>;
+  else if (error)
+    body = (
+      <Banner tone="danger" role="alert" icon={<Icon name="warning" />}>
+        <p>{error}</p>
+      </Banner>
+    );
+  else if (!versions) body = <Loading text="Загружаем историю…" />;
   else
     body = (
       <ol className="history-list">
@@ -369,21 +346,21 @@ function HistoryDialog({ note, pending, onClose }: { note: LocalNote; pending: b
                 Версия {v.revision}
                 {v.revision === note.serverRevision && " · текущая"}
               </strong>
-              <span className="muted small">
+              <span className="mk-caption">
                 {formatRelativeDate(v.createdAt)} · {v.document.title || "Без названия"}
                 {v.deleted && " · в корзине"}
               </span>
             </div>
             {v.revision !== note.serverRevision && (
-              <button
-                type="button"
-                className="button"
+              <Button
+                size="small"
                 disabled={pending || restoring !== null}
-                aria-busy={restoring === v.versionId}
+                loading={restoring === v.versionId}
+                loadingLabel="Восстанавливаем…"
                 onClick={() => void restore(v)}
               >
-                {restoring === v.versionId ? "Восстанавливаем…" : "Восстановить"}
-              </button>
+                Восстановить
+              </Button>
             )}
           </li>
         ))}
@@ -391,24 +368,24 @@ function HistoryDialog({ note, pending, onClose }: { note: LocalNote; pending: b
     );
 
   return (
-    <Dialog title="История заметки" onClose={onClose}>
+    <Sheet title="История заметки" onClose={onClose} actions={<Button onClick={onClose}>Закрыть</Button>}>
       {body}
       {transport && pending && versions && (
-        <p className="muted small">Восстановление станет доступно, когда изменения этой заметки будут отправлены.</p>
+        <p className="mk-caption">Восстановление станет доступно, когда изменения этой заметки будут отправлены.</p>
       )}
-      <p className="muted small">Восстановление создаёт новую версию; прежние версии не удаляются.</p>
-    </Dialog>
+      <p className="mk-caption">Восстановление создаёт новую версию; прежние версии не удаляются.</p>
+    </Sheet>
   );
 }
 
 function DictationDialog({ onClose }: { onClose: () => void }) {
   return (
-    <Dialog title="Диктовка пока недоступна" onClose={onClose}>
+    <Sheet title="Диктовка пока недоступна" onClose={onClose} actions={<Button variant="primary" onClick={onClose}>Понятно</Button>}>
       <p>
         Голосовой ввод на русском языке будет работать локально, без отправки аудио в облако. Движок распознавания
         (Whisper) в этой версии ещё не подключён, поэтому микрофон не включается.
       </p>
-      <p className="muted">Текст можно вводить с клавиатуры или системной диктовкой вашего устройства.</p>
-    </Dialog>
+      <p className="mk-secondary">Текст можно вводить с клавиатуры или системной диктовкой вашего устройства.</p>
+    </Sheet>
   );
 }

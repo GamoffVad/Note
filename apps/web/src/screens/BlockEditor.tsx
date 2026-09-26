@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
-import { useAutoHeight } from "../components/useAutoHeight.ts";
 import { newId, type Block } from "@mayak/domain";
+import { Button, Checkbox, IconButton } from "@mayak/ui";
 import { Icon } from "../components/Icon.tsx";
+import { useAutoHeight } from "../components/useAutoHeight.ts";
 
 interface Props {
   blocks: Block[];
@@ -14,7 +15,7 @@ type FocusRequest = { id: string; at: "start" | "end" } | null;
 
 /**
  * Редактор блоков (docs/adr/0003-editor.md): текстовый блок — растущее поле,
- * задача — чекбокс и однострочное поле. Каждый элемент привязан к id блока,
+ * задача — флажок библиотеки и однострочное поле. Каждый элемент привязан к id блока,
  * поэтому при наборе блоки не пересоздаются.
  */
 export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
@@ -95,12 +96,11 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
           );
         }
         if (block.type === "task") {
-          const id = `block-${block.id}`;
           return (
-            <div className="block checkrow block-task" data-block-id={block.id} key={block.id}>
-              <input
-                id={id}
-                type="checkbox"
+            <div className="block block-task" data-block-id={block.id} key={block.id}>
+              <Checkbox
+                id={`block-${block.id}`}
+                className="block-task__check"
                 checked={block.checked}
                 disabled={readOnly}
                 onChange={(e) => replace(block.id, { checked: e.target.checked })}
@@ -117,44 +117,45 @@ export function BlockEditor({ blocks, onChange, readOnly, onDictate }: Props) {
                 onKeyDown={(e) => onTaskKey(e, block)}
               />
               {!readOnly && (
-                <button type="button" className="icon-button small remove" aria-label="Удалить задачу" onClick={() => remove(block.id)}>
-                  <Icon name="close" size={16} />
-                </button>
+                <IconButton
+                  className="remove"
+                  variant="plain"
+                  size="small"
+                  label="Удалить задачу"
+                  icon={<Icon name="close" size={16} />}
+                  onClick={() => remove(block.id)}
+                />
               )}
             </div>
           );
         }
         return (
           <div className="attachment" data-block-id={block.id} key={block.id}>
-            <span className="file-icon">
+            <span className="attachment__icon">
               <Icon name="files" />
             </span>
             <div>
               <strong>{block.text || "Вложение"}</strong>
-              <small>Файлы появятся в следующей версии: содержимое пока недоступно</small>
+              <small className="mk-caption">Файлы появятся в следующей версии: содержимое пока недоступно</small>
             </div>
           </div>
         );
       })}
       {!readOnly && (
         <div className="block-actions">
-          <button
-            type="button"
-            className="chip-button"
-            onClick={() => insertAfter(null, { id: newId(), type: "markdown", text: "" })}
-          >
-            <Icon name="text" size={16} /> Текст
-          </button>
-          <button
-            type="button"
-            className="chip-button"
+          <Button size="small" icon={<Icon name="text" />} onClick={() => insertAfter(null, { id: newId(), type: "markdown", text: "" })}>
+            Текст
+          </Button>
+          <Button
+            size="small"
+            icon={<Icon name="tasks" />}
             onClick={() => insertAfter(null, { id: newId(), type: "task", text: "", checked: false })}
           >
-            <Icon name="tasks" size={16} /> Задача
-          </button>
-          <button type="button" className="chip-button" onClick={onDictate}>
-            <Icon name="mic" size={16} /> Диктовать
-          </button>
+            Задача
+          </Button>
+          <Button size="small" icon={<Icon name="mic" />} onClick={onDictate}>
+            Диктовать
+          </Button>
         </div>
       )}
     </div>

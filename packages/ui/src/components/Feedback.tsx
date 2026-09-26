@@ -28,8 +28,8 @@ export function ProgressBar({ label, value, max = 100 }: { label: string; value:
   );
 }
 
-export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: Tone }) {
-  return <span className={cx("mk-badge", `mk-badge--${tone}`)}>{children}</span>;
+export function Badge({ children, tone = "neutral", className }: { children: ReactNode; tone?: Tone; className?: string }) {
+  return <span className={cx("mk-badge", `mk-badge--${tone}`, className)}>{children}</span>;
 }
 
 interface BannerProps {

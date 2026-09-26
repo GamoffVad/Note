@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { cx } from "./util.ts";
 
 interface TokenFieldProps {
   label: string;
@@ -9,10 +10,27 @@ interface TokenFieldProps {
   maxLength?: number;
   readOnly?: boolean;
   prefix?: string;
+  /** Доступное имя поля ввода; по умолчанию «Добавить: <подпись>». */
+  inputLabel?: string;
+  /** Доступное имя кнопки удаления жетона. */
+  removeLabel?: (token: string) => string;
+  className?: string;
 }
 
 /** Поле жетонов macOS (NSTokenField) для тегов: Enter или запятая добавляет, Backspace в пустом поле удаляет последний. */
-export function TokenField({ label, tokens, onChange, placeholder, maxTokens = 50, maxLength = 100, readOnly, prefix = "" }: TokenFieldProps) {
+export function TokenField({
+  label,
+  tokens,
+  onChange,
+  placeholder,
+  maxTokens = 50,
+  maxLength = 100,
+  readOnly,
+  prefix = "",
+  inputLabel,
+  removeLabel,
+  className,
+}: TokenFieldProps) {
   const id = useId();
   const [draft, setDraft] = useState("");
   const add = () => {
@@ -22,7 +40,7 @@ export function TokenField({ label, tokens, onChange, placeholder, maxTokens = 5
     onChange([...tokens, token]);
   };
   return (
-    <div className="mk-tokens" role="group" aria-labelledby={`${id}-label`}>
+    <div className={cx("mk-tokens", className)} role="group" aria-labelledby={`${id}-label`}>
       <span id={`${id}-label`} className="mk-visually-hidden">
         {label}
       </span>
@@ -33,7 +51,7 @@ export function TokenField({ label, tokens, onChange, placeholder, maxTokens = 5
             {t}
           </span>
           {!readOnly && (
-            <button type="button" className="mk-token__remove" aria-label={`Убрать «${t}»`} onClick={() => onChange(tokens.filter((x) => x !== t))}>
+            <button type="button" className="mk-token__remove" aria-label={removeLabel ? removeLabel(t) : `Убрать «${t}»`} onClick={() => onChange(tokens.filter((x) => x !== t))}>
               <svg viewBox="0 0 10 10" aria-hidden="true">
                 <path d="m2.5 2.5 5 5m0-5-5 5" />
               </svg>
@@ -46,7 +64,7 @@ export function TokenField({ label, tokens, onChange, placeholder, maxTokens = 5
           className="mk-tokens__input"
           value={draft}
           placeholder={placeholder}
-          aria-label={`Добавить: ${label.toLocaleLowerCase("ru")}`}
+          aria-label={inputLabel ?? `Добавить: ${label.toLocaleLowerCase("ru")}`}
           maxLength={maxLength}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={add}

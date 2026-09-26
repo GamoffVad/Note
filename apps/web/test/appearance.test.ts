@@ -61,7 +61,8 @@ describe("контраст", () => {
   });
 
   it("основной и вторичный текст обеих тем не ниже 4.5:1 на всех поверхностях", () => {
-    const secondary = { light: "#5a6a80", dark: "#a0aec5" };
+    // --text-secondary из токенов @mayak/ui.
+    const secondary = { light: "#6c6c70", dark: "#aeaeb2" };
     for (const theme of ["light", "dark"] as const) {
       const s = SURFACES[theme];
       for (const bg of [s.page, s.panel, s.navigation]) {

@@ -1,4 +1,6 @@
 import { projectTasks } from "@mayak/domain";
+import { Button, EmptyState } from "@mayak/ui";
+import { Icon } from "../components/Icon.tsx";
 import { TaskItem } from "../components/TaskItem.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
 import { noteTitle } from "../state/format.ts";
@@ -15,34 +17,43 @@ export function TasksScreen() {
   const open = groups.reduce((sum, g) => sum + g.tasks.filter((t) => !t.checked).length, 0);
 
   return (
-    <article className="sheet">
-      <div className="eyebrow accent">По одному шагу</div>
-      <h1 className="page-title">Ваши задачи</h1>
+    <article className="page">
+      <header className="page-header">
+        <h1 className="page-title">Ваши задачи</h1>
+        <p className="page-subtitle">По одному шагу</p>
+      </header>
       {groups.length === 0 ? (
-        <div className="empty-page">
-          <p className="intro">Задачи появятся здесь, когда вы добавите список в заметку.</p>
-          <button type="button" className="button primary" onClick={() => void create(true)}>
-            Создать заметку со списком
-          </button>
-        </div>
+        <EmptyState
+          title="Задач пока нет"
+          icon={<Icon name="tasks" />}
+          action={
+            <Button variant="primary" onClick={() => void create(true)}>
+              Создать заметку со списком
+            </Button>
+          }
+        >
+          Задачи появятся здесь, когда вы добавите список в заметку.
+        </EmptyState>
       ) : (
         <>
           <p className="intro">{open ? `Осталось сделать: ${open}.` : "Всё сделано. Отличная работа."}</p>
           {groups.map(({ note, tasks }) => (
             <section key={note.id} className="task-group" aria-labelledby={`tg-${note.id}`}>
-              <h3 id={`tg-${note.id}`}>
+              <h2 id={`tg-${note.id}`} className="task-group__title mk-headline">
                 <a href={routeHref({ section: "notes", noteId: note.id })}>{noteTitle(note.document)}</a>
-              </h3>
-              {tasks.map((task) => (
-                <TaskItem
-                  key={task.blockId}
-                  task={task}
-                  onToggle={(checked) => void setTaskChecked(task.noteId, task.blockId, checked)}
-                />
-              ))}
+              </h2>
+              <div className="card task-group__card">
+                {tasks.map((task) => (
+                  <TaskItem
+                    key={task.blockId}
+                    task={task}
+                    onToggle={(checked) => void setTaskChecked(task.noteId, task.blockId, checked)}
+                  />
+                ))}
+              </div>
             </section>
           ))}
-          <p className="cloud-explain">
+          <p className="explain">
             Отметки связаны с исходной заметкой: изменение здесь меняет ту же задачу в заметке и на других устройствах.
           </p>
         </>

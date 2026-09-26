@@ -26,6 +26,8 @@ const HEX = /^#[0-9a-f]{6}$/i;
 
 interface ColorWellProps {
   label: string;
+  /** Подпись скрыта визуально (например, в строке FormRow со своей подписью), но доступна диктору. */
+  hideLabel?: boolean;
   value: string;
   onChange: (hex: string) => void;
   disabled?: boolean;
@@ -36,7 +38,7 @@ interface ColorWellProps {
  * Цветовая ячейка macOS (color well) вместо системного выбора цвета:
  * по нажатию — панель с образцами и полем HEX.
  */
-export function ColorWell({ label, value, onChange, disabled, className }: ColorWellProps) {
+export function ColorWell({ label, hideLabel, value, onChange, disabled, className }: ColorWellProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -59,7 +61,7 @@ export function ColorWell({ label, value, onChange, disabled, className }: Color
 
   return (
     <div className={cx("mk-colorwell", className)}>
-      <span id={`${id}-label`} className="mk-field__label">
+      <span id={`${id}-label`} className={cx("mk-field__label", hideLabel && "mk-visually-hidden")}>
         {label}
       </span>
       <button
