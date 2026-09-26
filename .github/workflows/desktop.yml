@@ -64,6 +64,69 @@ jobs:
       - name: Заметка переживает перезапуск и хранится в SQLite
         run: xvfb-run -a dbus-run-session -- sh -c 'tauri-driver & sleep 2; node apps/desktop/e2e/smoke.mjs'
 
+  android:
+    name: Сборка · Android
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    env:
+      VITE_API_BASE: ${{ vars.MAYAK_API_BASE }}
+      VITE_SUPABASE_URL: ${{ vars.MAYAK_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.MAYAK_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi
+      - run: npm ci
+      - name: Ключ подписи
+        env:
+          KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: apps/desktop/src-tauri/gen/android
+        run: |
+          if [ -n "$KEY_BASE64" ]; then
+            echo "$KEY_BASE64" | base64 -d > "$RUNNER_TEMP/mayak.jks"
+            PASS="$KEY_PASSWORD"
+          else
+            # Без секретов — временный ключ: установка работает, но обновление
+            # поверх такой версии потребует удалить приложение.
+            echo "::warning::Нет секретов ANDROID_KEY_BASE64 и ANDROID_KEY_PASSWORD — APK подписан временным ключом."
+            PASS=$(openssl rand -hex 16)
+            keytool -genkey -noprompt -keystore "$RUNNER_TEMP/mayak.jks" -keyalg RSA -keysize 2048 -validity 10000 \
+              -alias upload -storepass "$PASS" -keypass "$PASS" -dname "CN=Mayak"
+          fi
+          printf 'keyAlias=upload\npassword=%s\nstoreFile=%s\n' "$PASS" "$RUNNER_TEMP/mayak.jks" > keystore.properties
+      - name: Сборка APK
+        run: |
+          export NDK_HOME="$ANDROID_NDK_LATEST_HOME"
+          npm run tauri -w @mayak/desktop -- android build --apk --target aarch64 --target armv7
+      - name: Файл установщика
+        run: |
+          version=$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")
+          apk=$(find apps/desktop/src-tauri/gen/android/app/build/outputs/apk -name '*release*.apk' | head -1)
+          test -n "$apk"
+          mkdir -p out && cp "$apk" "out/Mayak_${version}_android.apk"
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: out/*.apk
+      - name: В релиз
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" out/*.apk --clobber
+
   build:
     name: Сборка · ${{ matrix.name }}
     needs: test
