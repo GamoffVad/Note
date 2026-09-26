@@ -48,6 +48,30 @@ jobs:
         working-directory: apps/desktop/src-tauri
         run: cargo test
 
+  dictation-test:
+    name: Распознавание речи (Whisper)
+    needs: test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Системные библиотеки и синтезатор речи
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf espeak-ng ffmpeg cmake
+      - name: Модель и русская фраза
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/ggml-small.bin" https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin
+          echo "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b  $RUNNER_TEMP/ggml-small.bin" | sha256sum -c
+          espeak-ng -v ru -s 140 -w "$RUNNER_TEMP/phrase.wav" "Это проверка голосового ввода в приложении Маяк."
+          ffmpeg -loglevel error -i "$RUNNER_TEMP/phrase.wav" -ar 16000 -ac 1 -c:a pcm_s16le "$RUNNER_TEMP/phrase16.wav"
+      - name: Распознавание
+        working-directory: apps/desktop/src-tauri
+        env:
+          MAYAK_TEST_MODEL: ${{ runner.temp }}/ggml-small.bin
+          MAYAK_TEST_WAV: ${{ runner.temp }}/phrase16.wav
+        run: cargo test --release recognizes_russian_speech -- --ignored --nocapture
+
   window-test:
     name: Окно приложения (Linux, WebDriver)
     needs: test

@@ -23,6 +23,14 @@ getrandom = "0.4"
 rusqlite = { version = "0.40", features = ["bundled"] }
 # Вход по ссылке из письма: ссылка io.github.gamoffvad.mayak://… открывает приложение.
 tauri-plugin-deep-link = "2.4"
+# Голосовой ввод: локальное распознавание Whisper (whisper.cpp), загрузка модели
+# с проверкой SHA-256 (design/VOICE-DICTATION.md). rustls — как у плагина Tauri upload,
+# работает и на Android.
+whisper-rs = "0.16"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+futures-util = "0.3"
+sha2 = "0.11"
+tokio = { version = "1", features = ["fs", "io-util"] }
 
 # Системное хранилище секретов: Связка ключей macOS, Диспетчер учётных данных Windows,
 # Secret Service в Linux. На мобильных системах — отдельная реализация позже.
@@ -31,8 +39,13 @@ keyring = "4.2"
 # Повторный запуск (в Windows и Linux так приходит ссылка) передаёт её уже открытому окну.
 tauri-plugin-single-instance = { version = "2.4", features = ["deep-link"] }
 
+# Linux: WebKitGTK по умолчанию не даёт странице микрофон — включаем его для диктовки.
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = { version = "2.0", features = ["v2_40"] }
+
 [dev-dependencies]
 tempfile = "3"
+hound = "3.5"
 
 [profile.release]
 codegen-units = 1
