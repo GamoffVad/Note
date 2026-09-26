@@ -75,9 +75,9 @@ await app.find(`//*[contains(@class,"save-state") and contains(., "Сохран�
 assert(true, "заметка создана и сохранена на устройстве");
 // Диктовка в приложении: модуль распознавания отвечает и предлагает скачать модель.
 await app.click(`//button[normalize-space()="Диктовать"]`);
-await app.find(`//*[@role="dialog"]//button[contains(., "Скачать модель")]`);
+await app.find(`//dialog//button[contains(., "Скачать модель")]`);
 assert(true, "диктовка готова: предлагает скачать модель распознавания");
-await app.click(`//*[@role="dialog"]//button[normalize-space()="Не сейчас"]`);
+await app.click(`//dialog//button[normalize-space()="Не сейчас"]`);
 await new Promise((r) => setTimeout(r, 500));
 await app.close();
 

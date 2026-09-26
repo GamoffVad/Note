@@ -218,8 +218,19 @@ fn run(context: &WhisperContext, mut samples: Vec<f32>, cancel: Arc<AtomicBool>)
     params.set_print_timestamps(false);
     let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).clamp(1, 8);
     params.set_n_threads(threads as i32);
-    let abort = cancel.clone();
-    params.set_abort_callback_safe(move || abort.load(Ordering::SeqCst));
+    // Отмена распознавания. Не set_abort_callback_safe: в whisper-rs 0.16 его
+    // переходник читает замыкание не того типа (Box<Box<dyn FnMut>> как F),
+    // из-за чего распознавание сразу прерывается (whisper_full → −6).
+    // Указатель на флаг живёт до конца функции: `cancel` держит Arc.
+    unsafe extern "C" fn should_abort(user_data: *mut std::ffi::c_void) -> bool {
+        // SAFETY: user_data — указатель на AtomicBool внутри Arc, живущего дольше вызова full().
+        unsafe { (*(user_data as *const AtomicBool)).load(Ordering::SeqCst) }
+    }
+    // SAFETY: функция и указатель остаются действительными на всё время state.full().
+    unsafe {
+        params.set_abort_callback(Some(should_abort));
+        params.set_abort_callback_user_data(Arc::as_ptr(&cancel) as *mut std::ffi::c_void);
+    }
     state.full(params, &samples).map_err(|e| format!("Ошибка распознавания: {e}"))?;
     if cancel.load(Ordering::SeqCst) {
         return Err("cancelled".into());
