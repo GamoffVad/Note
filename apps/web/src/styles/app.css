@@ -1450,3 +1450,29 @@ code {
     scroll-behavior: auto !important;
   }
 }
+
+/* Аккаунт */
+.error-text {
+  color: var(--status-danger);
+  font-weight: 500;
+}
+.dev-sync {
+  margin-top: 28px;
+  padding: 12px 16px;
+  border: 1px dashed var(--field-border);
+  border-radius: var(--radius-md);
+}
+.dev-sync summary {
+  cursor: pointer;
+  min-height: 32px;
+  font-weight: 600;
+}
+.settings input[type="email"] {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  color: var(--text-primary);
+}

@@ -2,7 +2,16 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { NoteDocument } from "@mayak/domain";
 import { requestPersistentStorage } from "@mayak/local-store";
 import type { ConflictChoice, ConflictRecord, LocalNote, OutboxEntry, SyncStatus } from "@mayak/sync";
-import { loadSyncConfig, openWorkspace, saveSyncConfig, type SyncConfig, type Workspace } from "./workspace.ts";
+import { getSupabase } from "./supabase.ts";
+import {
+  loadSyncConfig,
+  META_DEVICE_REVOKED,
+  openWorkspace,
+  releaseNamespace,
+  saveSyncConfig,
+  type SyncConfig,
+  type Workspace,
+} from "./workspace.ts";
 
 export interface MayakState {
   workspace: Workspace;
@@ -19,6 +28,11 @@ export interface MayakState {
   resolveConflict(noteId: string, choice: ConflictChoice): Promise<{ copyId: string | null }>;
   syncNow(): Promise<SyncStatus | null>;
   setSyncConfig(config: SyncConfig): void;
+  /**
+   * Выход из аккаунта на этом устройстве. wipe — удалить заметки аккаунта
+   * с устройства (только если всё отправлено).
+   */
+  signOut(options: { wipe: boolean }): Promise<void>;
 }
 
 const Context = createContext<MayakState | null>(null);
@@ -61,6 +75,22 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
     };
   }, [config]);
 
+  // Вход по ссылке из письма (PKCE): библиотека обменивает код на сессию при загрузке.
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event !== "SIGNED_IN" || !session) return;
+      setConfig((current) => {
+        if (current.mode === "account" && current.userId === session.user.id) return current;
+        const next: SyncConfig = { mode: "account", userId: session.user.id, email: session.user.email ?? "" };
+        saveSyncConfig(next);
+        return next;
+      });
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     requestPersistentStorage()
       .then(setPersisted)
@@ -82,6 +112,12 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
         conflicts: await tx.getAll<ConflictRecord>("conflicts"),
       }));
       if (!alive) return;
+      const status = engine.getStatus();
+      const code = status.lastError?.code;
+      if (code === "DEVICE_REVOKED" || code === "SESSION_REVOKED") {
+        // После нового входа устройство зарегистрируется заново (workspace.ts).
+        await store.write((tx) => tx.put("meta", META_DEVICE_REVOKED, true)).catch(() => undefined);
+      }
       setSnapshot({
         notes: data.notes,
         outbox: new Map(data.outbox.map((e) => [e.entityId, e])),
@@ -147,6 +183,24 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
       setSyncConfig: (next) => {
         saveSyncConfig(next);
         setConfig(next);
+      },
+      signOut: async ({ wipe }) => {
+        const supabase = getSupabase();
+        // Только эта сессия: выход на одном устройстве не должен выкидывать остальные.
+        if (supabase && workspace.config.mode === "account") await supabase.auth.signOut({ scope: "local" });
+        const namespace = workspace.namespace;
+        if (wipe) {
+          // Сначала закрываем и удаляем базу, потом открываем пространство заново:
+          // иначе новое подключение заблокировало бы удаление той же базы.
+          workspace.close();
+          await new Promise<void>((resolve) => {
+            const request = indexedDB.deleteDatabase(`mayak:${namespace}`);
+            request.onsuccess = request.onerror = () => resolve();
+          });
+          releaseNamespace(namespace);
+        }
+        saveSyncConfig({ mode: "local" });
+        setConfig({ mode: "local" });
       },
     };
   }, [workspace, snapshot, persisted, kick]);

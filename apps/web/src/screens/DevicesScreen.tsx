@@ -37,7 +37,14 @@ export function DevicesScreen() {
   return (
     <article className="sheet">
       <div className="eyebrow accent">Связь между устройствами</div>
-      <h1 className="page-title">Ваши устройства</h1>
+      <div className="page-heading">
+        <h1 className="page-title">Ваши устройства</h1>
+        {transport && (
+          <button type="button" className="button" onClick={load} aria-label="Обновить список устройств">
+            <Icon name="sync" size={16} /> Обновить
+          </button>
+        )}
+      </div>
       <p className="intro">Мысли остаются с вами, даже когда меняется экран.</p>
 
       {!transport && (

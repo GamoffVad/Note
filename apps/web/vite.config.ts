@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 
 /**
  * Строгая CSP для сборки (ТЗ, раздел 7): скрипты только свои и встроенные
  * по хэшу, без eval и внешних источников. В режиме разработки не добавляется:
  * Vite использует встроенные скрипты для горячей перезагрузки.
  */
-function contentSecurityPolicy(): Plugin {
+function contentSecurityPolicy(connectOrigins: string[]): Plugin {
   return {
     name: "mayak-csp",
     apply: "build",
@@ -23,7 +23,8 @@ function contentSecurityPolicy(): Plugin {
           // Атрибуты style нужны для автоматической высоты полей и настроек оформления.
           "style-src 'self' 'unsafe-inline'",
           "img-src 'self' data: blob:",
-          "connect-src 'self'",
+          // Свой API и Auth-сервер проекта Supabase.
+          `connect-src 'self' ${connectOrigins.join(" ")}`.trim(),
           "object-src 'none'",
           "base-uri 'none'",
           "form-action 'self'",
@@ -36,9 +37,15 @@ function contentSecurityPolicy(): Plugin {
 
 const apiTarget = process.env.MAYAK_API_PROXY ?? "http://localhost:8787";
 
-export default defineConfig({
-  plugins: [react(), contentSecurityPolicy()],
-  server: { port: 5173, proxy: { "/api": apiTarget } },
-  preview: { port: 4173, proxy: { "/api": apiTarget } },
-  build: { target: "es2022", sourcemap: true },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  const origins: string[] = [];
+  if (env.VITE_SUPABASE_URL) origins.push(new URL(env.VITE_SUPABASE_URL).origin);
+  if (env.VITE_API_BASE && /^https?:/.test(env.VITE_API_BASE)) origins.push(new URL(env.VITE_API_BASE).origin);
+  return {
+    plugins: [react(), contentSecurityPolicy(origins)],
+    server: { port: 5173, proxy: { "/api": apiTarget } },
+    preview: { port: 4173, proxy: { "/api": apiTarget } },
+    build: { target: "es2022", sourcemap: true },
+  };
 });

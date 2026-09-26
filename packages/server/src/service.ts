@@ -29,6 +29,8 @@ import { ApiError } from "./errors.ts";
 export interface RequestContext {
   ownerId: string;
   deviceId: string;
+  /** Сессия провайдера, если он её сообщает. */
+  sessionId?: string | null;
 }
 
 interface NoteRow {
@@ -45,26 +47,36 @@ export class SyncService {
   /** Находит или создаёт пользователя приложения по идентичности провайдера. */
   async resolveUser(authSubject: string): Promise<string> {
     const { rows } = await this.pool.query<{ id: string }>(
-      `insert into users(auth_subject, quota_bytes) values ($1, $2)
+      `insert into mayak.users(auth_subject, quota_bytes) values ($1, $2)
        on conflict (auth_subject) do update set auth_subject = excluded.auth_subject
        returning id`,
       [authSubject, DEFAULT_ACCOUNT_QUOTA_BYTES],
     );
     const ownerId = rows[0]!.id;
-    await this.pool.query("insert into sync_heads(owner_id) values ($1) on conflict do nothing", [ownerId]);
+    await this.pool.query("insert into mayak.sync_heads(owner_id) values ($1) on conflict do nothing", [ownerId]);
     return ownerId;
   }
 
-  async registerDevice(ownerId: string, input: unknown): Promise<DeviceInfo> {
+  /** Сессия, отозванная вместе с устройством, больше не принимается. */
+  async assertSessionActive(ownerId: string, sessionId: string | null): Promise<void> {
+    if (!sessionId) return;
+    const { rowCount } = await this.pool.query(
+      "select 1 from mayak.revoked_sessions where owner_id = $1 and session_id = $2",
+      [ownerId, sessionId],
+    );
+    if (rowCount) throw new ApiError("SESSION_REVOKED", "Доступ этого устройства отозван. Войдите снова");
+  }
+
+  async registerDevice(ownerId: string, input: unknown, sessionId: string | null = null): Promise<DeviceInfo> {
     const parsed = RegisterDeviceSchema.safeParse(input);
     if (!parsed.success) throw new ApiError("VALIDATION_FAILED", "Некорректные данные устройства");
     const { id, name, platform } = parsed.data;
     const { rows } = await this.pool.query<{ owner_id: string; revoked_at: Date | null }>(
-      `insert into devices(owner_id, id, name, platform, last_seen_at) values ($1, $2, $3, $4, now())
-       on conflict (id) do update set name = excluded.name, last_seen_at = now()
+      `insert into mayak.devices(owner_id, id, name, platform, last_seen_at, session_id) values ($1, $2, $3, $4, now(), $5)
+       on conflict (id) do update set name = excluded.name, last_seen_at = now(), session_id = excluded.session_id
          where devices.owner_id = excluded.owner_id and devices.revoked_at is null
        returning owner_id, revoked_at`,
-      [ownerId, id, name, platform],
+      [ownerId, id, name, platform, sessionId],
     );
     // Пустой результат: id занят другим аккаунтом или устройство отозвано.
     if (!rows.length) throw new ApiError("FORBIDDEN", "Это устройство нельзя зарегистрировать");
@@ -72,18 +84,20 @@ export class SyncService {
   }
 
   /** Устройство должно принадлежать владельцу сессии и не быть отозванным. */
-  async authorizeDevice(ownerId: string, deviceId: string): Promise<void> {
-    const { rows } = await this.pool.query<{ revoked_at: Date | null }>(
-      "select revoked_at from devices where owner_id = $1 and id = $2",
+  async authorizeDevice(ownerId: string, deviceId: string, sessionId: string | null = null): Promise<void> {
+    const { rows } = await this.pool.query<{ revoked_at: Date | null; session_id: string | null }>(
+      "select revoked_at, session_id from mayak.devices where owner_id = $1 and id = $2",
       [ownerId, deviceId],
     );
     const device = rows[0];
     if (!device) throw new ApiError("DEVICE_NOT_REGISTERED", "Устройство не зарегистрировано");
     if (device.revoked_at) throw new ApiError("DEVICE_REVOKED", "Доступ этого устройства отозван");
+    // Устройство привязано к последней сессии, с которой оно работало: её отзовём вместе с ним.
     await this.pool.query(
-      `update devices set last_seen_at = now()
-       where owner_id = $1 and id = $2 and (last_seen_at is null or last_seen_at < now() - interval '1 minute')`,
-      [ownerId, deviceId],
+      `update mayak.devices set last_seen_at = now(), session_id = coalesce($3, session_id)
+       where owner_id = $1 and id = $2
+         and (last_seen_at is null or last_seen_at < now() - interval '1 minute' or session_id is distinct from coalesce($3, session_id))`,
+      [ownerId, deviceId, sessionId],
     );
   }
 
@@ -95,7 +109,7 @@ export class SyncService {
       last_seen_at: Date | null;
       revoked_at: Date | null;
     }>(
-      `select id, name, platform, last_seen_at, revoked_at from devices
+      `select id, name, platform, last_seen_at, revoked_at from mayak.devices
        where owner_id = $1 order by revoked_at nulls first, last_seen_at desc nulls last`,
       [ctx.ownerId],
     );
@@ -109,12 +123,23 @@ export class SyncService {
     }));
   }
 
+  /** Отзыв устройства закрывает и его сессию провайдера для нашего API. */
   async revokeDevice(ctx: RequestContext, deviceId: string): Promise<void> {
-    const { rowCount } = await this.pool.query(
-      "update devices set revoked_at = coalesce(revoked_at, now()) where owner_id = $1 and id = $2",
-      [ctx.ownerId, deviceId],
-    );
-    if (!rowCount) throw new ApiError("NOT_FOUND", "Устройство не найдено");
+    await withTransaction(this.pool, async (client) => {
+      const { rows } = await client.query<{ session_id: string | null }>(
+        `update mayak.devices set revoked_at = coalesce(revoked_at, now())
+         where owner_id = $1 and id = $2 returning session_id`,
+        [ctx.ownerId, deviceId],
+      );
+      if (!rows[0]) throw new ApiError("NOT_FOUND", "Устройство не найдено");
+      const sessionId = rows[0].session_id;
+      if (sessionId && sessionId !== ctx.sessionId) {
+        await client.query(
+          "insert into mayak.revoked_sessions(owner_id, session_id) values ($1, $2) on conflict do nothing",
+          [ctx.ownerId, sessionId],
+        );
+      }
+    });
   }
 
   async push(ctx: RequestContext, rawMutations: unknown[]): Promise<MutationResult[]> {
@@ -154,14 +179,14 @@ export class SyncService {
     const requestHash = createHash("sha256").update(stableStringify(m)).digest("hex");
     return withTransaction(this.pool, async (client) => {
       const head = await client.query<{ last_seq: string }>(
-        "select last_seq from sync_heads where owner_id = $1 for update",
+        "select last_seq from mayak.sync_heads where owner_id = $1 for update",
         [ctx.ownerId],
       );
       if (!head.rows[0]) throw new Error("sync_heads отсутствует для владельца");
       const lastSeq = Number(head.rows[0].last_seq);
 
       const previous = await client.query<{ request_hash: string; result: MutationResult }>(
-        "select request_hash, result from mutations where owner_id = $1 and mutation_id = $2",
+        "select request_hash, result from mayak.mutations where owner_id = $1 and mutation_id = $2",
         [ctx.ownerId, m.mutationId],
       );
       if (previous.rows[0]) {
@@ -170,7 +195,7 @@ export class SyncService {
       }
 
       const existing = await client.query<NoteRow>(
-        `select id, revision, document, deleted_at, updated_at from notes
+        `select id, revision, document, deleted_at, updated_at from mayak.notes
          where owner_id = $1 and id = $2 for update`,
         [ctx.ownerId, m.entityId],
       );
@@ -179,7 +204,7 @@ export class SyncService {
 
       if (!current) {
         const purged = await client.query(
-          "select 1 from purged_ids where owner_id = $1 and entity_type = 'note' and entity_id = $2",
+          "select 1 from mayak.purged_ids where owner_id = $1 and entity_type = 'note' and entity_id = $2",
           [ctx.ownerId, m.entityId],
         );
         if (purged.rowCount) {
@@ -190,7 +215,7 @@ export class SyncService {
         }
         revision = 1;
         await client.query(
-          `insert into notes(owner_id, id, title, document, tags, pinned, revision, deleted_at)
+          `insert into mayak.notes(owner_id, id, title, document, tags, pinned, revision, deleted_at)
            values ($1, $2, $3, $4, $5, $6, 1, case when $7::boolean then now() end)`,
           [ctx.ownerId, m.entityId, m.document.title, m.document, m.document.tags, m.document.pinned, m.deleted],
         );
@@ -208,7 +233,7 @@ export class SyncService {
         }
         revision = currentRevision + 1;
         await client.query(
-          `update notes set title = $3, document = $4, tags = $5, pinned = $6, revision = $7,
+          `update mayak.notes set title = $3, document = $4, tags = $5, pinned = $6, revision = $7,
              deleted_at = case when $8::boolean then coalesce(deleted_at, now()) end,
              updated_at = now()
            where owner_id = $1 and id = $2`,
@@ -217,21 +242,21 @@ export class SyncService {
       }
 
       const seq = lastSeq + 1;
-      await client.query("update sync_heads set last_seq = $2 where owner_id = $1", [ctx.ownerId, seq]);
+      await client.query("update mayak.sync_heads set last_seq = $2 where owner_id = $1", [ctx.ownerId, seq]);
       const saved = await readNote(client, ctx.ownerId, m.entityId);
       await client.query(
-        `insert into note_versions(owner_id, note_id, revision, snapshot, deleted, source_device_id)
+        `insert into mayak.note_versions(owner_id, note_id, revision, snapshot, deleted, source_device_id)
          values ($1, $2, $3, $4, $5, $6)`,
         [ctx.ownerId, m.entityId, revision, m.document, m.deleted, ctx.deviceId],
       );
       await client.query(
-        `insert into changes(owner_id, seq, entity_type, entity_id, revision, operation, mutation_id, payload)
+        `insert into mayak.changes(owner_id, seq, entity_type, entity_id, revision, operation, mutation_id, payload)
          values ($1, $2, 'note', $3, $4, 'upsert', $5, $6)`,
         [ctx.ownerId, seq, m.entityId, revision, m.mutationId, saved],
       );
       const result: MutationResult = { mutationId: m.mutationId, status: "applied", revision, seq };
       await client.query(
-        "insert into mutations(owner_id, mutation_id, request_hash, result) values ($1, $2, $3, $4)",
+        "insert into mayak.mutations(owner_id, mutation_id, request_hash, result) values ($1, $2, $3, $4)",
         [ctx.ownerId, m.mutationId, requestHash, result],
       );
       return result;
@@ -242,7 +267,7 @@ export class SyncService {
     const { epoch, seq } = decodeCursor(cursor, ctx.ownerId);
     const pageSize = clampLimit(limit, MAX_PULL_PAGE);
     const head = await this.pool.query<{ epoch: number; retained_from_seq: string }>(
-      "select epoch, retained_from_seq from sync_heads where owner_id = $1",
+      "select epoch, retained_from_seq from mayak.sync_heads where owner_id = $1",
       [ctx.ownerId],
     );
     const h = head.rows[0];
@@ -256,7 +281,7 @@ export class SyncService {
       mutation_id: string | null;
       payload: ServerNote;
     }>(
-      `select seq, entity_id, revision, mutation_id, payload from changes
+      `select seq, entity_id, revision, mutation_id, payload from mayak.changes
        where owner_id = $1 and seq > $2 order by seq limit $3`,
       [ctx.ownerId, seq, pageSize + 1],
     );
@@ -272,7 +297,7 @@ export class SyncService {
     }));
     const lastSeq = changes.at(-1)?.seq ?? seq;
     await this.pool.query(
-      `insert into device_cursors(owner_id, device_id, last_ack_seq) values ($1, $2, $3)
+      `insert into mayak.device_cursors(owner_id, device_id, last_ack_seq) values ($1, $2, $3)
        on conflict (owner_id, device_id) do update set last_ack_seq = excluded.last_ack_seq, updated_at = now()`,
       [ctx.ownerId, ctx.deviceId, seq],
     );
@@ -297,20 +322,20 @@ export class SyncService {
       highWater = token.h;
     } else {
       const head = await this.pool.query<{ epoch: number; last_seq: string }>(
-        "select epoch, last_seq from sync_heads where owner_id = $1",
+        "select epoch, last_seq from mayak.sync_heads where owner_id = $1",
         [ctx.ownerId],
       );
       epoch = head.rows[0]!.epoch;
       highWater = Number(head.rows[0]!.last_seq);
     }
     const { rows } = await this.pool.query<NoteRow>(
-      `select id, revision, document, deleted_at, updated_at from notes
+      `select id, revision, document, deleted_at, updated_at from mayak.notes
        where owner_id = $1 and id > $2 order by id limit $3`,
       [ctx.ownerId, after, pageSize + 1],
     );
     const hasMore = rows.length > pageSize;
     const notes = rows.slice(0, pageSize).map(toServerNote);
-    const quota = await this.pool.query<{ quota_bytes: string }>("select quota_bytes from users where id = $1", [
+    const quota = await this.pool.query<{ quota_bytes: string }>("select quota_bytes from mayak.users where id = $1", [
       ctx.ownerId,
     ]);
     return {
@@ -337,7 +362,7 @@ export class SyncService {
       created_at: Date;
       source_device_id: string | null;
     }>(
-      `select id, revision, snapshot, deleted, created_at, source_device_id from note_versions
+      `select id, revision, snapshot, deleted, created_at, source_device_id from mayak.note_versions
        where owner_id = $1 and note_id = $2 and ($3::bigint is null or revision < $3)
        order by revision desc limit $4`,
       [ctx.ownerId, noteId, before, pageSize + 1],
@@ -360,7 +385,7 @@ export class SyncService {
     if (!parsed.success) throw new ApiError("VALIDATION_FAILED", "Некорректный запрос восстановления");
     await this.assertNoteOwned(ctx.ownerId, noteId);
     const { rows } = await this.pool.query<{ snapshot: NoteDocument }>(
-      "select snapshot from note_versions where owner_id = $1 and note_id = $2 and id = $3",
+      "select snapshot from mayak.note_versions where owner_id = $1 and note_id = $2 and id = $3",
       [ctx.ownerId, noteId, parsed.data.versionId],
     );
     if (!rows[0]) throw new ApiError("NOT_FOUND", "Версия не найдена");
@@ -376,7 +401,7 @@ export class SyncService {
   }
 
   private async assertNoteOwned(ownerId: string, noteId: string): Promise<void> {
-    const { rowCount } = await this.pool.query("select 1 from notes where owner_id = $1 and id = $2", [
+    const { rowCount } = await this.pool.query("select 1 from mayak.notes where owner_id = $1 and id = $2", [
       ownerId,
       noteId,
     ]);
@@ -387,7 +412,7 @@ export class SyncService {
 
 async function readNote(client: PoolClient, ownerId: string, id: string): Promise<ServerNote> {
   const { rows } = await client.query<NoteRow>(
-    "select id, revision, document, deleted_at, updated_at from notes where owner_id = $1 and id = $2",
+    "select id, revision, document, deleted_at, updated_at from mayak.notes where owner_id = $1 and id = $2",
     [ownerId, id],
   );
   return toServerNote(rows[0]!);

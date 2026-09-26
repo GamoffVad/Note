@@ -125,6 +125,7 @@ export const ERROR_CODES = [
   "VALIDATION_FAILED",
   "PAYLOAD_TOO_LARGE",
   "UNAUTHORIZED",
+  "SESSION_REVOKED",
   "FORBIDDEN",
   "DEVICE_REVOKED",
   "DEVICE_NOT_REGISTERED",
@@ -136,6 +137,7 @@ export const ERROR_CODES = [
   "INVALID_CURSOR",
   "UPGRADE_REQUIRED",
   "RATE_LIMITED",
+  "SERVICE_UNAVAILABLE",
   "INTERNAL",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];

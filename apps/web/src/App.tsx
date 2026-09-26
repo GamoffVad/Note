@@ -124,7 +124,11 @@ export function App() {
         </a>
         <div className="meta">
           <span className="mode-label">
-            {workspace.config.mode === "dev" ? `Сервер разработки · ${workspace.config.account}` : "Только это устройство"}
+            {workspace.config.mode === "dev"
+              ? `Сервер разработки · ${workspace.config.account}`
+              : workspace.config.mode === "account"
+                ? workspace.config.email
+                : "Только это устройство"}
           </span>
           <a
             className="icon-button"
@@ -150,7 +154,11 @@ export function App() {
       <footer className="footer">
         <SyncFooter />
         <span className="footer-note">
-          {workspace.config.mode === "dev" ? "Вход разработчика без проверки личности" : "Данные не покидают это устройство"}
+          {workspace.config.mode === "dev"
+            ? "Вход разработчика без проверки личности"
+            : workspace.config.mode === "account"
+              ? "Синхронизация через ваш аккаунт"
+              : "Данные не покидают это устройство"}
         </span>
       </footer>
 

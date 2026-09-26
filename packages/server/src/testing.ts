@@ -21,7 +21,7 @@ export async function openTestDatabase(): Promise<Db | null> {
 }
 
 export async function resetDatabase(pool: Db): Promise<void> {
-  await pool.query("drop schema if exists public cascade; create schema public;");
+  await pool.query("drop schema if exists mayak cascade; drop schema if exists public cascade; create schema public;");
   await migrate(pool);
 }
 

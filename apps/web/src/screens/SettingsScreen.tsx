@@ -1,10 +1,11 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Dialog } from "../components/Dialog.tsx";
 import { useAppearance } from "../state/AppearanceContext.tsx";
 import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope } from "../state/appearance.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, plural, safeFileName } from "../state/format.ts";
-import { DEFAULT_API_BASE, type SyncConfig } from "../state/workspace.ts";
+import { getSupabase, isValidEmail, normalizeOtp, supabaseConfigured } from "../state/supabase.ts";
+import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/workspace.ts";
 
 export function SettingsScreen() {
   return (
@@ -135,6 +136,227 @@ function FontFieldset({ scope, legend }: { scope: Scope; legend: string }) {
 }
 
 function SyncSection() {
+  const { workspace } = useMayak();
+  return (
+    <section className="settings-section" aria-labelledby="sync-title">
+      <h2 id="sync-title">Аккаунт и синхронизация</h2>
+      {supabaseConfigured() ? (
+        workspace.config.mode === "account" ? (
+          <SignedIn email={workspace.config.email} />
+        ) : (
+          <SignInForm />
+        )
+      ) : (
+        <p className="muted">
+          Вход через аккаунт не настроен в этой сборке: не заданы адрес проекта Supabase и публикуемый ключ. Заметки
+          хранятся только на этом устройстве.
+        </p>
+      )}
+      {DEV_SYNC_ENABLED && <DevSyncForm />}
+    </section>
+  );
+}
+
+function authErrorText(error: { status?: number; code?: string; message?: string } | null): string {
+  if (!error) return "Не удалось выполнить запрос.";
+  if (error.status === 429 || error.code === "over_email_send_rate_limit") return "Слишком много запросов. Подождите минуту и повторите.";
+  if (error.code === "otp_expired" || error.status === 403) return "Код неверный или устарел. Запросите новый.";
+  if (error.status === 0 || /fetch|network/i.test(error.message ?? "")) return "Нет сети. Проверьте подключение и повторите.";
+  return "Не удалось войти. Повторите позже.";
+}
+
+/** Вход по email: письмо с кодом (или ссылкой для этого браузера). Пароль не нужен. */
+function SignInForm() {
+  const { setSyncConfig, status, workspace } = useMayak();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
+  const pending = status.pendingCount + status.failedCount;
+
+  const requestCode = async () => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    setBusy(true);
+    setError(null);
+    const { error: e } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: { shouldCreateUser: true, emailRedirectTo: `${location.origin}${location.pathname}` },
+    });
+    setBusy(false);
+    if (e) return setError(authErrorText(e));
+    setStep("code");
+    requestAnimationFrame(() => codeRef.current?.focus());
+  };
+
+  const verify = async () => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    setBusy(true);
+    setError(null);
+    const { data, error: e } = await supabase.auth.verifyOtp({ email: email.trim(), token: normalizeOtp(code), type: "email" });
+    setBusy(false);
+    if (e || !data.session) return setError(authErrorText(e));
+    setSyncConfig({ mode: "account", userId: data.session.user.id, email: data.session.user.email ?? email.trim() });
+  };
+
+  return (
+    <>
+      <p>
+        Войдите по email, чтобы заметки синхронизировались между вашими устройствами.
+        {workspace.config.mode === "local" && pending > 0 && " Заметки, созданные на этом устройстве, будут отправлены в аккаунт."}
+      </p>
+      {step === "email" ? (
+        <form
+          className="sync-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (isValidEmail(email)) void requestCode();
+          }}
+        >
+          <label className="field-label" htmlFor="auth-email">
+            Email
+          </label>
+          <input
+            id="auth-email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <div className="form-actions">
+            <button type="submit" className="button primary" disabled={!isValidEmail(email) || busy} aria-busy={busy}>
+              {busy ? "Отправляем…" : "Получить код"}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <form
+          className="sync-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (normalizeOtp(code).length >= 6) void verify();
+          }}
+        >
+          <p role="status">
+            Письмо отправлено на <strong>{email.trim()}</strong>. Введите код из письма или откройте ссылку из него в этом
+            же браузере.
+          </p>
+          <label className="field-label" htmlFor="auth-code">
+            Код из письма
+          </label>
+          <input
+            ref={codeRef}
+            id="auth-code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+          <div className="form-actions">
+            <button type="submit" className="button primary" disabled={normalizeOtp(code).length < 6 || busy} aria-busy={busy}>
+              {busy ? "Проверяем…" : "Войти"}
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                setStep("email");
+                setCode("");
+                setError(null);
+              }}
+            >
+              Другой email
+            </button>
+          </div>
+        </form>
+      )}
+      {error && (
+        <p role="alert" className="error-text">
+          {error}
+        </p>
+      )}
+      <p className="muted small">
+        Вход обслуживает Supabase Auth: он хранит ваш email и отправляет письма. Сквозного шифрования нет.
+      </p>
+    </>
+  );
+}
+
+function SignedIn({ email }: { email: string }) {
+  const { status, signOut } = useMayak();
+  const [confirm, setConfirm] = useState(false);
+  const [wipe, setWipe] = useState(false);
+  const pending = status.pendingCount + status.failedCount + status.conflictCount;
+  const sessionLost = status.state === "auth-required" || status.state === "forbidden";
+
+  return (
+    <>
+      <p>
+        Вы вошли как <strong>{email}</strong>. Заметки синхронизируются между устройствами этого аккаунта.
+      </p>
+      {sessionLost && (
+        <div className="banner banner-warning" role="alert">
+          <p>
+            {status.lastError?.code === "DEVICE_REVOKED" || status.lastError?.code === "SESSION_REVOKED"
+              ? "Доступ этого устройства отозван с другого устройства. Изменения сохранены здесь; войдите снова, чтобы продолжить синхронизацию."
+              : "Сессия завершилась. Изменения сохранены на устройстве; войдите снова, чтобы продолжить синхронизацию."}
+          </p>
+        </div>
+      )}
+      {sessionLost && <SignInForm />}
+      <div className="form-actions">
+        <button type="button" className="button" onClick={() => setConfirm(true)}>
+          Выйти на этом устройстве
+        </button>
+      </div>
+      {confirm && (
+        <Dialog
+          title="Выйти из аккаунта?"
+          onClose={() => setConfirm(false)}
+          actions={
+            <>
+              <button type="button" className="button" onClick={() => setConfirm(false)}>
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="button primary"
+                onClick={async () => {
+                  setConfirm(false);
+                  await signOut({ wipe: wipe && pending === 0 });
+                }}
+              >
+                Выйти
+              </button>
+            </>
+          }
+        >
+          {pending > 0 ? (
+            <p role="alert">
+              {pending} {plural(pending, "изменение ещё не отправлено", "изменения ещё не отправлены", "изменений ещё не отправлено")}.
+              Они останутся на этом устройстве и уйдут, когда вы снова войдёте. Чтобы сохранить копию сейчас, скачайте
+              архив в разделе «Хранилище и экспорт».
+            </p>
+          ) : (
+            <p>Все изменения отправлены. Выход завершит сессию только на этом устройстве.</p>
+          )}
+          <label className="checkline">
+            <input type="checkbox" checked={wipe} disabled={pending > 0} onChange={(e) => setWipe(e.target.checked)} />
+            Удалить заметки этого аккаунта с устройства
+          </label>
+          {pending > 0 && <p className="muted small">Удаление недоступно, пока есть неотправленные изменения.</p>}
+        </Dialog>
+      )}
+    </>
+  );
+}
+
+/** Режим разработчика: локальный сервер, вход по имени без проверки личности. */
+function DevSyncForm() {
   const { workspace, setSyncConfig, status } = useMayak();
   const config = workspace.config;
   const [account, setAccount] = useState(config.mode === "dev" ? config.account : "");
@@ -149,20 +371,17 @@ function SyncSection() {
   };
 
   return (
-    <section className="settings-section" aria-labelledby="sync-title">
-      <h2 id="sync-title">Синхронизация</h2>
-      {config.mode === "local" ? (
-        <p>Сейчас заметки хранятся только в этом браузере.</p>
-      ) : (
+    <details className="dev-sync" open={config.mode === "dev"}>
+      <summary>Режим разработчика</summary>
+      {config.mode === "dev" && (
         <p>
           Подключено к серверу разработки <code>{config.apiBase}</code> как «{config.account}».
         </p>
       )}
       <div className="banner banner-warning">
         <p>
-          Вход через аккаунт ещё не подключён. Здесь доступен только <strong>режим разработчика</strong>: подключение к
-          локальному серверу Маяка по имени, без пароля и проверки личности. Не используйте его для личных данных на общем
-          сервере.
+          Подключение к локальному серверу Маяка по имени, <strong>без пароля и проверки личности</strong>. Только для
+          разработки; не используйте его для личных данных.
         </p>
       </div>
       <form
@@ -228,7 +447,7 @@ function SyncSection() {
           </p>
         </Dialog>
       )}
-    </section>
+    </details>
   );
 }
 

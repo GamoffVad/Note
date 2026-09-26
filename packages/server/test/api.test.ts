@@ -100,9 +100,9 @@ describe.skipIf(!pool)("API синхронизации на PostgreSQL", () => {
     // jsonb меняет порядок ключей, поэтому сравниваем канонический JSON.
     expect(new Set(results.map((r) => stableStringify(r))).size).toBe(1);
     expect(results[0]).toMatchObject({ status: "applied", revision: 1 });
-    const { rows } = await pool!.query("select count(*)::int as n from changes");
+    const { rows } = await pool!.query("select count(*)::int as n from mayak.changes");
     expect(rows[0].n).toBe(1);
-    const versions = await pool!.query("select count(*)::int as n from note_versions");
+    const versions = await pool!.query("select count(*)::int as n from mayak.note_versions");
     expect(versions.rows[0].n).toBe(1);
   });
 
@@ -110,7 +110,7 @@ describe.skipIf(!pool)("API синхронизации на PostgreSQL", () => {
     const m = mutation(newId(), 0, "Параллельно");
     const results = await Promise.all(Array.from({ length: 10 }, () => alice.push([m])));
     expect(new Set(results.map((r) => stableStringify(r.body.results[0]))).size).toBe(1);
-    const { rows } = await pool!.query("select count(*)::int as n from changes");
+    const { rows } = await pool!.query("select count(*)::int as n from mayak.changes");
     expect(rows[0].n).toBe(1);
   });
 
@@ -128,7 +128,7 @@ describe.skipIf(!pool)("API синхронизации на PostgreSQL", () => {
     const stale = await alice.push([mutation(id, 1, "моя правка на v1")]);
     expect(stale.body.results[0]).toMatchObject({ status: "conflict", serverRevision: 2 });
     expect(stale.body.results[0].server.document.title).toBe("v2");
-    const { rows } = await pool!.query("select revision from notes where id = $1", [id]);
+    const { rows } = await pool!.query("select revision from mayak.notes where id = $1", [id]);
     expect(Number(rows[0].revision)).toBe(2);
   });
 
@@ -251,7 +251,7 @@ describe.skipIf(!pool)("API синхронизации на PostgreSQL", () => {
     await alice.push([mutation(newId(), 0, "b")]);
     await alice.push([mutation(newId(), 0, "c")]);
     // Имитация очистки журнала старше срока хранения.
-    await pool!.query("update sync_heads set retained_from_seq = 3");
+    await pool!.query("update mayak.sync_heads set retained_from_seq = 3");
     const expired = await alice.call("GET", `/sync/pull?cursor=${start}`);
     expect(expired.status).toBe(410);
     expect(expired.body.code).toBe("CURSOR_EXPIRED");
@@ -284,8 +284,8 @@ describe.skipIf(!pool)("API синхронизации на PostgreSQL", () => {
 
   it("окончательно удалённый id нельзя создать заново", async () => {
     const id = newId();
-    const { rows } = await pool!.query("select id from users where auth_subject = 'dev|alice'");
-    await pool!.query("insert into purged_ids(owner_id, entity_type, entity_id) values ($1, 'note', $2)", [
+    const { rows } = await pool!.query("select id from mayak.users where auth_subject = 'dev|alice'");
+    await pool!.query("insert into mayak.purged_ids(owner_id, entity_type, entity_id) values ($1, 'note', $2)", [
       rows[0].id,
       id,
     ]);

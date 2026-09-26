@@ -8,7 +8,7 @@ import {
   PushRequestSchema,
   type MutationResult,
 } from "@mayak/domain";
-import type { AuthProvider } from "./auth.ts";
+import { AuthUnavailableError, type AuthProvider } from "./auth.ts";
 import { ApiError } from "./errors.ts";
 import type { RequestContext, SyncService } from "./service.ts";
 
@@ -50,20 +50,27 @@ export function createApiHandler(options: ApiOptions): (request: Request) => Pro
         });
       }
 
-      const identity = await auth.authenticate(request);
+      let identity;
+      try {
+        identity = await auth.authenticate(request);
+      } catch (error) {
+        if (error instanceof AuthUnavailableError) throw new ApiError("SERVICE_UNAVAILABLE", error.message);
+        throw error;
+      }
       if (!identity) throw new ApiError("UNAUTHORIZED", "Войдите снова, чтобы продолжить синхронизацию");
       const ownerId = await service.resolveUser(identity.subject);
+      await service.assertSessionActive(ownerId, identity.sessionId);
 
       if (route === "POST /devices") {
-        const device = await service.registerDevice(ownerId, await readJson(request, MAX_JSON_BODY_BYTES));
+        const device = await service.registerDevice(ownerId, await readJson(request, MAX_JSON_BODY_BYTES), identity.sessionId);
         status = 201;
         return json(201, device);
       }
 
       const deviceId = request.headers.get(HEADER_DEVICE);
       if (!isUuid(deviceId)) throw new ApiError("VALIDATION_FAILED", `Нужен заголовок ${HEADER_DEVICE}`);
-      await service.authorizeDevice(ownerId, deviceId);
-      const ctx: RequestContext = { ownerId, deviceId };
+      await service.authorizeDevice(ownerId, deviceId, identity.sessionId);
+      const ctx: RequestContext = { ownerId, deviceId, sessionId: identity.sessionId };
 
       const response = await dispatch(service, ctx, route, segments, url, request);
       status = response.status;
@@ -73,7 +80,7 @@ export function createApiHandler(options: ApiOptions): (request: Request) => Pro
       status = apiError.status;
       errorCode = error instanceof ApiError ? apiError.code : `INTERNAL:${(error as Error)?.name ?? "Error"}`;
       const headers: Record<string, string> = {};
-      if (apiError.code === "RATE_LIMITED") headers["retry-after"] = "30";
+      if (apiError.code === "RATE_LIMITED" || apiError.code === "SERVICE_UNAVAILABLE") headers["retry-after"] = "30";
       return json(apiError.status, apiError.toBody(requestId), headers);
     } finally {
       options.log?.({ requestId, method: request.method, route, status, ms: Date.now() - started, error: errorCode });

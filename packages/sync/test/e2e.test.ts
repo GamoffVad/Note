@@ -78,7 +78,7 @@ async function note(d: Device, id: string): Promise<LocalNote> {
 }
 
 async function serverChanges(): Promise<number> {
-  const { rows } = await pool!.query("select count(*)::int as n from changes");
+  const { rows } = await pool!.query("select count(*)::int as n from mayak.changes");
   return rows[0].n;
 }
 
@@ -241,7 +241,7 @@ describe.skipIf(!pool)("SyncEngine ↔ API ↔ PostgreSQL", () => {
     // а новая правка ушла следующей мутацией в том же цикле.
     expect(n.serverRevision).toBe(2);
     expect(await a.engine.getOutbox()).toHaveLength(0);
-    const { rows } = await pool!.query("select document from notes");
+    const { rows } = await pool!.query("select document from mayak.notes");
     expect(rows[0].document.blocks[0].text).toBe("второе, набрано во время запроса");
   });
 
@@ -310,13 +310,13 @@ describe.skipIf(!pool)("SyncEngine ↔ API ↔ PostgreSQL", () => {
     // Сервер: ещё одна правка, окончательное удаление, очистка журнала.
     await b.engine.editNote(shared.id, doc("Общая", "B ещё раз"));
     await b.engine.syncOnce();
-    const owner = await pool!.query("select id from users where auth_subject = 'dev|alice'");
-    await pool!.query("delete from notes where id = $1", [doomed.id]);
-    await pool!.query("insert into purged_ids(owner_id, entity_type, entity_id) values ($1, 'note', $2)", [
+    const owner = await pool!.query("select id from mayak.users where auth_subject = 'dev|alice'");
+    await pool!.query("delete from mayak.notes where id = $1", [doomed.id]);
+    await pool!.query("insert into mayak.purged_ids(owner_id, entity_type, entity_id) values ($1, 'note', $2)", [
       owner.rows[0].id,
       doomed.id,
     ]);
-    await pool!.query("update sync_heads set retained_from_seq = last_seq + 1");
+    await pool!.query("update mayak.sync_heads set retained_from_seq = last_seq + 1");
 
     expect((await a.engine.syncOnce()).state).toBe("idle");
     expect((await note(a, shared.id)).document.blocks[0]).toMatchObject({ text: "A продолжает во время конфликта" });
@@ -355,7 +355,7 @@ describe.skipIf(!pool)("SyncEngine ↔ API ↔ PostgreSQL", () => {
     a.net.token = "Bearer dev:alice";
     expect((await a.engine.syncOnce()).state).toBe("idle");
 
-    await pool!.query("update devices set revoked_at = now() where id = $1", [phone.id]);
+    await pool!.query("update mayak.devices set revoked_at = now() where id = $1", [phone.id]);
     await phone.engine.createNote(doc("После отзыва"));
     const revoked = await phone.engine.syncOnce();
     expect(revoked.state).toBe("forbidden");

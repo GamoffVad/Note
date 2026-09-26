@@ -4,6 +4,7 @@ const STATUS: Record<ErrorCode, number> = {
   VALIDATION_FAILED: 400,
   INVALID_CURSOR: 400,
   UNAUTHORIZED: 401,
+  SESSION_REVOKED: 401,
   FORBIDDEN: 403,
   DEVICE_REVOKED: 403,
   DEVICE_NOT_REGISTERED: 403,
@@ -16,9 +17,10 @@ const STATUS: Record<ErrorCode, number> = {
   UPGRADE_REQUIRED: 426,
   RATE_LIMITED: 429,
   INTERNAL: 500,
+  SERVICE_UNAVAILABLE: 503,
 };
 
-const RETRYABLE = new Set<ErrorCode>(["RATE_LIMITED", "INTERNAL"]);
+const RETRYABLE = new Set<ErrorCode>(["RATE_LIMITED", "INTERNAL", "SERVICE_UNAVAILABLE"]);
 
 export class ApiError extends Error {
   override readonly name = "ApiError";

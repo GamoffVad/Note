@@ -59,7 +59,19 @@ export function SyncDialog({ onClose }: { onClose: () => void }) {
               Настроить
             </button>
           )}
-          {connected && (
+          {connected && (status.state === "auth-required" || status.state === "forbidden") && (
+            <button
+              type="button"
+              className="button primary"
+              onClick={() => {
+                onClose();
+                navigate({ section: "settings" });
+              }}
+            >
+              Войти
+            </button>
+          )}
+          {connected && status.state !== "auth-required" && status.state !== "forbidden" && (
             <button
               type="button"
               className="button primary"
@@ -88,9 +100,11 @@ export function SyncDialog({ onClose }: { onClose: () => void }) {
         <dd>{workspace.deviceName}</dd>
         <dt>Режим</dt>
         <dd>
-          {connected
-            ? `Локальный сервер разработки · аккаунт «${workspace.config.mode === "dev" ? workspace.config.account : ""}»`
-            : "Только на этом устройстве"}
+          {workspace.config.mode === "account"
+            ? `Аккаунт ${workspace.config.email}`
+            : workspace.config.mode === "dev"
+              ? `Локальный сервер разработки · «${workspace.config.account}»`
+              : "Только на этом устройстве"}
         </dd>
         <dt>Не отправлено</dt>
         <dd>{status.pendingCount ? pluralChanges(status.pendingCount) : "нет"}</dd>

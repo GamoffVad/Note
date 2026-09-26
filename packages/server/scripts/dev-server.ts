@@ -1,24 +1,21 @@
 import { createServer } from "node:http";
 import { Readable } from "node:stream";
-import pg from "pg";
-import { DevTokenAuthProvider } from "../src/auth.ts";
+import { authFromEnv } from "../src/auth.ts";
+import { createPool } from "../src/db.ts";
 import { createApiHandler } from "../src/http.ts";
 import { SyncService } from "../src/service.ts";
 
 /**
- * Локальный сервер API для разработки. Не для production: использует
- * DevTokenAuthProvider («Authorization: Bearer dev:<имя>»).
+ * Локальный сервер API. Аутентификация по переменным окружения:
+ * MAYAK_AUTH=supabase + SUPABASE_URL — проверка токенов Supabase Auth;
+ * MAYAK_DEV_AUTH=1 — вход разработчика «Bearer dev:<имя>» без проверки личности.
  */
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("Задайте DATABASE_URL (см. .env.example)");
-  process.exit(1);
-}
 const port = Number(process.env.PORT ?? 8787);
-const pool = new pg.Pool({ connectionString: url });
+const pool = createPool(process.env);
+const auth = authFromEnv(process.env);
 const handler = createApiHandler({
   service: new SyncService(pool),
-  auth: new DevTokenAuthProvider({ enabled: process.env.MAYAK_DEV_AUTH === "1", environment: process.env.NODE_ENV }),
+  auth,
   log: (e) => console.log(`${e.status} ${e.route} ${e.ms}ms ${e.requestId}${e.error ? " " + e.error : ""}`),
 });
 
@@ -33,4 +30,4 @@ createServer(async (req, res) => {
   const response = await handler(request);
   res.writeHead(response.status, Object.fromEntries(response.headers));
   res.end(Buffer.from(await response.arrayBuffer()));
-}).listen(port, () => console.log(`Маяк API: http://localhost:${port}/api/v1`));
+}).listen(port, () => console.log(`Маяк API: http://localhost:${port}/api/v1 · вход: ${auth.constructor.name}`));
