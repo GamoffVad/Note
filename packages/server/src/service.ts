@@ -46,7 +46,8 @@ export class SyncService {
 
   /** Проверка состояния: база доступна и таблицы Маяка на месте. */
   async ping(): Promise<void> {
-    await this.pool.query("select 1 from mayak.schema_migrations where false");
+    // Таблица, к которой у роли API есть доступ (к журналу миграций доступа нет).
+    await this.pool.query("select 1 from mayak.users where false");
   }
 
   /** Находит или создаёт пользователя приложения по идентичности провайдера. */

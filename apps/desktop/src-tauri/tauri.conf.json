@@ -47,5 +47,14 @@
     "macOS": {
       "signingIdentity": "-"
     }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "io.github.gamoffvad.mayak"
+        ]
+      }
+    }
   }
 }

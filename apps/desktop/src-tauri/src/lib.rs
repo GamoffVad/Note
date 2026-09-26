@@ -34,8 +34,31 @@ fn session_key() -> Result<String, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    #[allow(unused_mut)]
+    let mut builder = tauri::Builder::default();
+    // Одно окно на компьютер: повторный запуск (так Windows и Linux открывают
+    // ссылку из письма) передаёт ссылку уже открытому приложению и поднимает окно.
+    // Плагин должен быть зарегистрирован первым (документация Tauri).
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }));
+    }
+    builder
+        .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
+            // Windows и Linux: схема ссылок регистрируется при установке; в Linux
+            // (AppImage) и при разработке в Windows — ещё и при запуске.
+            #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                app.deep_link().register_all()?;
+            }
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
             let store = Store::open(&dir.join("mayak.sqlite3")).map_err(std::io::Error::other)?;

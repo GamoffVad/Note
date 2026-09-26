@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { encryptedStorage, importSessionKey, nativePlatform } from "../src/state/native.ts";
+import { AUTH_REDIRECT_URL, encryptedStorage, importSessionKey, nativePlatform, parseAuthLink } from "../src/state/native.ts";
 
 class MemoryStorage {
   readonly data = new Map<string, string>();
@@ -54,5 +54,22 @@ describe("сессия в приложении: шифрование ключо�
     expect(nativePlatform("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15")).toBe("macos");
     expect(nativePlatform("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Edg/140.0")).toBe("windows");
     expect(nativePlatform("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15")).toBe("linux");
+  });
+});
+
+describe("вход по ссылке из письма в приложении", () => {
+  it("берёт код PKCE из ссылки возврата", () => {
+    expect(parseAuthLink(`${AUTH_REDIRECT_URL}?code=abc-123`)).toEqual({ code: "abc-123" });
+  });
+  it("распознаёт ошибку Supabase Auth в параметрах и во фрагменте", () => {
+    expect(parseAuthLink(`${AUTH_REDIRECT_URL}#error=access_denied&error_description=Email+link+is+invalid+or+has+expired`)).toEqual({
+      error: "Email link is invalid or has expired",
+    });
+    expect(parseAuthLink(`${AUTH_REDIRECT_URL}?error=server_error`)).toEqual({ error: "server_error" });
+  });
+  it("игнорирует чужие ссылки и ссылки без кода", () => {
+    expect(parseAuthLink("https://evil.example/login-callback?code=x")).toBeNull();
+    expect(parseAuthLink("io.github.gamoffvad.mayak://other?code=x")).toBeNull();
+    expect(parseAuthLink(AUTH_REDIRECT_URL)).toBeNull();
   });
 });

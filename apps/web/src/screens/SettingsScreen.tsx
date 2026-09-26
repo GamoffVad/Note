@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Banner,
   Button,
@@ -18,7 +18,7 @@ import { useAppearance } from "../state/AppearanceContext.tsx";
 import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope, type ThemeChoice } from "../state/appearance.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, plural, safeFileName } from "../state/format.ts";
-import { isNativeApp } from "../state/native.ts";
+import { AUTH_LINK_ERROR_EVENT, AUTH_REDIRECT_URL, isNativeApp } from "../state/native.ts";
 import { getSupabase, isValidEmail, normalizeOtp, supabaseConfigured } from "../state/supabase.ts";
 import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/workspace.ts";
 
@@ -197,6 +197,13 @@ function SignInForm() {
   const codeRef = useRef<HTMLInputElement>(null);
   const pending = status.pendingCount + status.failedCount;
 
+  // Ошибка входа по ссылке из письма (приложение, MayakContext).
+  useEffect(() => {
+    const onError = (e: Event) => setError((e as CustomEvent<string>).detail);
+    window.addEventListener(AUTH_LINK_ERROR_EVENT, onError);
+    return () => window.removeEventListener(AUTH_LINK_ERROR_EVENT, onError);
+  }, []);
+
   const requestCode = async () => {
     const supabase = getSupabase();
     if (!supabase) return;
@@ -204,10 +211,11 @@ function SignInForm() {
     setError(null);
     const { error: e } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      // В приложении ссылка из письма не открывается внутри него: вход только по коду.
-      options: isNativeApp()
-        ? { shouldCreateUser: true }
-        : { shouldCreateUser: true, emailRedirectTo: `${location.origin}${location.pathname}` },
+      // В приложении ссылка из письма открывает «Маяк» (deep link) и выполняет вход.
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: isNativeApp() ? AUTH_REDIRECT_URL : `${location.origin}${location.pathname}`,
+      },
     });
     setBusy(false);
     if (e) return setError(authErrorText(e));
@@ -268,7 +276,7 @@ function SignInForm() {
           <p role="status">
             Письмо отправлено на <strong>{email.trim()}</strong>.{" "}
             {isNativeApp()
-              ? "Введите код из письма."
+              ? "Откройте ссылку из письма на этом компьютере — «Маяк» откроется и выполнит вход. Если в письме есть код, можно ввести его здесь."
               : "Введите код из письма или откройте ссылку из него в этом же браузере."}
           </p>
           <TextField

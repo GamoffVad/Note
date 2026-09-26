@@ -21,11 +21,15 @@ serde_json = "1"
 getrandom = "0.4"
 # SQLite собирается вместе с приложением: не зависит от версии в системе.
 rusqlite = { version = "0.40", features = ["bundled"] }
+# Вход по ссылке из письма: ссылка io.github.gamoffvad.mayak://… открывает приложение.
+tauri-plugin-deep-link = "2.4"
 
 # Системное хранилище секретов: Связка ключей macOS, Диспетчер учётных данных Windows,
 # Secret Service в Linux. На мобильных системах — отдельная реализация позже.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 keyring = "4.2"
+# Повторный запуск (в Windows и Linux так приходит ссылка) передаёт её уже открытому окну.
+tauri-plugin-single-instance = { version = "2.4", features = ["deep-link"] }
 
 [dev-dependencies]
 tempfile = "3"

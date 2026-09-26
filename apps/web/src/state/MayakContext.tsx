@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { NoteDocument } from "@mayak/domain";
 import { requestPersistentStorage } from "@mayak/local-store";
 import type { ConflictChoice, ConflictRecord, LocalNote, OutboxEntry, SyncStatus } from "@mayak/sync";
+import { AUTH_LINK_ERROR_EVENT, isNativeApp, listenForAuthLinks, parseAuthLink } from "./native.ts";
 import { getSupabase } from "./supabase.ts";
 import {
   loadSyncConfig,
@@ -89,6 +90,32 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
       });
     });
     return () => data.subscription.unsubscribe();
+  }, []);
+
+  // Приложение: ссылка из письма открывает «Маяк» с кодом входа (PKCE).
+  // Обмен кода на сессию вызывает SIGNED_IN, дальше — как при входе по коду.
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase || !isNativeApp()) return;
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    const handled = new Set<string>();
+    const report = (text: string) => window.dispatchEvent(new CustomEvent(AUTH_LINK_ERROR_EVENT, { detail: text }));
+    void listenForAuthLinks((url) => {
+      const link = parseAuthLink(url);
+      if (!link || handled.has(url)) return;
+      handled.add(url);
+      if ("error" in link) return report("Ссылка из письма устарела или уже использована. Запросите новое письмо.");
+      void supabase.auth.exchangeCodeForSession(link.code).then(({ error }) => {
+        if (error) report("Не удалось войти по ссылке. Запросите новое письмо на этом компьютере.");
+      });
+    })
+      .then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)))
+      .catch((error: unknown) => console.warn("Ссылки для входа недоступны", error));
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
   }, []);
 
   useEffect(() => {
