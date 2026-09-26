@@ -16,29 +16,29 @@ interface RadioGroupProps<T extends string> {
   className?: string;
 }
 
-/** Группа радиокнопок macOS: круг, выбранный — заливка акцентом и белая точка. */
+/** Группа радиокнопок «Островов»: круг, выбранный — кольцо основного действия с точкой. */
 export function RadioGroup<T extends string>({ label, value, onChange, options, orientation = "vertical", className }: RadioGroupProps<T>) {
   const name = useId();
   return (
-    <fieldset className={cx("mk-radio-group", `mk-radio-group--${orientation}`, className)}>
-      <legend className="mk-field__label">{label}</legend>
+    <fieldset className={cx("isl-radio-group", `isl-radio-group--${orientation}`, className)}>
+      <legend className="isl-field__label">{label}</legend>
       {options.map((o) => {
         const id = `${name}-${o.value}`;
         return (
-          <span key={o.value} className="mk-radio">
-            <span className="mk-check__hit">
+          <span key={o.value} className="isl-radio">
+            <span className="isl-check__hit">
               <input
                 id={id}
                 type="radio"
                 name={name}
-                className="mk-radio__input"
+                className="isl-radio__input"
                 checked={o.value === value}
                 disabled={o.disabled}
                 onChange={() => onChange(o.value)}
               />
-              <span className="mk-radio__circle" aria-hidden="true" />
+              <span className="isl-radio__circle" aria-hidden="true" />
             </span>
-            <label htmlFor={id} className="mk-check__label">
+            <label htmlFor={id} className="isl-check__label">
               {o.label}
             </label>
           </span>

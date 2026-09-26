@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { TaskView } from "@mayak/domain";
-import { Checkbox } from "@mayak/ui";
+import { Checkbox } from "@mayak/islands";
 
 interface Props {
   task: TaskView;

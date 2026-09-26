@@ -14,7 +14,7 @@ export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
   tooltip?: boolean;
 }
 
-/** Кнопка панели инструментов macOS: только значок, подсказка и доступное имя. */
+/** Кнопка-значок: видимый значок может быть меньше зоны касания; подсказка и доступное имя обязательны. */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
   { label, icon, pressed, variant = "toolbar", size = "regular", tooltip = true, className, type = "button", ...rest },
   ref,
@@ -25,7 +25,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       type={type}
       aria-label={label}
       aria-pressed={pressed}
-      className={cx("mk-icon-button", `mk-icon-button--${variant}`, `mk-icon-button--${size}`, className)}
+      className={cx("isl-icon-button", `isl-icon-button--${variant}`, `isl-icon-button--${size}`, className)}
       {...rest}
     >
       {icon}
@@ -49,7 +49,7 @@ export const IconLink = forwardRef<HTMLAnchorElement, IconLinkProps>(function Ic
   ref,
 ) {
   const link = (
-    <a ref={ref} aria-label={label} className={cx("mk-icon-button", `mk-icon-button--${variant}`, `mk-icon-button--${size}`, className)} {...rest}>
+    <a ref={ref} aria-label={label} className={cx("isl-icon-button", `isl-icon-button--${variant}`, `isl-icon-button--${size}`, className)} {...rest}>
       {icon}
     </a>
   );

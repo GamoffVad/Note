@@ -19,7 +19,7 @@ interface FieldChrome {
 
 export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & FieldChrome;
 
-/** Текстовое поле macOS: скруглённый прямоугольник, фокус-кольцо акцента. */
+/** Текстовое поле «Островов»: радиус 8 px, контур 1 px, при фокусе — контур 2 px. */
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
   { label, hideLabel, hint, error, leading, trailing, className, id, ...rest },
   ref,
@@ -29,31 +29,31 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
   const hintId = hint ? `${inputId}-hint` : undefined;
   const errorId = error ? `${inputId}-error` : undefined;
   return (
-    <div className={cx("mk-field", error && "is-invalid", className)}>
+    <div className={cx("isl-field", error && "is-invalid", className)}>
       {label && (
-        <label htmlFor={inputId} className={cx("mk-field__label", hideLabel && "mk-visually-hidden")}>
+        <label htmlFor={inputId} className={cx("isl-field__label", hideLabel && "isl-visually-hidden")}>
           {label}
         </label>
       )}
-      <div className="mk-field__control mk-focus-within">
-        {leading && <span className="mk-field__adornment">{leading}</span>}
+      <div className="isl-field__control isl-focus-within">
+        {leading && <span className="isl-field__adornment">{leading}</span>}
         <input
           ref={ref}
           id={inputId}
-          className="mk-field__input"
+          className="isl-field__input"
           aria-invalid={error ? true : undefined}
           aria-describedby={[hintId, errorId].filter(Boolean).join(" ") || undefined}
           {...rest}
         />
-        {trailing && <span className="mk-field__adornment">{trailing}</span>}
+        {trailing && <span className="isl-field__adornment">{trailing}</span>}
       </div>
       {hint && (
-        <div id={hintId} className="mk-field__hint">
+        <div id={hintId} className="isl-field__hint">
           {hint}
         </div>
       )}
       {error && (
-        <div id={errorId} className="mk-field__error" role="alert">
+        <div id={errorId} className="isl-field__error" role="alert">
           {error}
         </div>
       )}
@@ -71,27 +71,27 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
   const inputId = id ?? auto;
   const hintId = hint ? `${inputId}-hint` : undefined;
   return (
-    <div className={cx("mk-field", error && "is-invalid", className)}>
+    <div className={cx("isl-field", error && "is-invalid", className)}>
       {label && (
-        <label htmlFor={inputId} className={cx("mk-field__label", hideLabel && "mk-visually-hidden")}>
+        <label htmlFor={inputId} className={cx("isl-field__label", hideLabel && "isl-visually-hidden")}>
           {label}
         </label>
       )}
       <textarea
         ref={ref}
         id={inputId}
-        className="mk-field__control mk-field__textarea"
+        className="isl-field__control isl-field__textarea"
         aria-invalid={error ? true : undefined}
         aria-describedby={hintId}
         {...rest}
       />
       {hint && (
-        <div id={hintId} className="mk-field__hint">
+        <div id={hintId} className="isl-field__hint">
           {hint}
         </div>
       )}
       {error && (
-        <div className="mk-field__error" role="alert">
+        <div className="isl-field__error" role="alert">
           {error}
         </div>
       )}

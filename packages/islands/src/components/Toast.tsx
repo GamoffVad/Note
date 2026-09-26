@@ -34,14 +34,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Context.Provider value={show}>
       {children}
-      <div className="mk-toast-region" role="status" aria-live="polite">
+      <div className="isl-toast-region" role="status" aria-live="polite">
         {message && (
-          <div className={cx("mk-toast", `mk-toast--${message.tone ?? "info"}`)} key={message.id}>
+          <div className={cx("isl-toast", `isl-toast--${message.tone ?? "info"}`)} key={message.id}>
             <span>{message.text}</span>
             {message.action && (
               <button
                 type="button"
-                className="mk-toast__action"
+                className="isl-toast__action"
                 onClick={() => {
                   message.action!.run();
                   setMessage(null);

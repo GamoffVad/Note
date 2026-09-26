@@ -1,4 +1,4 @@
-import { Spinner } from "@mayak/ui";
+import { Spinner } from "@mayak/islands";
 
 /** Строка загрузки: индикатор библиотеки объявляет текст, видимая подпись дублирует его только глазами. */
 export function Loading({ text }: { text: string }) {

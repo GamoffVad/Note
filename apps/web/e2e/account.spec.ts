@@ -118,7 +118,7 @@ test("вход по коду из письма, синхронизация, от
   await laptop.page.getByRole("button", { name: "Войти" }).click();
   await expect(laptop.page.getByText(`Вы вошли как ${email}`)).toBeVisible();
   await expect(laptop.page.getByRole("banner")).toContainText(email);
-  await expect(laptop.page.getByRole("contentinfo")).toContainText("Сохранено в облаке", { timeout: 15_000 });
+  await expect(laptop.page.locator(".titlebar .sync-status")).toContainText("Сохранено в облаке", { timeout: 15_000 });
 
   await signIn(phone.page, email);
   await expect(phone.page.getByText(`Вы вошли как ${email}`)).toBeVisible();
@@ -143,7 +143,7 @@ test("вход по коду из письма, синхронизация, от
   await phone.page.goto("/#/notes");
   await phone.page.getByLabel("Текст заметки").fill("После отзыва");
   await phone.page.evaluate(() => window.dispatchEvent(new Event("focus")));
-  await expect(phone.page.getByRole("contentinfo")).toContainText(/Войдите снова|Доступ этого устройства отозван/, {
+  await expect(phone.page.locator(".titlebar .sync-status")).toContainText(/Войдите снова|Доступ этого устройства отозван/, {
     timeout: 15_000,
   });
   await phone.page.goto("/#/settings");
@@ -151,7 +151,7 @@ test("вход по коду из письма, синхронизация, от
 
   // Повторный вход: новая сессия и новое устройство; неотправленная правка уходит.
   await signIn(phone.page, email);
-  await expect(phone.page.getByRole("contentinfo")).toContainText("Сохранено в облаке", { timeout: 15_000 });
+  await expect(phone.page.locator(".titlebar .sync-status")).toContainText("Сохранено в облаке", { timeout: 15_000 });
   await laptop.page.getByRole("button", { name: "Обновить список устройств" }).click();
   await expect(laptop.page.locator(".device")).toHaveCount(3);
   await laptop.page.goto("/#/notes");

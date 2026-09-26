@@ -97,7 +97,7 @@ export function MenuButton({ label, trigger, items, align = "start", buttonClass
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? `${id}-menu` : undefined}
-        className={cx("mk-icon-button mk-icon-button--toolbar mk-icon-button--regular", buttonClassName)}
+        className={cx("isl-icon-button isl-icon-button--toolbar isl-icon-button--regular", buttonClassName)}
         onClick={() => (open ? setOpen(false) : openAt(actionable[0] ?? 0))}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
@@ -120,28 +120,28 @@ export function MenuButton({ label, trigger, items, align = "start", buttonClass
             aria-label={label}
             tabIndex={-1}
             aria-activedescendant={`${id}-item-${active}`}
-            className="mk-menu"
+            className="isl-menu"
             style={pos ? { top: pos.top, left: pos.left, maxHeight: pos.maxHeight } : { visibility: "hidden" }}
             onKeyDown={onMenuKey}
           >
             {items.map((it, i) =>
               it.type === "separator" ? (
-                <li key={it.id} role="separator" className="mk-menu__separator" />
+                <li key={it.id} role="separator" className="isl-menu__separator" />
               ) : (
                 <li
                   key={it.id}
                   id={`${id}-item-${i}`}
                   role="menuitem"
                   aria-disabled={it.disabled || undefined}
-                  className={cx("mk-menu__item", i === active && "is-active", it.destructive && "is-destructive", it.disabled && "is-disabled")}
+                  className={cx("isl-menu__item", i === active && "is-active", it.destructive && "is-destructive", it.disabled && "is-disabled")}
                   onPointerEnter={() => !it.disabled && setActive(i)}
                   onClick={() => run(i)}
                 >
-                  <span className="mk-menu__icon" aria-hidden="true">
+                  <span className="isl-menu__icon" aria-hidden="true">
                     {it.icon}
                   </span>
-                  <span className="mk-menu__label">{it.label}</span>
-                  {it.shortcut && <kbd className="mk-menu__shortcut">{it.shortcut}</kbd>}
+                  <span className="isl-menu__label">{it.label}</span>
+                  {it.shortcut && <kbd className="isl-menu__shortcut">{it.shortcut}</kbd>}
                 </li>
               ),
             )}

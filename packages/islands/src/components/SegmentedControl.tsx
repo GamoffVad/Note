@@ -19,7 +19,7 @@ interface SegmentedControlProps<T extends string> {
 }
 
 /**
- * Сегментированный элемент macOS для взаимоисключающего выбора.
+ * Сегментированный выбор «Островов» для взаимоисключающих вариантов.
  * Семантика радиогруппы: Tab попадает на выбранный сегмент, стрелки выбирают соседний.
  */
 export function SegmentedControl<T extends string>({ label, value, onChange, segments, size = "regular", className }: SegmentedControlProps<T>) {
@@ -43,7 +43,7 @@ export function SegmentedControl<T extends string>({ label, value, onChange, seg
   };
 
   return (
-    <div role="radiogroup" aria-label={label} className={cx("mk-segmented", `mk-segmented--${size}`, className)}>
+    <div role="radiogroup" aria-label={label} className={cx("isl-segmented", `isl-segmented--${size}`, className)}>
       {segments.map((s, i) => {
         const selected = s.value === value;
         return (
@@ -58,7 +58,7 @@ export function SegmentedControl<T extends string>({ label, value, onChange, seg
             aria-label={s.ariaLabel}
             tabIndex={i === tabbable ? 0 : -1}
             disabled={s.disabled}
-            className={cx("mk-segmented__item", selected && "is-selected")}
+            className={cx("isl-segmented__item", selected && "is-selected")}
             onClick={() => onChange(s.value)}
             onKeyDown={(e) => onKey(e, i)}
           >

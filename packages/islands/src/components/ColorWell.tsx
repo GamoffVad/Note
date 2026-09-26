@@ -35,7 +35,7 @@ interface ColorWellProps {
 }
 
 /**
- * Цветовая ячейка macOS (color well) вместо системного выбора цвета:
+ * Выбор цвета «Островов» вместо системного элемента:
  * по нажатию — панель с образцами и полем HEX.
  */
 export function ColorWell({ label, hideLabel, value, onChange, disabled, className }: ColorWellProps) {
@@ -60,8 +60,8 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
   const name = COLOR_SWATCHES.find((s) => s.value === value.toLowerCase())?.name;
 
   return (
-    <div className={cx("mk-colorwell", className)}>
-      <span id={`${id}-label`} className={cx("mk-field__label", hideLabel && "mk-visually-hidden")}>
+    <div className={cx("isl-colorwell", className)}>
+      <span id={`${id}-label`} className={cx("isl-field__label", hideLabel && "isl-visually-hidden")}>
         {label}
       </span>
       <button
@@ -71,11 +71,11 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
         aria-haspopup="dialog"
         aria-expanded={open}
         disabled={disabled}
-        className="mk-colorwell__button"
+        className="isl-colorwell__button"
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="mk-colorwell__swatch" style={{ background: value }} aria-hidden="true" />
-        <span id={`${id}-value`} className="mk-colorwell__text">
+        <span className="isl-colorwell__swatch" style={{ background: value }} aria-hidden="true" />
+        <span id={`${id}-value`} className="isl-colorwell__text">
           {name ? `${name} · ${value.toUpperCase()}` : value.toUpperCase()}
         </span>
       </button>
@@ -85,7 +85,7 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
             ref={panel}
             role="dialog"
             aria-label={label}
-            className="mk-popover mk-colorwell__panel"
+            className="isl-popover isl-colorwell__panel"
             style={pos ? { top: pos.top, left: pos.left } : { visibility: "hidden" }}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
@@ -94,7 +94,7 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
               }
             }}
           >
-            <div role="radiogroup" aria-label="Образцы" className="mk-colorwell__grid">
+            <div role="radiogroup" aria-label="Образцы" className="isl-colorwell__grid">
               {COLOR_SWATCHES.map((s, i) => {
                 const selected = s.value === value.toLowerCase();
                 return (
@@ -105,7 +105,7 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
                     aria-checked={selected}
                     aria-label={s.name}
                     tabIndex={selected || (i === 0 && !COLOR_SWATCHES.some((c) => c.value === value.toLowerCase())) ? 0 : -1}
-                    className={cx("mk-colorwell__chip", selected && "is-selected")}
+                    className={cx("isl-colorwell__chip", selected && "is-selected")}
                     style={{ background: s.value }}
                     onClick={() => {
                       onChange(s.value);
@@ -124,7 +124,7 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
               })}
             </div>
             <form
-              className="mk-colorwell__hex"
+              className="isl-colorwell__hex"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!valid) return;
@@ -132,13 +132,13 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
                 close();
               }}
             >
-              <label htmlFor={`${id}-hex`} className="mk-field__label">
+              <label htmlFor={`${id}-hex`} className="isl-field__label">
                 HEX
               </label>
-              <div className="mk-field__control mk-focus-within">
+              <div className="isl-field__control isl-focus-within">
                 <input
                   id={`${id}-hex`}
-                  className="mk-field__input"
+                  className="isl-field__input"
                   value={draft}
                   maxLength={7}
                   spellCheck={false}
@@ -146,8 +146,8 @@ export function ColorWell({ label, hideLabel, value, onChange, disabled, classNa
                   onChange={(e) => setDraft(e.target.value.startsWith("#") ? e.target.value : `#${e.target.value}`)}
                 />
               </div>
-              <button type="submit" className="mk-button mk-button--default mk-button--small" disabled={!valid}>
-                <span className="mk-button__label">Применить</span>
+              <button type="submit" className="isl-button isl-button--default isl-button--small" disabled={!valid}>
+                <span className="isl-button__label">Применить</span>
               </button>
             </form>
           </div>,

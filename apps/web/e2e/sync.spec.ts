@@ -16,7 +16,7 @@ async function device(browser: Browser, account: string): Promise<{ context: Bro
   await expect(developer).toHaveAttribute("aria-expanded", "true");
   await page.getByLabel("Имя аккаунта разработчика").fill(account);
   await page.getByRole("button", { name: "Подключить" }).click();
-  await expect(page.getByRole("contentinfo")).toContainText(/Сохранено в облаке|Сохранено на устройстве/);
+  await expect(page.locator(".titlebar .sync-status")).toContainText(/Сохранено в облаке|Сохранено на устройстве/);
   await page.goto("/#/notes");
   return { context, page };
 }
@@ -50,7 +50,7 @@ test("две копии приложения обмениваются замет
   await b.context.setOffline(true);
   await a.page.goto(`/#/notes/${id}`);
   await a.page.getByLabel("Текст заметки").fill("Версия A");
-  await expect(a.page.getByRole("contentinfo")).toContainText("Нет сети. Изменения сохранены на устройстве", { timeout: 15_000 });
+  await expect(a.page.locator(".titlebar .sync-status")).toContainText("Нет сети. Изменения сохранены на устройстве", { timeout: 15_000 });
   await b.page.goto(`/#/notes/${id}`);
   await b.page.getByLabel("Текст заметки").fill("Версия B");
   await expect(b.page.locator(".save-state")).toHaveText("Сохранено на устройстве");

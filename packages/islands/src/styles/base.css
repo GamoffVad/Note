@@ -1,0 +1,118 @@
+/* Маяк · «Острова идей» · базовые стили @mayak/islands */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  font-size: var(--ui-size, 16px);
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body {
+  margin: 0;
+  font-family: var(--ui-font, var(--isl-font));
+  font-size: var(--isl-text-body);
+  line-height: 1.45;
+  font-weight: var(--ui-weight, 400);
+  color: var(--ui-color, var(--mayak-text-primary));
+  background: var(--mayak-surface-page);
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: default;
+}
+a {
+  color: var(--mayak-action-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+::selection {
+  background: var(--isl-selection);
+}
+:focus {
+  outline: none;
+}
+/* Фокус виден при работе с клавиатуры: контур 2 px с отступом 2 px (component-токены focus). */
+:focus-visible {
+  outline: var(--isl-focus-width) solid var(--mayak-focus-ring);
+  outline-offset: var(--isl-focus-offset);
+}
+/* Поле внутри обёртки (текстовое поле, поиск, HEX): контур один — у обёртки. */
+.isl-focus-within:focus-within {
+  outline: var(--isl-focus-width) solid var(--mayak-focus-ring);
+  outline-offset: 0;
+}
+.isl-focus-within input:focus-visible,
+.isl-focus-within textarea:focus-visible {
+  outline: none;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--mayak-text-secondary) 45%, transparent) transparent;
+}
+
+/* Типографические роли (DESIGN-SYSTEM, раздел 4). */
+.isl-large-title {
+  font-size: var(--isl-text-heading);
+  line-height: 1.2;
+  font-weight: 700;
+}
+.isl-title1 {
+  font-size: var(--isl-text-title);
+  line-height: 1.25;
+  font-weight: 700;
+}
+.isl-title2 {
+  font-size: var(--isl-text-body-lg);
+  line-height: 1.35;
+  font-weight: 600;
+}
+.isl-title3 {
+  font-size: var(--isl-text-body-lg);
+  line-height: 1.35;
+  font-weight: 600;
+}
+.isl-headline {
+  font-size: var(--isl-text-body);
+  line-height: 1.4;
+  font-weight: 700;
+}
+.isl-body {
+  font-size: var(--isl-text-body);
+  line-height: 1.45;
+}
+.isl-callout {
+  font-size: var(--isl-text-label);
+  line-height: 1.4;
+}
+.isl-caption {
+  font-size: var(--isl-text-label);
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--mayak-text-secondary);
+}
+.isl-secondary {
+  color: var(--mayak-text-secondary);
+}
+
+.isl-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

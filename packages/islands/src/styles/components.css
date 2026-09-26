@@ -1,0 +1,1687 @@
+/*
+ * Маяк · «Острова идей» · компоненты @mayak/islands 1.0.
+ * Только токены: семантические --mayak-* из дизайн-системы и производные --isl-*.
+ * Ни одного стандартного вида элементов браузера: флажки, радиокнопки,
+ * переключатели, списки выбора, ползунки и выбор цвета нарисованы здесь.
+ */
+
+/* ─── Кнопки (раздел 6: 48 px, радиус 12 px) ─────────────── */
+.isl-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--isl-space-2);
+  /* Высота — минимальная: на узком экране длинная подпись переносится, а не обрезается. */
+  min-height: var(--isl-control);
+  min-width: var(--isl-hit);
+  max-width: 100%;
+  padding: var(--isl-space-1) var(--isl-space-4);
+  border: 1px solid var(--mayak-border-subtle);
+  border-radius: var(--isl-radius-button);
+  font-size: var(--isl-text-body);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--mayak-text-primary);
+  background: var(--mayak-surface-raised);
+  text-decoration: none;
+  transition: background var(--isl-fast) var(--isl-ease), border-color var(--isl-fast) var(--isl-ease),
+    transform var(--isl-fast) var(--isl-ease);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.isl-button:hover {
+  border-color: var(--isl-border-strong);
+  background: color-mix(in srgb, var(--mayak-action-primary) 5%, var(--mayak-surface-raised));
+}
+.isl-button:active:not(:disabled) {
+  transform: scale(0.98);
+  background: color-mix(in srgb, var(--mayak-action-primary) 10%, var(--mayak-surface-raised));
+}
+.isl-button--small {
+  min-height: var(--isl-control-sm);
+  padding: 0 var(--isl-space-3);
+  font-size: var(--isl-text-label);
+}
+.isl-button--large {
+  min-height: var(--isl-control-lg);
+  padding: 0 var(--isl-space-5);
+}
+.isl-button--xlarge {
+  min-height: calc(var(--isl-control-lg) + 8px);
+  padding: 0 var(--isl-space-6);
+  font-size: var(--isl-text-body-lg);
+}
+.isl-button--primary {
+  border-color: var(--mayak-button-primary-bg);
+  color: var(--mayak-button-primary-fg);
+  background: var(--mayak-button-primary-bg);
+}
+.isl-button--primary:hover {
+  border-color: var(--isl-primary-hover);
+  background: var(--isl-primary-hover);
+}
+.isl-button--primary:active:not(:disabled) {
+  background: var(--mayak-action-hover);
+  border-color: var(--mayak-action-hover);
+}
+.isl-button--destructive {
+  border-color: var(--mayak-status-danger);
+  color: var(--mayak-status-danger);
+  background: var(--mayak-surface-raised);
+}
+.isl-button--destructive:hover {
+  border-color: var(--mayak-status-danger);
+  background: var(--isl-danger-soft);
+}
+.isl-button--plain {
+  border-color: transparent;
+  background: transparent;
+  color: var(--mayak-action-primary);
+}
+.isl-button--plain:hover {
+  border-color: transparent;
+  background: var(--isl-hover);
+}
+.isl-button:disabled {
+  color: var(--isl-text-disabled);
+  border-color: var(--mayak-border-subtle);
+  background: var(--mayak-surface-soft);
+}
+.isl-button--plain:disabled {
+  border-color: transparent;
+  background: transparent;
+}
+.isl-button.is-loading {
+  color: var(--mayak-text-secondary);
+}
+.isl-button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.isl-button--small svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ─── Кнопка-значок ──────────────────────────────────────── */
+.isl-icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--isl-hit);
+  height: var(--isl-hit);
+  padding: 0;
+  border: 0;
+  border-radius: var(--isl-radius-button);
+  color: var(--mayak-action-primary);
+  background: transparent;
+  text-decoration: none;
+  transition: background var(--isl-fast) var(--isl-ease);
+}
+.isl-icon-button:hover {
+  background: var(--isl-hover);
+}
+.isl-icon-button:active,
+.isl-icon-button[aria-expanded="true"] {
+  background: var(--isl-pressed);
+}
+.isl-icon-button[aria-pressed="true"],
+.isl-icon-button[aria-current="page"] {
+  background: var(--isl-selected);
+}
+.isl-icon-button--plain {
+  color: var(--mayak-text-secondary);
+}
+.isl-icon-button--small {
+  width: var(--isl-control-sm);
+  height: var(--isl-control-sm);
+}
+.isl-icon-button:disabled {
+  color: var(--isl-text-disabled);
+  background: transparent;
+}
+.isl-icon-button svg {
+  width: 24px;
+  height: 24px;
+}
+.isl-icon-button--small svg {
+  width: 18px;
+  height: 18px;
+}
+.isl-toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isl-space-1);
+}
+
+/* ─── Подсказка ──────────────────────────────────────────── */
+.isl-tooltip {
+  position: fixed;
+  z-index: 1000;
+  transform: translateX(-50%);
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: var(--isl-radius-field);
+  font-size: var(--isl-text-label);
+  line-height: 1.35;
+  color: var(--isl-inverse-fg);
+  background: var(--isl-inverse-bg);
+  pointer-events: none;
+}
+
+/* ─── Поля (радиус 8 px, контур 1 px, фокус 2 px) ────────── */
+.isl-field {
+  display: grid;
+  gap: var(--isl-space-2);
+  min-width: 0;
+}
+.isl-field__label {
+  display: block;
+  font-size: var(--isl-text-label);
+  font-weight: 600;
+  color: var(--mayak-text-primary);
+}
+.isl-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-2);
+  min-height: var(--isl-control);
+  padding: 0 var(--isl-space-3);
+  border: 1px solid var(--isl-border-strong);
+  border-radius: var(--isl-radius-field);
+  background: var(--mayak-surface-raised);
+}
+.isl-field__control:focus-within {
+  border-color: var(--mayak-focus-ring);
+}
+.isl-field__input {
+  flex: 1;
+  min-width: 0;
+  height: calc(var(--isl-control) - 2px);
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--isl-text-body);
+  color: var(--mayak-text-primary);
+}
+.isl-field__input::placeholder,
+.isl-field__textarea::placeholder {
+  color: var(--mayak-text-secondary);
+}
+.isl-field__textarea {
+  display: block;
+  width: 100%;
+  min-height: 96px;
+  padding: var(--isl-space-3);
+  border: 1px solid var(--isl-border-strong);
+  border-radius: var(--isl-radius-field);
+  background: var(--mayak-surface-raised);
+  resize: vertical;
+  font-size: var(--isl-text-body);
+  line-height: 1.45;
+}
+.isl-field__textarea:focus-visible {
+  outline: var(--isl-focus-width) solid var(--mayak-focus-ring);
+  outline-offset: 0;
+}
+.isl-field__adornment {
+  display: inline-flex;
+  color: var(--mayak-text-secondary);
+}
+.isl-field__hint {
+  font-size: var(--isl-text-label);
+  color: var(--mayak-text-secondary);
+}
+.isl-field__error {
+  font-size: var(--isl-text-label);
+  font-weight: 600;
+  color: var(--mayak-status-danger);
+}
+.isl-field.is-invalid .isl-field__control {
+  border-color: var(--mayak-status-danger);
+}
+
+/* ─── Поиск (48 px, радиус 12 px, видимая подсказка) ─────── */
+.isl-search {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-3);
+  height: var(--isl-control-lg);
+  padding: 0 var(--isl-space-1) 0 var(--isl-space-4);
+  border: 1px solid var(--mayak-border-subtle);
+  border-radius: var(--mayak-search-radius);
+  background: var(--mayak-search-bg);
+  color: var(--mayak-text-secondary);
+}
+.isl-search:focus-within {
+  border-color: var(--mayak-focus-ring);
+}
+.isl-search__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.isl-search__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  font-size: var(--isl-text-body);
+  color: var(--mayak-search-fg);
+}
+.isl-search__input::placeholder {
+  color: var(--mayak-text-secondary);
+}
+/* Системная кнопка очистки поля поиска не показывается — есть своя. */
+.isl-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+.isl-search__clear {
+  display: grid;
+  place-items: center;
+  width: var(--isl-hit);
+  height: var(--isl-hit);
+  padding: 0;
+  border: 0;
+  border-radius: var(--isl-radius-button);
+  background: none;
+  color: var(--mayak-text-secondary);
+}
+.isl-search__clear:hover {
+  background: var(--isl-hover);
+}
+.isl-search__clear svg {
+  width: 18px;
+  height: 18px;
+}
+.isl-search__clear svg circle {
+  fill: currentColor;
+  stroke: none;
+}
+.isl-search__clear svg path {
+  stroke: var(--mayak-surface-raised);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+/* ─── Флажок и радиокнопка ───────────────────────────────── */
+.isl-check,
+.isl-radio {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--isl-space-3);
+  min-width: 0;
+}
+/* Зона нажатия больше видимого квадрата: 32 px мышью, 48 px пальцем. */
+.isl-check__hit {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: max(32px, 1.45em);
+  margin: -4px;
+}
+@media (pointer: coarse) {
+  .isl-check__hit {
+    width: 48px;
+    height: 48px;
+    margin: -12px;
+  }
+}
+.isl-check__input,
+.isl-radio__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.isl-check__box {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--mayak-action-primary);
+  border-radius: 7px;
+  background: var(--mayak-surface-raised);
+  transition: background var(--isl-fast) var(--isl-ease);
+  pointer-events: none;
+}
+.isl-check__box svg {
+  grid-area: 1 / 1;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--mayak-action-text);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.isl-check__input:checked + .isl-check__box,
+.isl-check__input:indeterminate + .isl-check__box {
+  background: var(--mayak-action-primary);
+}
+.isl-check__input:checked:not(:indeterminate) + .isl-check__box .isl-check__mark,
+.isl-check__input:indeterminate + .isl-check__box .isl-check__dash {
+  opacity: 1;
+}
+.isl-check__input:focus-visible + .isl-check__box,
+.isl-radio__input:focus-visible + .isl-radio__circle {
+  outline: var(--isl-focus-width) solid var(--mayak-focus-ring);
+  outline-offset: var(--isl-focus-offset);
+}
+.isl-check__input:disabled + .isl-check__box,
+.isl-radio__input:disabled + .isl-radio__circle {
+  border-color: var(--isl-text-disabled);
+  background: var(--mayak-surface-soft);
+}
+.isl-check__label {
+  min-width: 0;
+  padding-top: 1px;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.isl-check--strike:has(.isl-check__input:checked) .isl-check__label {
+  text-decoration: line-through;
+  color: var(--mayak-text-secondary);
+}
+.isl-radio {
+  position: relative;
+}
+.isl-radio__circle {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--isl-border-strong);
+  border-radius: 50%;
+  background: var(--mayak-surface-raised);
+  pointer-events: none;
+}
+.isl-radio__circle::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--mayak-action-primary);
+  transform: scale(0);
+  transition: transform var(--isl-fast) var(--isl-ease);
+}
+.isl-radio__input:checked + .isl-radio__circle {
+  border-color: var(--mayak-action-primary);
+}
+.isl-radio__input:checked + .isl-radio__circle::after {
+  transform: scale(1);
+}
+.isl-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--isl-space-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.isl-radio-group--horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--isl-space-3) var(--isl-space-6);
+}
+.isl-radio-group legend {
+  margin-bottom: var(--isl-space-2);
+  padding: 0;
+  font-weight: 600;
+}
+
+/* ─── Переключатель ──────────────────────────────────────── */
+.isl-switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isl-space-3);
+}
+.isl-switch-row__label {
+  cursor: pointer;
+}
+.isl-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid var(--isl-border-strong);
+  border-radius: var(--isl-radius-pill);
+  background: var(--mayak-surface-soft);
+  transition: background var(--isl-standard) var(--isl-ease), border-color var(--isl-standard) var(--isl-ease);
+}
+.isl-switch--mini {
+  width: 40px;
+  height: 24px;
+}
+.isl-switch[aria-checked="true"] {
+  border-color: var(--mayak-action-primary);
+  background: var(--mayak-action-primary);
+}
+.isl-switch__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--mayak-text-secondary);
+  transition: transform var(--isl-standard) var(--isl-ease), background var(--isl-standard) var(--isl-ease);
+}
+.isl-switch--mini .isl-switch__thumb {
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+}
+.isl-switch[aria-checked="true"] .isl-switch__thumb {
+  transform: translateX(20px);
+  background: var(--mayak-action-text);
+}
+.isl-switch--mini[aria-checked="true"] .isl-switch__thumb {
+  transform: translateX(16px);
+}
+.isl-switch:disabled {
+  border-color: var(--mayak-border-subtle);
+  background: var(--mayak-surface-soft);
+}
+.isl-switch:disabled .isl-switch__thumb {
+  background: var(--isl-text-disabled);
+}
+/* Невидимое расширение зоны нажатия на сенсорных экранах до 48 px. */
+@media (pointer: coarse) {
+  .isl-switch::before {
+    content: "";
+    position: absolute;
+    inset: -10px -4px;
+  }
+}
+
+/* ─── Сегменты ───────────────────────────────────────────── */
+.isl-segmented {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 4px;
+  gap: 4px;
+  border-radius: var(--isl-radius-button);
+  background: var(--mayak-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--mayak-border-subtle);
+}
+/* Подписи сегментов не обрезаются: элемент шире — строка формы переносит его ниже. */
+.isl-segmented__item {
+  flex: 1 0 auto;
+  min-width: 0;
+  height: calc(var(--isl-control) - 8px);
+  padding: 0 var(--isl-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--isl-radius-field);
+  background: transparent;
+  font-size: var(--isl-text-label);
+  font-weight: 600;
+  color: var(--mayak-text-secondary);
+  white-space: nowrap;
+  transition: background var(--isl-fast) var(--isl-ease), color var(--isl-fast) var(--isl-ease);
+}
+.isl-segmented--small .isl-segmented__item {
+  height: calc(var(--isl-control-sm) - 8px);
+}
+.isl-segmented__item:hover:not(.is-selected) {
+  color: var(--mayak-text-primary);
+  background: var(--isl-hover);
+}
+.isl-segmented__item.is-selected {
+  border-color: var(--mayak-border-subtle);
+  color: var(--mayak-action-primary);
+  background: var(--mayak-surface-raised);
+  box-shadow: var(--isl-shadow-card);
+}
+.isl-segmented__item:disabled {
+  color: var(--isl-text-disabled);
+}
+
+/* ─── Выпадающий список и меню ───────────────────────────── */
+.isl-popup {
+  display: grid;
+  gap: var(--isl-space-2);
+  min-width: 0;
+}
+.isl-popup__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--isl-space-2);
+  width: 100%;
+  height: var(--isl-control);
+  padding: 0 var(--isl-space-2) 0 var(--isl-space-3);
+  border: 1px solid var(--isl-border-strong);
+  border-radius: var(--isl-radius-field);
+  background: var(--mayak-surface-raised);
+  font-size: var(--isl-text-body);
+  color: var(--mayak-text-primary);
+  text-align: left;
+}
+.isl-popup__button--small {
+  height: var(--isl-control-sm);
+  font-size: var(--isl-text-label);
+}
+.isl-popup__button:hover {
+  border-color: var(--mayak-action-primary);
+}
+.isl-popup__button[aria-expanded="true"] {
+  border-color: var(--mayak-focus-ring);
+}
+.isl-popup__button:disabled {
+  color: var(--isl-text-disabled);
+  background: var(--mayak-surface-soft);
+}
+.isl-popup__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.isl-popup__chevrons {
+  flex-shrink: 0;
+  width: 14px;
+  height: 18px;
+  fill: none;
+  stroke: var(--mayak-action-primary);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.isl-menu,
+.isl-popover {
+  position: fixed;
+  z-index: 900;
+  margin: 0;
+  padding: var(--isl-space-2);
+  list-style: none;
+  overflow: auto;
+  border-radius: var(--isl-radius-button);
+  background: var(--mayak-surface-raised);
+  box-shadow: var(--isl-shadow-popover);
+  color: var(--mayak-text-primary);
+  transform-origin: top center;
+  animation: isl-pop-in var(--isl-standard) var(--isl-ease);
+}
+@keyframes isl-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.isl-menu:focus {
+  outline: none;
+}
+.isl-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-2);
+  min-height: 36px;
+  padding: var(--isl-space-1) var(--isl-space-3) var(--isl-space-1) var(--isl-space-2);
+  border-radius: var(--isl-radius-field);
+  font-size: var(--isl-text-body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .isl-menu__item {
+    min-height: 48px;
+  }
+}
+.isl-menu__item.is-active {
+  background: var(--isl-selected);
+}
+.isl-menu__item[aria-selected="true"],
+.isl-menu__item[aria-checked="true"] {
+  font-weight: 600;
+}
+.isl-menu__item.is-destructive {
+  color: var(--mayak-status-danger);
+}
+.isl-menu__item.is-destructive.is-active {
+  background: var(--isl-danger-soft);
+}
+.isl-menu__item.is-disabled {
+  color: var(--isl-text-disabled);
+  cursor: default;
+}
+.isl-menu__check,
+.isl-menu__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--mayak-action-primary);
+}
+.isl-menu__item.is-destructive .isl-menu__icon {
+  color: inherit;
+}
+.isl-menu__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.isl-menu__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.isl-menu__shortcut {
+  margin-left: var(--isl-space-6);
+  font-family: inherit;
+  font-size: var(--isl-text-label);
+  color: var(--mayak-text-secondary);
+}
+.isl-menu__separator {
+  height: 1px;
+  margin: var(--isl-space-1) var(--isl-space-2);
+  background: var(--mayak-border-subtle);
+}
+
+/* ─── Ползунок ───────────────────────────────────────────── */
+.isl-slider {
+  display: grid;
+  gap: var(--isl-space-2);
+  min-width: 0;
+}
+.isl-slider__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--isl-space-3);
+}
+.isl-slider__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--mayak-action-primary);
+}
+.isl-slider__track {
+  position: relative;
+  height: var(--isl-hit);
+  margin: 0 12px;
+  touch-action: none;
+  cursor: pointer;
+}
+.isl-slider__track::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  right: -12px;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: var(--isl-radius-pill);
+  background: var(--mayak-border-subtle);
+}
+.isl-slider__fill {
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: var(--isl-radius-pill);
+  background: var(--mayak-action-primary);
+  margin-right: -12px;
+}
+.isl-slider__thumb {
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--mayak-action-primary);
+  border-radius: 50%;
+  background: var(--mayak-surface-raised);
+  transition: transform var(--isl-fast) var(--isl-ease);
+}
+.isl-slider__track:active .isl-slider__thumb {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+.isl-slider.is-disabled {
+  color: var(--mayak-text-secondary);
+}
+.isl-slider.is-disabled .isl-slider__track {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ─── Выбор цвета ────────────────────────────────────────── */
+.isl-colorwell {
+  display: grid;
+  gap: var(--isl-space-2);
+  min-width: 0;
+}
+.isl-colorwell__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isl-space-2);
+  height: var(--isl-control);
+  max-width: 100%;
+  padding: 0 var(--isl-space-3) 0 var(--isl-space-1);
+  border: 1px solid var(--isl-border-strong);
+  border-radius: var(--isl-radius-field);
+  background: var(--mayak-surface-raised);
+  color: var(--mayak-text-primary);
+  font-size: var(--isl-text-body);
+}
+.isl-colorwell__button:hover {
+  border-color: var(--mayak-action-primary);
+}
+.isl-colorwell__button:disabled {
+  opacity: 0.5;
+}
+.isl-colorwell__swatch {
+  width: 40px;
+  height: calc(var(--isl-control) - 10px);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mayak-text-primary) 25%, transparent);
+}
+.isl-colorwell__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.isl-colorwell__panel {
+  width: min(300px, calc(100vw - 16px));
+  padding: var(--isl-space-3);
+}
+.isl-colorwell__grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: var(--isl-space-2);
+}
+.isl-colorwell__chip {
+  aspect-ratio: 1;
+  width: 100%;
+  min-height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--isl-radius-field);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mayak-text-primary) 22%, transparent);
+}
+.isl-colorwell__chip.is-selected {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mayak-text-primary) 22%, transparent), 0 0 0 2px var(--mayak-surface-raised),
+    0 0 0 4px var(--mayak-action-primary);
+}
+.isl-colorwell__hex {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--isl-space-2);
+  margin-top: var(--isl-space-3);
+}
+
+/* ─── Диалог (поднятая поверхность, радиус 24 px) ────────── */
+.isl-sheet {
+  width: min(480px, calc(100% - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: max(6vh, 16px) auto auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--isl-radius-panel);
+  background: var(--mayak-surface-raised);
+  color: var(--mayak-text-primary);
+  box-shadow: var(--isl-shadow-dialog);
+  overflow: auto;
+}
+[data-mayak-theme="contrast"] .isl-sheet {
+  box-shadow: 0 0 0 2px var(--mayak-border-subtle);
+}
+.isl-sheet--wide {
+  width: min(840px, calc(100% - 32px));
+}
+.isl-sheet::backdrop {
+  background: var(--isl-backdrop);
+}
+.isl-sheet[open] {
+  animation: isl-sheet-in var(--isl-standard) var(--isl-ease);
+}
+@keyframes isl-sheet-in {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+.isl-sheet__body {
+  padding: var(--isl-space-6) var(--isl-space-6) var(--isl-space-1);
+}
+.isl-sheet__title {
+  margin: 0 0 var(--isl-space-3);
+  font-size: var(--isl-text-title);
+  line-height: 1.25;
+  font-weight: 700;
+}
+.isl-sheet__content {
+  font-size: var(--isl-text-body);
+  line-height: 1.45;
+}
+.isl-sheet__content p {
+  margin: 0 0 var(--isl-space-3);
+}
+.isl-sheet__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--isl-space-2);
+  padding: var(--isl-space-4) var(--isl-space-6) var(--isl-space-6);
+}
+/* Телефон: диалог выезжает снизу и занимает ширину экрана. */
+@media (max-width: 599px) {
+  .isl-sheet {
+    margin: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+    border-radius: var(--isl-radius-panel) var(--isl-radius-panel) 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .isl-sheet__body {
+    padding: var(--isl-space-5) var(--isl-space-5) var(--isl-space-1);
+  }
+  .isl-sheet__actions {
+    flex-direction: column-reverse;
+    padding: var(--isl-space-4) var(--isl-space-5) var(--isl-space-5);
+  }
+  .isl-sheet__actions .isl-button {
+    width: 100%;
+  }
+}
+
+/* ─── Индикаторы, метки, баннеры ─────────────────────────── */
+.isl-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--mayak-border-subtle);
+  border-top-color: var(--mayak-action-primary);
+  border-radius: 50%;
+  animation: isl-spin 0.8s linear infinite;
+}
+.isl-spinner--small,
+.isl-spinner--inline {
+  width: 16px;
+  height: 16px;
+}
+.isl-spinner--large {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+@keyframes isl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .isl-spinner {
+    animation-duration: 2.4s;
+  }
+}
+.isl-progress__track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--isl-radius-pill);
+  background: var(--mayak-border-subtle);
+}
+.isl-progress__fill {
+  height: 100%;
+  border-radius: var(--isl-radius-pill);
+  background: var(--mayak-action-primary);
+  transition: width var(--isl-standard) var(--isl-ease);
+}
+.isl-progress__track.is-indeterminate .isl-progress__fill {
+  width: 30%;
+  animation: isl-indeterminate 1.2s var(--isl-ease) infinite;
+}
+@keyframes isl-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+/* Метка: небольшая плашка (круглая форма — только для небольших меток). */
+.isl-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 1px 8px;
+  border-radius: var(--isl-radius-pill);
+  font-size: var(--isl-text-caption);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--mayak-text-secondary);
+  background: var(--mayak-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--mayak-border-subtle);
+}
+.isl-badge--info {
+  color: var(--mayak-action-primary);
+  background: var(--isl-info-soft);
+  box-shadow: none;
+}
+.isl-badge--success {
+  color: var(--mayak-status-success);
+  background: var(--isl-success-soft);
+  box-shadow: none;
+}
+.isl-badge--warning {
+  color: var(--mayak-status-warning);
+  background: var(--isl-warning-soft);
+  box-shadow: none;
+}
+.isl-badge--danger {
+  color: var(--mayak-status-danger);
+  background: var(--isl-danger-soft);
+  box-shadow: none;
+}
+.isl-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--isl-space-2) var(--isl-space-3);
+  padding: var(--isl-space-3) var(--isl-space-4);
+  border-radius: var(--isl-radius-button);
+  background: var(--mayak-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--mayak-border-subtle);
+  font-size: var(--isl-text-body);
+  line-height: 1.45;
+}
+.isl-banner__icon {
+  display: inline-flex;
+  color: var(--mayak-text-secondary);
+}
+.isl-banner__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.isl-banner__text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.isl-banner__text p {
+  margin: 0;
+}
+.isl-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--isl-space-2);
+}
+.isl-banner--info .isl-banner__icon {
+  color: var(--mayak-action-primary);
+}
+.isl-banner--success {
+  background: var(--isl-success-soft);
+}
+.isl-banner--success .isl-banner__icon {
+  color: var(--mayak-status-success);
+}
+.isl-banner--warning {
+  background: var(--isl-warning-soft);
+  box-shadow: inset 4px 0 0 var(--mayak-status-warning);
+}
+.isl-banner--warning .isl-banner__icon {
+  color: var(--mayak-status-warning);
+}
+.isl-banner--danger {
+  background: var(--isl-danger-soft);
+  box-shadow: inset 4px 0 0 var(--mayak-status-danger);
+}
+.isl-banner--danger .isl-banner__icon {
+  color: var(--mayak-status-danger);
+}
+
+/* ─── Раскрывающийся блок ────────────────────────────────── */
+.isl-disclosure__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isl-space-2);
+  min-height: var(--isl-hit);
+  padding: 0 var(--isl-space-1) 0 0;
+  border: 0;
+  background: none;
+  font-weight: 600;
+  color: var(--mayak-text-primary);
+}
+.isl-disclosure__chevron {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--mayak-action-primary);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--isl-fast) var(--isl-ease);
+}
+.isl-disclosure.is-open .isl-disclosure__chevron {
+  transform: rotate(90deg);
+}
+.isl-disclosure__content {
+  padding: var(--isl-space-2) 0 0 var(--isl-space-5);
+}
+
+/* ─── Группы настроек ────────────────────────────────────── */
+.isl-form-group {
+  display: grid;
+  gap: var(--isl-space-2);
+  margin: 0 0 var(--isl-space-6);
+}
+.isl-form-group__title {
+  margin: 0 0 0 var(--isl-space-1);
+  font-size: var(--isl-text-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mayak-text-secondary);
+}
+.isl-form-group__card {
+  border-radius: var(--isl-radius-card);
+  background: var(--mayak-surface-raised);
+  box-shadow: var(--isl-shadow-card);
+  overflow: hidden;
+}
+[data-mayak-theme="contrast"] .isl-form-group__card {
+  box-shadow: 0 0 0 1px var(--mayak-border-subtle);
+}
+.isl-form-group__description {
+  margin: 0 var(--isl-space-1);
+}
+.isl-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--isl-space-2) var(--isl-space-4);
+  min-height: var(--isl-row);
+  padding: var(--isl-space-3) var(--isl-space-4);
+}
+.isl-form-row + .isl-form-row {
+  box-shadow: inset 0 1px var(--mayak-border-subtle);
+}
+.isl-form-row__label {
+  display: grid;
+  flex: 1 1 10rem;
+  gap: 2px;
+  min-width: 0;
+}
+.isl-form-row__control {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--isl-space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+.isl-form-row__control .isl-popup,
+.isl-form-row__control .isl-colorwell {
+  min-width: 200px;
+}
+.isl-form-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+.isl-form-row--stacked .isl-form-row__control {
+  justify-content: flex-start;
+}
+.isl-form-row--stacked .isl-form-row__control > * {
+  flex: 1 1 auto;
+}
+@media (max-width: 599px) {
+  .isl-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .isl-form-row__control {
+    justify-content: flex-start;
+  }
+}
+
+/* ─── Боковая навигация (208–232 px) ─────────────────────── */
+.isl-sidebar-panel {
+  padding: var(--isl-space-4) var(--isl-space-3);
+  background: var(--mayak-surface-panel);
+  box-shadow: inset -1px 0 var(--mayak-border-subtle);
+}
+.isl-sidebar-section {
+  display: grid;
+  gap: var(--isl-space-1);
+}
+.isl-sidebar-section + .isl-sidebar-section {
+  margin-top: var(--isl-space-3);
+  padding-top: var(--isl-space-3);
+  box-shadow: inset 0 1px var(--mayak-border-subtle);
+}
+.isl-sidebar-section__title {
+  padding: var(--isl-space-2) var(--isl-space-3) var(--isl-space-1);
+  font-size: var(--isl-text-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mayak-text-secondary);
+}
+.isl-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-3);
+  min-height: var(--isl-control-lg);
+  padding: 0 var(--isl-space-3);
+  border-radius: var(--isl-radius-button);
+  color: var(--mayak-text-primary);
+  font-size: var(--isl-text-body);
+  text-decoration: none;
+}
+.isl-sidebar-item:hover {
+  background: var(--isl-hover);
+}
+.isl-sidebar-item.is-selected {
+  background: var(--isl-selected);
+  font-weight: 700;
+  color: var(--mayak-text-primary);
+}
+.isl-sidebar-item__icon {
+  display: inline-flex;
+  color: var(--mayak-action-primary);
+}
+.isl-sidebar-item__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.isl-sidebar-item__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.isl-sidebar-item__count {
+  font-size: var(--isl-text-label);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--mayak-text-secondary);
+}
+.isl-sidebar-item.is-selected .isl-sidebar-item__count {
+  color: var(--mayak-text-primary);
+}
+
+/* ─── Метки (теги) ───────────────────────────────────────── */
+.isl-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--isl-space-2);
+  min-width: 0;
+}
+.isl-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 0 2px 0 10px;
+  border-radius: var(--isl-radius-pill);
+  background: var(--isl-info-soft);
+  color: var(--mayak-action-primary);
+  font-size: var(--isl-text-label);
+  font-weight: 600;
+}
+.isl-token__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 2px 0;
+}
+.isl-token__remove {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+}
+.isl-token__remove:hover {
+  background: var(--isl-pressed);
+}
+.isl-token__remove svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.isl-tokens__input {
+  width: 9rem;
+  min-height: 28px;
+  padding: 0 var(--isl-space-1);
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-size: var(--isl-text-label);
+  color: var(--mayak-text-primary);
+}
+.isl-tokens__input::placeholder {
+  color: var(--mayak-text-secondary);
+}
+
+/* ─── Пустое состояние ───────────────────────────────────── */
+.isl-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--isl-space-2);
+  padding: var(--isl-space-8) var(--isl-space-4);
+  text-align: center;
+}
+.isl-empty__title,
+.isl-empty__text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.isl-empty__text {
+  max-width: 36ch;
+}
+.isl-empty__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--isl-space-2);
+  border-radius: var(--isl-radius-card);
+  color: var(--mayak-action-primary);
+  background: var(--isl-selected);
+}
+.isl-empty__icon svg {
+  width: 28px;
+  height: 28px;
+}
+.isl-empty .isl-button {
+  margin-top: var(--isl-space-2);
+}
+
+/* ─── Уведомления ────────────────────────────────────────── */
+/* --isl-toast-offset: приложение поднимает уведомление над своей нижней панелью. */
+.isl-toast-region {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--isl-toast-offset, 24px) + env(safe-area-inset-bottom));
+  z-index: 950;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+}
+.isl-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-3);
+  min-height: var(--isl-control-lg);
+  padding: var(--isl-space-2) var(--isl-space-2) var(--isl-space-2) var(--isl-space-4);
+  border-radius: var(--isl-radius-button);
+  background: var(--isl-inverse-bg);
+  color: var(--isl-inverse-fg);
+  font-size: var(--isl-text-body);
+  line-height: 1.4;
+  box-shadow: var(--isl-shadow-dialog);
+}
+.isl-toast--error {
+  box-shadow: var(--isl-shadow-dialog), inset 4px 0 0 var(--mayak-status-danger);
+}
+.isl-toast__action {
+  height: var(--isl-control-sm);
+  padding: 0 var(--isl-space-3);
+  border: 0;
+  border-radius: var(--isl-radius-field);
+  background: color-mix(in srgb, var(--isl-inverse-fg) 16%, transparent);
+  color: var(--isl-inverse-fg);
+  font-weight: 700;
+}
+
+/* ═══ Компоненты «Островов идей» (раздел 6) ═══════════════ */
+
+/* Заголовок экрана: 32 px на телефоне, 40 px на компьютере. */
+.isl-screen-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--isl-space-3);
+  min-width: 0;
+}
+.isl-screen-title__text {
+  min-width: 0;
+}
+.isl-screen-title__heading {
+  margin: 0;
+  font-size: var(--isl-text-heading);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--mayak-text-primary);
+  overflow-wrap: anywhere;
+}
+.isl-screen-title__subtitle {
+  margin: var(--isl-space-1) 0 0;
+  font-size: var(--isl-text-label);
+  color: var(--mayak-text-secondary);
+}
+.isl-screen-title__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-1);
+  flex-shrink: 0;
+}
+
+.isl-section-label {
+  margin: 0;
+  font-size: var(--isl-text-label);
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mayak-text-secondary);
+}
+
+/* Карточка заметки: от 104 px в полном виде, радиус 18 px, отступ 16 px. */
+.isl-note-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--isl-space-1);
+  padding: var(--mayak-note-card-padding) var(--isl-space-5);
+  border: 2px solid transparent;
+  border-radius: var(--mayak-note-card-radius);
+  background: var(--mayak-note-card-bg);
+  color: var(--mayak-note-card-fg);
+  text-decoration: none;
+  box-shadow: var(--isl-shadow-card);
+  transition: background var(--isl-fast) var(--isl-ease), border-color var(--isl-fast) var(--isl-ease);
+}
+[data-mayak-theme="contrast"] .isl-note-card {
+  border-color: var(--mayak-border-subtle);
+}
+.isl-note-card:hover {
+  border-color: var(--mayak-border-subtle);
+}
+.isl-note-card.is-selected {
+  border-color: var(--mayak-action-primary);
+  background: var(--isl-selected);
+}
+.isl-note-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--isl-space-3);
+  min-width: 0;
+}
+.isl-note-card__title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--isl-text-body-lg);
+  line-height: 1.35;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.isl-note-card__pin {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--mayak-action-primary);
+}
+.isl-note-card__snippet {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: var(--isl-text-body);
+  line-height: 1.45;
+  color: var(--mayak-text-secondary);
+}
+.isl-note-card__meta > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.isl-note-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--isl-space-2);
+  margin-top: var(--isl-space-1);
+  font-size: var(--isl-text-label);
+  font-weight: 500;
+  color: var(--mayak-text-secondary);
+}
+
+/*
+ * Изображение-герой: 2.2:1 в узком месте (телефон), 3:1 в широком (от 640 px
+ * ширины самого героя — по контейнеру, а не по окну); кадрируется, не растягивается.
+ */
+.isl-hero {
+  container-type: inline-size;
+  margin: 0;
+}
+.isl-hero__frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2.2 / 1;
+  border-radius: var(--isl-radius-card);
+  background: var(--mayak-surface-soft);
+}
+@container (min-width: 640px) {
+  .isl-hero__frame {
+    aspect-ratio: 3 / 1;
+  }
+}
+.isl-hero__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Тёмная тема: тот же кадр под затемняющей маской. */
+[data-mayak-theme="dark"] .isl-hero__image {
+  filter: brightness(0.82) saturate(0.9);
+}
+/* Повышенная контрастность: изображение скрыто, остаётся спокойный фон. */
+[data-mayak-theme="contrast"] .isl-hero__frame {
+  aspect-ratio: auto;
+  border: 2px solid var(--mayak-border-subtle);
+  background: var(--mayak-surface-raised);
+}
+[data-mayak-theme="contrast"] .isl-hero__image {
+  display: none;
+}
+.isl-hero__caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  gap: 2px;
+  padding: var(--isl-space-3) var(--isl-space-5) var(--isl-space-4);
+  background: var(--isl-hero-scrim);
+  color: var(--mayak-text-on-hero);
+}
+[data-mayak-theme="contrast"] .isl-hero__caption {
+  position: static;
+  background: none;
+  color: var(--mayak-text-primary);
+}
+.isl-hero__title {
+  font-size: var(--isl-text-title);
+  line-height: 1.25;
+  font-weight: 700;
+}
+.isl-hero__text {
+  font-size: var(--isl-text-label);
+  line-height: 1.4;
+}
+
+/* Нижняя навигация: четыре раздела, около 72 px плюс безопасная зона. */
+.isl-bottom-nav {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  padding: var(--isl-space-2) var(--isl-space-2) calc(var(--isl-space-2) + env(safe-area-inset-bottom));
+  background: var(--mayak-bottom-nav-bg);
+  box-shadow: inset 0 1px var(--mayak-border-subtle);
+}
+.isl-bottom-nav__item {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: var(--isl-space-1) 2px;
+  border-radius: var(--isl-radius-button);
+  color: var(--mayak-bottom-nav-fg);
+  font-size: var(--isl-text-caption);
+  font-weight: 500;
+  text-decoration: none;
+}
+.isl-bottom-nav__item.is-selected {
+  color: var(--mayak-bottom-nav-active);
+  font-weight: 700;
+}
+.isl-bottom-nav__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 30px;
+  border-radius: var(--isl-radius-pill);
+  transition: background var(--isl-fast) var(--isl-ease);
+}
+.isl-bottom-nav__item.is-selected .isl-bottom-nav__icon {
+  background: var(--isl-selected);
+}
+.isl-bottom-nav__icon svg {
+  width: 24px;
+  height: 24px;
+}
+.isl-bottom-nav__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Статус синхронизации: значок + текст. */
+.isl-sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--isl-space-2);
+  min-width: 0;
+  font-size: var(--isl-text-label);
+  font-weight: 500;
+  color: var(--mayak-text-secondary);
+}
+.isl-sync-status__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.isl-sync-status__icon svg {
+  width: 18px;
+  height: 18px;
+}
+.isl-sync-status--synced {
+  color: var(--mayak-status-success);
+}
+.isl-sync-status--syncing {
+  color: var(--mayak-action-primary);
+}
+.isl-sync-status--action {
+  color: var(--mayak-status-warning);
+  font-weight: 700;
+}
+
+/* Файл. */
+.isl-file-card {
+  display: flex;
+  align-items: center;
+  gap: var(--isl-space-3);
+  min-height: 64px;
+  padding: var(--isl-space-3) var(--isl-space-4);
+  border-radius: var(--isl-radius-card);
+  background: var(--mayak-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--mayak-border-subtle);
+}
+.isl-file-card__icon {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--isl-radius-button);
+  color: var(--mayak-action-primary);
+  background: var(--mayak-surface-raised);
+}
+.isl-file-card__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.isl-file-card__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.isl-file-card__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.isl-file-card__details {
+  font-size: var(--isl-text-label);
+  color: var(--mayak-text-secondary);
+}
+.isl-file-card__action {
+  flex-shrink: 0;
+}
+
+/* Поверхность-карточка. */
+.isl-card {
+  padding: var(--isl-space-4) var(--isl-space-5);
+  border-radius: var(--isl-radius-card);
+}
+.isl-card--raised {
+  background: var(--mayak-surface-raised);
+  box-shadow: var(--isl-shadow-card);
+}
+.isl-card--soft {
+  background: var(--mayak-surface-soft);
+  box-shadow: inset 0 0 0 1px var(--mayak-border-subtle);
+}
+.isl-card--panel {
+  background: var(--mayak-surface-panel);
+  box-shadow: inset 0 0 0 1px var(--mayak-border-subtle);
+}
+[data-mayak-theme="contrast"] .isl-card {
+  box-shadow: 0 0 0 1px var(--mayak-border-subtle);
+}
+
+/* Широкий экран: заголовок экрана 40 px. */
+@media (min-width: 1024px) {
+  .isl-screen-title__heading {
+    font-size: var(--isl-text-display);
+  }
+}

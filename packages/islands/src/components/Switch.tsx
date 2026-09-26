@@ -9,7 +9,7 @@ export interface SwitchProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
 }
 
 /**
- * Переключатель macOS (NSSwitch): капсула с круглой ручкой; включён — заливка
+ * Переключатель «Островов»: капсула с круглой ручкой; включён — заливка
  * акцентом. Роль switch, Пробел и Enter переключают.
  */
 export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
@@ -20,9 +20,9 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
   const switchId = id ?? auto;
   const labelId = `${switchId}-label`;
   return (
-    <span className={cx("mk-switch-row", className)}>
+    <span className={cx("isl-switch-row", className)}>
       {label !== undefined && (
-        <span id={labelId} className="mk-switch-row__label" onClick={() => !disabled && onChange(!checked)}>
+        <span id={labelId} className="isl-switch-row__label" onClick={() => !disabled && onChange(!checked)}>
           {label}
         </span>
       )}
@@ -34,11 +34,11 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         aria-checked={checked}
         aria-labelledby={label !== undefined ? labelId : undefined}
         disabled={disabled}
-        className={cx("mk-switch", `mk-switch--${size}`)}
+        className={cx("isl-switch", `isl-switch--${size}`)}
         onClick={() => onChange(!checked)}
         {...rest}
       >
-        <span className="mk-switch__thumb" aria-hidden="true" />
+        <span className="isl-switch__thumb" aria-hidden="true" />
       </button>
     </span>
   );

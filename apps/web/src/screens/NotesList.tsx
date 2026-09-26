@@ -1,13 +1,16 @@
 import { forwardRef, useMemo } from "react";
 import { emptyDocument, newId } from "@mayak/domain";
 import type { LocalNote } from "@mayak/sync";
-import { Button, EmptyState, IconButton, SearchField, Tooltip } from "@mayak/ui";
+import { Button, EmptyState, Hero, IconButton, IconLink, ScreenTitle, SearchField, SectionLabel, Tooltip } from "@mayak/islands";
+import art from "@mayak/islands/art.webp";
+import artSmall from "@mayak/islands/art-small.webp";
 import { Icon } from "../components/Icon.tsx";
 import { NoteListItem } from "../components/NoteListItem.tsx";
+import { SyncFooter } from "../components/SyncIndicator.tsx";
 import { useMayak } from "../state/MayakContext.tsx";
-import { searchableText } from "../state/format.ts";
+import { plural, searchableText } from "../state/format.ts";
 import { requestTitleFocus } from "../state/focus.ts";
-import { navigate } from "../state/router.ts";
+import { navigate, routeHref } from "../state/router.ts";
 
 interface Props {
   selectedId: string | null;
@@ -34,7 +37,10 @@ export function useCreateNote() {
   };
 }
 
-/** Колонка списка: создание, поиск, закреплённые и недавние заметки. */
+/**
+ * Колонка списка («Острова идей»): заголовок экрана с действиями, поиск,
+ * на телефоне — изображение-герой с числом записей, карточки заметок.
+ */
 export const NotesList = forwardRef<HTMLInputElement, Props>(function NotesList({ selectedId, tag, query, onQuery }, searchRef) {
   const { notes, outbox, conflicts, workspace } = useMayak();
   const create = useCreateNote();
@@ -63,15 +69,36 @@ export const NotesList = forwardRef<HTMLInputElement, Props>(function NotesList(
 
   return (
     <section className="list" aria-label="Список заметок">
-      <div className="list-header">
-        <h2 className="mk-title2">{tag ? `# ${tag}` : "Все заметки"}</h2>
-        <Tooltip label="Новая заметка · Ctrl+Alt+N">
-          <IconButton className="new" label="Создать заметку" tooltip={false} icon={<Icon name="plus" />} onClick={() => void create()} />
-        </Tooltip>
+      <ScreenTitle
+        as="h2"
+        className="list-header"
+        actions={
+          <>
+            <Tooltip label="Новая заметка · Ctrl+Alt+N">
+              <IconButton className="new" label="Создать заметку" tooltip={false} icon={<Icon name="plus" />} onClick={() => void create()} />
+            </Tooltip>
+            <IconLink className="phone-only" label="Настройки" icon={<Icon name="settings" />} href={routeHref({ section: "settings" })} />
+          </>
+        }
+      >
+        {tag ? `# ${tag}` : "Заметки"}
+      </ScreenTitle>
+      {/* Телефон: верхней панели нет — статус синхронизации под заголовком. */}
+      <div className="phone-status">
+        <SyncFooter />
       </div>
-      <SearchField ref={searchRef} className="list-search" label="Поиск заметок" placeholder="Найти заметку" value={query} onChange={onQuery} />
+      <SearchField ref={searchRef} className="list-search" label="Поиск по заметкам" placeholder="Поиск по заметкам" value={query} onChange={onQuery} />
+      {total > 0 && !q && !tag && (
+        <Hero
+          className="list-hero"
+          src={artSmall}
+          srcSet={`${artSmall} 960w, ${art} 1600w`}
+          title={`${total} ${plural(total, "запись", "записи", "записей")}`}
+          caption="Идеи на своей карте"
+        />
+      )}
       {tag && (
-        <p className="filter-line mk-caption">
+        <p className="filter-line isl-caption">
           Показаны заметки с тегом «{tag}».{" "}
           <Button variant="plain" size="small" onClick={() => navigate({ section: "notes" })}>
             Показать все
@@ -109,19 +136,19 @@ export const NotesList = forwardRef<HTMLInputElement, Props>(function NotesList(
       ) : (
         <>
           {q && (
-            <p className="mk-visually-hidden" role="status">
+            <p className="isl-visually-hidden" role="status">
               Найдено: {visible.length}
             </p>
           )}
           {pinned.length > 0 && (
             <>
-              <h3 className="list-label">Закреплённые</h3>
+              <SectionLabel as="h3">Закреплённые</SectionLabel>
               <ul className="note-list">{renderItems(pinned)}</ul>
             </>
           )}
           {recent.length > 0 && (
             <>
-              <h3 className="list-label">{q ? "Результаты поиска" : "Недавние записи"}</h3>
+              <SectionLabel as="h3">{q ? "Результаты поиска" : "Ваши записи"}</SectionLabel>
               <ul className="note-list">{renderItems(recent)}</ul>
             </>
           )}

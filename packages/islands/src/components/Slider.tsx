@@ -16,7 +16,7 @@ interface SliderProps {
 }
 
 /**
- * Ползунок macOS: тонкая дорожка, заполненная акцентом, круглая ручка с тенью.
+ * Ползунок «Островов»: дорожка, заполненная основным действием, круглая ручка с контуром.
  * Шаблон WAI-ARIA «slider»: стрелки ±шаг, PageUp/PageDown ±10 шагов, Home/End.
  */
 export function Slider({ label, value, onChange, min, max, step = 1, format = String, showValue = true, disabled, className }: SliderProps) {
@@ -49,20 +49,20 @@ export function Slider({ label, value, onChange, min, max, step = 1, format = St
   };
 
   return (
-    <div className={cx("mk-slider", disabled && "is-disabled", className)}>
-      <div className="mk-slider__header">
-        <span id={`${id}-label`} className="mk-field__label">
+    <div className={cx("isl-slider", disabled && "is-disabled", className)}>
+      <div className="isl-slider__header">
+        <span id={`${id}-label`} className="isl-field__label">
           {label}
         </span>
         {showValue && (
-          <span className="mk-slider__value" aria-hidden="true">
+          <span className="isl-slider__value" aria-hidden="true">
             {format(value)}
           </span>
         )}
       </div>
       <div
         ref={track}
-        className="mk-slider__track"
+        className="isl-slider__track"
         onPointerDown={(e) => {
           if (disabled) return;
           e.currentTarget.setPointerCapture(e.pointerId);
@@ -73,7 +73,7 @@ export function Slider({ label, value, onChange, min, max, step = 1, format = St
           if (!disabled && e.currentTarget.hasPointerCapture(e.pointerId)) fromPointer(e);
         }}
       >
-        <div className="mk-slider__fill" style={{ width: `${percent}%` }} />
+        <div className="isl-slider__fill" style={{ width: `${percent}%` }} />
         <div
           role="slider"
           tabIndex={disabled ? -1 : 0}
@@ -83,7 +83,7 @@ export function Slider({ label, value, onChange, min, max, step = 1, format = St
           aria-valuenow={value}
           aria-valuetext={format(value)}
           aria-disabled={disabled || undefined}
-          className="mk-slider__thumb"
+          className="isl-slider__thumb"
           style={{ left: `${percent}%` }}
           onKeyDown={disabled ? undefined : onKeyDown}
         />

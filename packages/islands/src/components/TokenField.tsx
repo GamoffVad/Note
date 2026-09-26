@@ -17,7 +17,7 @@ interface TokenFieldProps {
   className?: string;
 }
 
-/** Поле жетонов macOS (NSTokenField) для тегов: Enter или запятая добавляет, Backspace в пустом поле удаляет последний. */
+/** Поле меток для тегов: Enter или запятая добавляет, Backspace в пустом поле удаляет последний. */
 export function TokenField({
   label,
   tokens,
@@ -40,18 +40,18 @@ export function TokenField({
     onChange([...tokens, token]);
   };
   return (
-    <div className={cx("mk-tokens", className)} role="group" aria-labelledby={`${id}-label`}>
-      <span id={`${id}-label`} className="mk-visually-hidden">
+    <div className={cx("isl-tokens", className)} role="group" aria-labelledby={`${id}-label`}>
+      <span id={`${id}-label`} className="isl-visually-hidden">
         {label}
       </span>
       {tokens.map((t) => (
-        <span key={t} className="mk-token">
-          <span className="mk-token__text">
+        <span key={t} className="isl-token">
+          <span className="isl-token__text">
             {prefix}
             {t}
           </span>
           {!readOnly && (
-            <button type="button" className="mk-token__remove" aria-label={removeLabel ? removeLabel(t) : `Убрать «${t}»`} onClick={() => onChange(tokens.filter((x) => x !== t))}>
+            <button type="button" className="isl-token__remove" aria-label={removeLabel ? removeLabel(t) : `Убрать «${t}»`} onClick={() => onChange(tokens.filter((x) => x !== t))}>
               <svg viewBox="0 0 10 10" aria-hidden="true">
                 <path d="m2.5 2.5 5 5m0-5-5 5" />
               </svg>
@@ -61,7 +61,7 @@ export function TokenField({
       ))}
       {!readOnly && (
         <input
-          className="mk-tokens__input"
+          className="isl-tokens__input"
           value={draft}
           placeholder={placeholder}
           aria-label={inputLabel ?? `Добавить: ${label.toLocaleLowerCase("ru")}`}

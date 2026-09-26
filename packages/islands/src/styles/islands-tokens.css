@@ -1,0 +1,151 @@
+/* Маяк / Острова идей · generated from tokens.json (дизайн-система 1.0, 26.09.2026; значения без изменений). */
+:root {
+  --mayak-color-sea-950: #0C282C;
+  --mayak-color-sea-900: #143D42;
+  --mayak-color-sea-800: #194C51;
+  --mayak-color-sea-700: #155B61;
+  --mayak-color-sea-600: #1B7177;
+  --mayak-color-sea-100: #DCEDEB;
+  --mayak-color-sea-50: #EEF6F3;
+  --mayak-color-paper: #F8FBF8;
+  --mayak-color-white: #FFFFFF;
+  --mayak-color-ink: #173B3F;
+  --mayak-color-muted: #4E6B6C;
+  --mayak-color-line: #B9D5D0;
+  --mayak-color-coral: #B55E48;
+  --mayak-color-success: #257554;
+  --mayak-color-warning: #885B18;
+  --mayak-color-danger: #B74343;
+  --mayak-color-night-950: #0B1D21;
+  --mayak-color-night-900: #123036;
+  --mayak-color-night-800: #194046;
+  --mayak-color-night-line: #3A5E61;
+  --mayak-color-night-text: #EAF5F2;
+  --mayak-color-night-muted: #B3CECB;
+  --mayak-color-night-accent: #83D5CC;
+  --mayak-space-0: 0px;
+  --mayak-space-1: 4px;
+  --mayak-space-2: 8px;
+  --mayak-space-3: 12px;
+  --mayak-space-4: 16px;
+  --mayak-space-5: 20px;
+  --mayak-space-6: 24px;
+  --mayak-space-8: 32px;
+  --mayak-space-10: 40px;
+  --mayak-space-12: 48px;
+  --mayak-space-16: 64px;
+  --mayak-radius-xs: 4px;
+  --mayak-radius-sm: 8px;
+  --mayak-radius-md: 12px;
+  --mayak-radius-lg: 18px;
+  --mayak-radius-xl: 24px;
+  --mayak-radius-pill: 999px;
+  --mayak-type-caption: 12px;
+  --mayak-type-label: 14px;
+  --mayak-type-body: 16px;
+  --mayak-type-body-lg: 18px;
+  --mayak-type-title: 22px;
+  --mayak-type-heading: 32px;
+  --mayak-type-display: 40px;
+  --mayak-font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mayak-font-reading: Georgia, 'Noto Serif', serif;
+  --mayak-font-mono: ui-monospace, Consolas, monospace;
+  --mayak-motion-fast-ms: 150ms;
+  --mayak-motion-standard-ms: 220ms;
+  --mayak-motion-slow-ms: 320ms;
+}
+
+:root, [data-mayak-theme="light"] {
+  --mayak-surface-page: var(--mayak-color-sea-100);
+  --mayak-surface-panel: var(--mayak-color-paper);
+  --mayak-surface-raised: var(--mayak-color-white);
+  --mayak-surface-soft: var(--mayak-color-sea-50);
+  --mayak-text-primary: var(--mayak-color-ink);
+  --mayak-text-secondary: var(--mayak-color-muted);
+  --mayak-text-on-hero: var(--mayak-color-white);
+  --mayak-action-primary: var(--mayak-color-sea-700);
+  --mayak-action-hover: var(--mayak-color-sea-900);
+  --mayak-action-text: var(--mayak-color-white);
+  --mayak-border-subtle: var(--mayak-color-line);
+  --mayak-focus-ring: var(--mayak-color-sea-600);
+  --mayak-status-success: var(--mayak-color-success);
+  --mayak-status-warning: var(--mayak-color-warning);
+  --mayak-status-danger: var(--mayak-color-danger);
+  --mayak-map-route: var(--mayak-color-coral);
+}
+
+[data-mayak-theme="dark"] {
+  --mayak-surface-page: var(--mayak-color-night-950);
+  --mayak-surface-panel: var(--mayak-color-night-900);
+  --mayak-surface-raised: var(--mayak-color-night-800);
+  --mayak-surface-soft: var(--mayak-color-night-800);
+  --mayak-text-primary: var(--mayak-color-night-text);
+  --mayak-text-secondary: var(--mayak-color-night-muted);
+  --mayak-text-on-hero: var(--mayak-color-white);
+  --mayak-action-primary: var(--mayak-color-night-accent);
+  --mayak-action-hover: var(--mayak-color-sea-100);
+  --mayak-action-text: var(--mayak-color-sea-950);
+  --mayak-border-subtle: var(--mayak-color-night-line);
+  --mayak-focus-ring: var(--mayak-color-night-accent);
+  --mayak-status-success: var(--mayak-color-night-accent);
+  --mayak-status-warning: #F0CF8A;
+  --mayak-status-danger: #F3A6A2;
+  --mayak-map-route: #F0A58B;
+}
+
+[data-mayak-theme="contrast"] {
+  --mayak-surface-page: var(--mayak-color-white);
+  --mayak-surface-panel: var(--mayak-color-white);
+  --mayak-surface-raised: var(--mayak-color-white);
+  --mayak-surface-soft: var(--mayak-color-white);
+  --mayak-text-primary: var(--mayak-color-sea-950);
+  --mayak-text-secondary: var(--mayak-color-sea-900);
+  --mayak-text-on-hero: var(--mayak-color-white);
+  --mayak-action-primary: var(--mayak-color-sea-950);
+  --mayak-action-hover: var(--mayak-color-sea-800);
+  --mayak-action-text: var(--mayak-color-white);
+  --mayak-border-subtle: var(--mayak-color-sea-900);
+  --mayak-focus-ring: var(--mayak-color-sea-950);
+  --mayak-status-success: var(--mayak-color-sea-900);
+  --mayak-status-warning: var(--mayak-color-sea-900);
+  --mayak-status-danger: var(--mayak-color-danger);
+  --mayak-map-route: var(--mayak-color-sea-900);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mayak-theme]) {
+    --mayak-surface-page: var(--mayak-color-night-950);
+    --mayak-surface-panel: var(--mayak-color-night-900);
+    --mayak-surface-raised: var(--mayak-color-night-800);
+    --mayak-surface-soft: var(--mayak-color-night-800);
+    --mayak-text-primary: var(--mayak-color-night-text);
+    --mayak-text-secondary: var(--mayak-color-night-muted);
+    --mayak-text-on-hero: var(--mayak-color-white);
+    --mayak-action-primary: var(--mayak-color-night-accent);
+    --mayak-action-hover: var(--mayak-color-sea-100);
+    --mayak-action-text: var(--mayak-color-sea-950);
+    --mayak-border-subtle: var(--mayak-color-night-line);
+    --mayak-focus-ring: var(--mayak-color-night-accent);
+    --mayak-status-success: var(--mayak-color-night-accent);
+    --mayak-status-warning: #F0CF8A;
+    --mayak-status-danger: #F3A6A2;
+    --mayak-map-route: #F0A58B;
+  }
+}
+
+:root {
+  --mayak-note-card-bg: var(--mayak-surface-raised);
+  --mayak-note-card-fg: var(--mayak-text-primary);
+  --mayak-note-card-radius: var(--mayak-radius-lg);
+  --mayak-note-card-padding: var(--mayak-space-4);
+  --mayak-search-bg: var(--mayak-surface-raised);
+  --mayak-search-fg: var(--mayak-text-primary);
+  --mayak-search-radius: var(--mayak-radius-md);
+  --mayak-button-primary-bg: var(--mayak-action-primary);
+  --mayak-button-primary-fg: var(--mayak-action-text);
+  --mayak-bottom-nav-bg: var(--mayak-surface-panel);
+  --mayak-bottom-nav-fg: var(--mayak-text-secondary);
+  --mayak-bottom-nav-active: var(--mayak-action-primary);
+  --mayak-focus-width: 2px;
+  --mayak-focus-offset: 2px;
+}

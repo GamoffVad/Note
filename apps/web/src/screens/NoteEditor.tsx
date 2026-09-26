@@ -10,9 +10,9 @@ import {
 } from "@mayak/domain";
 import { LocalWriteError } from "@mayak/local-store";
 import { noteSyncState, TransportError, type ConflictRecord, type LocalNote, type OutboxEntry } from "@mayak/sync";
-import { Badge, Banner, Button, ButtonLink, IconButton, Sheet, TokenField, ToolbarGroup, useToast, type Tone } from "@mayak/ui";
+import { Banner, Button, ButtonLink, IconButton, Sheet, SyncStatus, TokenField, ToolbarGroup, useToast, type SyncTone } from "@mayak/islands";
 import { ConflictDialog } from "../components/ConflictDialog.tsx";
-import { Icon } from "../components/Icon.tsx";
+import { Icon, type IconName } from "../components/Icon.tsx";
 import { Loading } from "../components/Loading.tsx";
 import { SyncDialog } from "../components/SyncIndicator.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
@@ -134,8 +134,9 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
               : `Сохранено в облаке${note.cloudSavedAt ? ` · ${formatTime(new Date(note.cloudSavedAt))}` : ""}`;
 
   const stateKey = saveError ? "failed" : dirty ? "dirty" : state;
-  const stateTone: Tone =
-    stateKey === "failed" ? "danger" : stateKey === "conflict" ? "warning" : stateKey === "cloud-saved" ? "success" : stateKey === "syncing" ? "info" : "neutral";
+  const stateTone: SyncTone =
+    stateKey === "failed" || stateKey === "conflict" ? "action" : stateKey === "cloud-saved" ? "synced" : stateKey === "syncing" ? "syncing" : "local";
+  const stateIcon: IconName = stateTone === "action" ? "warning" : stateTone === "syncing" ? "sync" : "check";
 
   const exportMarkdown = () => {
     const blob = new Blob([toMarkdown(draftRef.current)], { type: "text/markdown;charset=utf-8" });
@@ -158,7 +159,7 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
         <ButtonLink className="mobile-back" href={routeHref({ section: "notes" })} icon={<Icon name="back" />}>
           Заметки
         </ButtonLink>
-        <span className="crumb">Все заметки / {noteTitle(draft)}</span>
+        <span className="crumb">Заметки / {noteTitle(draft)}</span>
         <div className="tools">
           <ToolbarGroup label="Действия с заметкой">
             {!readOnly && (
@@ -251,9 +252,9 @@ export function NoteEditor({ note, outbox, conflict }: Props) {
             onChange={(tags) => change({ ...draftRef.current, tags })}
           />
           <span className="byline__item">Markdown</span>
-          <Badge className={`save-state state-${stateKey}`} tone={stateTone}>
+          <SyncStatus className={`save-state state-${stateKey}`} tone={stateTone} icon={<Icon name={stateIcon} size={18} />}>
             {statusText}
-          </Badge>
+          </SyncStatus>
         </div>
 
         <BlockEditor
@@ -357,7 +358,7 @@ function HistoryDialog({ note, pending, onClose }: { note: LocalNote; pending: b
                 Версия {v.revision}
                 {v.revision === note.serverRevision && " · текущая"}
               </strong>
-              <span className="mk-caption">
+              <span className="isl-caption">
                 {formatRelativeDate(v.createdAt)} · {v.document.title || "Без названия"}
                 {v.deleted && " · в корзине"}
               </span>
@@ -382,9 +383,9 @@ function HistoryDialog({ note, pending, onClose }: { note: LocalNote; pending: b
     <Sheet title="История заметки" onClose={onClose} actions={<Button onClick={onClose}>Закрыть</Button>}>
       {body}
       {transport && pending && versions && (
-        <p className="mk-caption">Восстановление станет доступно, когда изменения этой заметки будут отправлены.</p>
+        <p className="isl-caption">Восстановление станет доступно, когда изменения этой заметки будут отправлены.</p>
       )}
-      <p className="mk-caption">Восстановление создаёт новую версию; прежние версии не удаляются.</p>
+      <p className="isl-caption">Восстановление создаёт новую версию; прежние версии не удаляются.</p>
     </Sheet>
   );
 }

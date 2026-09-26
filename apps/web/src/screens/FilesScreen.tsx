@@ -1,4 +1,4 @@
-import { Banner, Button } from "@mayak/ui";
+import { Banner, Button } from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 
 /**
@@ -10,7 +10,7 @@ export function FilesScreen() {
     <article className="page">
       <header className="page-header page-header--actions">
         <div>
-          <h1 className="page-title">Ваши файлы</h1>
+          <h1 className="page-title">Файлы</h1>
           <p className="page-subtitle">Под рукой на всех устройствах</p>
         </div>
         <Button variant="primary" icon={<Icon name="plus" />} disabled aria-describedby="files-unavailable">
@@ -27,7 +27,7 @@ export function FilesScreen() {
         </Banner>
       </div>
       <div className="explain">
-        <h2 className="mk-headline">
+        <h2 className="isl-headline">
           Копия или синхронизация?
         </h2>
         <p>

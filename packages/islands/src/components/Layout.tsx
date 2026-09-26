@@ -2,7 +2,7 @@ import { useId, type AnchorHTMLAttributes, type ReactNode } from "react";
 import { cx } from "./util.ts";
 
 /**
- * Группа настроек в стиле «Системных настроек» macOS: скруглённая карточка со строками.
+ * Группа настроек: карточка «Островов» (радиус 18 px) со строками.
  * Семантика — группа (role="group"), названная заголовком или меткой label.
  */
 export function FormGroup({
@@ -23,19 +23,19 @@ export function FormGroup({
   return (
     <div
       role="group"
-      className={cx("mk-form-group", className)}
+      className={cx("isl-form-group", className)}
       aria-labelledby={title ? `${id}-title` : undefined}
       aria-label={title ? undefined : label}
       aria-describedby={description ? `${id}-description` : undefined}
     >
       {title && (
-        <h3 id={`${id}-title`} className="mk-form-group__title mk-headline">
+        <h3 id={`${id}-title`} className="isl-form-group__title isl-headline">
           {title}
         </h3>
       )}
-      <div className="mk-form-group__card">{children}</div>
+      <div className="isl-form-group__card">{children}</div>
       {description && (
-        <p id={`${id}-description`} className="mk-form-group__description mk-caption">
+        <p id={`${id}-description`} className="isl-form-group__description isl-caption">
           {description}
         </p>
       )}
@@ -58,14 +58,14 @@ export function FormRow({
   className?: string;
 }) {
   return (
-    <div className={cx("mk-form-row", stacked && "mk-form-row--stacked", className)}>
+    <div className={cx("isl-form-row", stacked && "isl-form-row--stacked", className)}>
       {label !== undefined && (
-        <div className="mk-form-row__label">
+        <div className="isl-form-row__label">
           <span>{label}</span>
-          {hint && <span className="mk-caption">{hint}</span>}
+          {hint && <span className="isl-caption">{hint}</span>}
         </div>
       )}
-      <div className="mk-form-row__control">{children}</div>
+      <div className="isl-form-row__control">{children}</div>
     </div>
   );
 }
@@ -77,25 +77,25 @@ interface SidebarItemProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   selected?: boolean;
 }
 
-/** Строка боковой панели macOS: значок акцентного цвета, скруглённое выделение. */
+/** Раздел боковой навигации: выбранный — мягкая заливка, жирная подпись и aria-current. */
 export function SidebarItem({ icon, label, count, selected, className, ...rest }: SidebarItemProps) {
   return (
-    <a className={cx("mk-sidebar-item", selected && "is-selected", className)} aria-current={selected ? "page" : undefined} {...rest}>
+    <a className={cx("isl-sidebar-item", selected && "is-selected", className)} aria-current={selected ? "page" : undefined} {...rest}>
       {icon && (
-        <span className="mk-sidebar-item__icon" aria-hidden="true">
+        <span className="isl-sidebar-item__icon" aria-hidden="true">
           {icon}
         </span>
       )}
-      <span className="mk-sidebar-item__label">{label}</span>
-      {count !== undefined && <span className="mk-sidebar-item__count">{count}</span>}
+      <span className="isl-sidebar-item__label">{label}</span>
+      {count !== undefined && <span className="isl-sidebar-item__count">{count}</span>}
     </a>
   );
 }
 
 export function SidebarSection({ title, children, label }: { title?: string; children: ReactNode; label: string }) {
   return (
-    <nav className="mk-sidebar-section" aria-label={label}>
-      {title && <div className="mk-sidebar-section__title">{title}</div>}
+    <nav className="isl-sidebar-section" aria-label={label}>
+      {title && <div className="isl-sidebar-section__title">{title}</div>}
       {children}
     </nav>
   );
@@ -120,14 +120,14 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cx("mk-empty", className)}>
+    <div className={cx("isl-empty", className)}>
       {icon && (
-        <span className="mk-empty__icon" aria-hidden="true">
+        <span className="isl-empty__icon" aria-hidden="true">
           {icon}
         </span>
       )}
-      <Title className="mk-empty__title mk-title3">{title}</Title>
-      {children && <p className="mk-empty__text mk-secondary">{children}</p>}
+      <Title className="isl-empty__title isl-title3">{title}</Title>
+      {children && <p className="isl-empty__text isl-secondary">{children}</p>}
       {action}
     </div>
   );

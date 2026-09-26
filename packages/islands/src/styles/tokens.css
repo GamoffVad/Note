@@ -1,0 +1,123 @@
+/*
+ * Маяк · «Острова идей» · токены библиотеки @mayak/islands.
+ *
+ * islands-tokens.css — значения дизайн-системы (tokens.json, слои
+ * primitive → semantic → component), тема задаётся атрибутом
+ * data-mayak-theme="light" | "dark" | "contrast" на корне; без атрибута —
+ * светлая, при системной тёмной теме — тёмная.
+ *
+ * Здесь — только то, чего нет в tokens.json и что выводится из него:
+ * типографика в rem (масштабируется настройкой размера интерфейса), высоты
+ * элементов, производные цвета (color-mix от семантических токенов — прямых
+ * HEX в компонентах нет), тени и движение.
+ */
+@import "./islands-tokens.css";
+
+:root {
+  /* ── типографика (DESIGN-SYSTEM, раздел 4), rem от 16 px ── */
+  --isl-font: var(--mayak-font-ui);
+  --isl-font-reading: var(--mayak-font-reading);
+  --isl-font-mono: var(--mayak-font-mono);
+  --isl-text-caption: 0.75rem; /* 12 — техническая метка */
+  --isl-text-label: 0.875rem; /* 14 — подписи */
+  --isl-text-body: 1rem; /* 16 — текст интерфейса */
+  --isl-text-body-lg: 1.125rem; /* 18 — название заметки */
+  --isl-text-title: 1.375rem; /* 22 — заголовок секции */
+  --isl-text-heading: 2rem; /* 32 — заголовок экрана, телефон */
+  --isl-text-display: 2.5rem; /* 40 — заголовок экрана, компьютер */
+
+  /* ── размеры (раздел 5): шаг 4 px, радиусы 8/12/18/24 ── */
+  --isl-space-1: var(--mayak-space-1);
+  --isl-space-2: var(--mayak-space-2);
+  --isl-space-3: var(--mayak-space-3);
+  --isl-space-4: var(--mayak-space-4);
+  --isl-space-5: var(--mayak-space-5);
+  --isl-space-6: var(--mayak-space-6);
+  --isl-space-8: var(--mayak-space-8);
+  --isl-radius-field: var(--mayak-radius-sm);
+  --isl-radius-button: var(--mayak-radius-md);
+  --isl-radius-card: var(--mayak-radius-lg);
+  --isl-radius-panel: var(--mayak-radius-xl);
+  --isl-radius-pill: var(--mayak-radius-pill);
+  /*
+   * Высота элементов. Точный указатель (мышь): 40 px — компактно, но не меньше
+   * 24 px по WCAG 2.5.8. Сенсорный экран: 48 px (Android 48 dp, iOS 44 pt).
+   */
+  --isl-control: 40px;
+  --isl-control-sm: 32px;
+  --isl-control-lg: 48px;
+  --isl-hit: 40px;
+  --isl-row: 52px;
+  --isl-focus-width: var(--mayak-focus-width);
+  --isl-focus-offset: var(--mayak-focus-offset);
+
+  /* ── производные цвета ── */
+  --isl-selected: color-mix(in srgb, var(--mayak-action-primary) 10%, var(--mayak-surface-panel));
+  --isl-hover: color-mix(in srgb, var(--mayak-action-primary) 7%, transparent);
+  --isl-pressed: color-mix(in srgb, var(--mayak-action-primary) 14%, transparent);
+  --isl-selection: color-mix(in srgb, var(--mayak-action-primary) 26%, transparent);
+  --isl-primary-hover: color-mix(in srgb, var(--mayak-action-primary) 86%, var(--mayak-text-primary));
+  --isl-text-disabled: color-mix(in srgb, var(--mayak-text-secondary) 62%, var(--mayak-surface-raised));
+  --isl-border-strong: color-mix(in srgb, var(--mayak-text-secondary) 70%, var(--mayak-border-subtle));
+  /* Инверсная поверхность: подсказки и уведомления. */
+  --isl-inverse-bg: var(--mayak-text-primary);
+  --isl-inverse-fg: var(--mayak-surface-raised);
+  --isl-backdrop: color-mix(in srgb, var(--mayak-color-sea-950) 48%, transparent);
+  /* Подложка подписи на изображении: непрозрачная настолько, чтобы белый текст читался на любом кадре. */
+  --isl-hero-scrim: color-mix(in srgb, var(--mayak-color-sea-950) 74%, transparent);
+  --isl-success-soft: color-mix(in srgb, var(--mayak-status-success) 12%, var(--mayak-surface-raised));
+  --isl-warning-soft: color-mix(in srgb, var(--mayak-status-warning) 12%, var(--mayak-surface-raised));
+  --isl-danger-soft: color-mix(in srgb, var(--mayak-status-danger) 12%, var(--mayak-surface-raised));
+  --isl-info-soft: color-mix(in srgb, var(--mayak-action-primary) 12%, var(--mayak-surface-raised));
+
+  --isl-shadow-card: 0 1px 2px color-mix(in srgb, var(--mayak-color-sea-950) 6%, transparent);
+  --isl-shadow-popover: 0 12px 32px color-mix(in srgb, var(--mayak-color-sea-950) 18%, transparent),
+    0 0 0 1px var(--mayak-border-subtle);
+  --isl-shadow-dialog: 0 24px 64px color-mix(in srgb, var(--mayak-color-sea-950) 28%, transparent);
+
+  /* ── движение ── */
+  --isl-fast: var(--mayak-motion-fast-ms);
+  --isl-standard: var(--mayak-motion-standard-ms);
+  --isl-slow: var(--mayak-motion-slow-ms);
+  --isl-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  color-scheme: light;
+}
+
+[data-mayak-theme="dark"] {
+  color-scheme: dark;
+  --isl-shadow-card: 0 0 0 1px var(--mayak-border-subtle);
+  --isl-shadow-popover: 0 12px 32px color-mix(in srgb, var(--mayak-color-night-950) 60%, transparent),
+    0 0 0 1px var(--mayak-border-subtle);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mayak-theme]) {
+    color-scheme: dark;
+  }
+}
+
+/* Повышенная контрастность: границы полей и карточек заметнее, тени не нужны. */
+[data-mayak-theme="contrast"] {
+  --isl-border-strong: var(--mayak-border-subtle);
+  --isl-shadow-card: 0 0 0 1px var(--mayak-border-subtle);
+  --isl-selected: color-mix(in srgb, var(--mayak-action-primary) 12%, var(--mayak-surface-panel));
+}
+
+/* Сенсорные экраны: зоны касания 48 px (раздел 5). */
+@media (pointer: coarse) {
+  :root {
+    --isl-control: 48px;
+    --isl-control-sm: 44px;
+    --isl-control-lg: 52px;
+    --isl-hit: 48px;
+    --isl-row: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --isl-fast: 0ms;
+    --isl-standard: 0ms;
+    --isl-slow: 0ms;
+  }
+}

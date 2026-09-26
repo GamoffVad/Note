@@ -5,7 +5,7 @@ interface SheetProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
-  /** Кнопки внизу: по правилам macOS основная — справа. */
+  /** Кнопки внизу: основная — последняя (справа на компьютере). */
   actions?: ReactNode;
   size?: "regular" | "wide";
   /** Селектор элемента, получающего фокус при открытии. */
@@ -13,7 +13,7 @@ interface SheetProps {
 }
 
 /**
- * Лист macOS: карточка со скруглёнными углами над затемнённым окном.
+ * Диалог «Островов»: поднятая поверхность с радиусом 24 px над затемнённым окном.
  * Построен на <dialog>: фокус удерживается внутри, Esc закрывает, после
  * закрытия фокус возвращается к инициатору.
  */
@@ -37,7 +37,7 @@ export function Sheet({ title, onClose, children, actions, size = "regular", ini
   return (
     <dialog
       ref={ref}
-      className={cx("mk-sheet", size === "wide" && "mk-sheet--wide")}
+      className={cx("isl-sheet", size === "wide" && "isl-sheet--wide")}
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
@@ -47,13 +47,13 @@ export function Sheet({ title, onClose, children, actions, size = "regular", ini
         if (event.target === ref.current) onClose();
       }}
     >
-      <div className="mk-sheet__body">
-        <h2 id={titleId} className="mk-sheet__title mk-title3">
+      <div className="isl-sheet__body">
+        <h2 id={titleId} className="isl-sheet__title isl-title3">
           {title}
         </h2>
-        <div className="mk-sheet__content">{children}</div>
+        <div className="isl-sheet__content">{children}</div>
       </div>
-      {actions && <div className="mk-sheet__actions">{actions}</div>}
+      {actions && <div className="isl-sheet__actions">{actions}</div>}
     </dialog>
   );
 }

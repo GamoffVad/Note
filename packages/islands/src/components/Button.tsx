@@ -14,8 +14,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Кнопка macOS (push button). primary — кнопка по умолчанию с заливкой
- * акцентом; default — светлая кнопка с тенью; plain — без рамки.
+ * Кнопка «Островов» (DESIGN-SYSTEM, раздел 6): 48 px на сенсорных экранах,
+ * радиус 12 px. primary — заливка основным действием (одна на экран);
+ * default — поднятая поверхность с контуром; plain — только текст.
  */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   { variant = "default", size = "regular", icon, loading, loadingLabel, className, children, disabled, type = "button", ...rest },
@@ -25,13 +26,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     <button
       ref={ref}
       type={type}
-      className={cx("mk-button", `mk-button--${variant}`, `mk-button--${size}`, loading && "is-loading", className)}
+      className={cx("isl-button", `isl-button--${variant}`, `isl-button--${size}`, loading && "is-loading", className)}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
     >
-      {loading ? <span className="mk-spinner mk-spinner--inline" aria-hidden="true" /> : icon}
-      {children !== undefined && <span className="mk-button__label">{loading && loadingLabel ? loadingLabel : children}</span>}
+      {loading ? <span className="isl-spinner isl-spinner--inline" aria-hidden="true" /> : icon}
+      {children !== undefined && <span className="isl-button__label">{loading && loadingLabel ? loadingLabel : children}</span>}
     </button>
   );
 });
@@ -42,15 +43,15 @@ export interface ButtonLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>
   icon?: ReactNode;
 }
 
-/** Ссылка в виде кнопки-капсулы: переход по адресу, а не действие (например, «К списку заметок»). */
+/** Ссылка в виде кнопки: переход по адресу, а не действие (например, «К списку заметок»). */
 export const ButtonLink = forwardRef<HTMLAnchorElement, ButtonLinkProps>(function ButtonLink(
   { variant = "default", size = "regular", icon, className, children, ...rest },
   ref,
 ) {
   return (
-    <a ref={ref} className={cx("mk-button", `mk-button--${variant}`, `mk-button--${size}`, className)} {...rest}>
+    <a ref={ref} className={cx("isl-button", `isl-button--${variant}`, `isl-button--${size}`, className)} {...rest}>
       {icon}
-      {children !== undefined && <span className="mk-button__label">{children}</span>}
+      {children !== undefined && <span className="isl-button__label">{children}</span>}
     </a>
   );
 });

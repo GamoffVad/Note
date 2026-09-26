@@ -23,13 +23,13 @@ interface PopUpButtonProps<T extends string | number> {
 }
 
 const CHEVRONS = (
-  <svg viewBox="0 0 10 14" className="mk-popup__chevrons" aria-hidden="true">
+  <svg viewBox="0 0 10 14" className="isl-popup__chevrons" aria-hidden="true">
     <path d="M2.5 5 5 2.5 7.5 5M2.5 9 5 11.5 7.5 9" />
   </svg>
 );
 
 /**
- * Всплывающая кнопка macOS (pop-up button) вместо системного <select>.
+ * Выпадающий список «Островов» вместо системного <select>.
  * Шаблон WAI-ARIA «select-only combobox»: Enter/Пробел/↓ открывают список,
  * стрелки, Home/End и первые буквы перемещают, Enter выбирает, Esc закрывает.
  */
@@ -54,7 +54,7 @@ export function PopUpButton<T extends string | number>({
   const button = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
   const pos = usePopoverPosition(button, list, open);
-  // В открытом списке буквы перемещают выделение, в закрытом — сразу меняют значение, как в macOS.
+  // В открытом списке буквы перемещают выделение, в закрытом — сразу меняют значение.
   const typeahead = useTypeahead(
     options.map((o) => o.label),
     (i) => {
@@ -135,8 +135,8 @@ export function PopUpButton<T extends string | number>({
 
   const current = options[selectedIndex];
   return (
-    <div className={cx("mk-popup", className)}>
-      <span id={labelId} className={cx("mk-field__label", hideLabel && "mk-visually-hidden")}>
+    <div className={cx("isl-popup", className)}>
+      <span id={labelId} className={cx("isl-field__label", hideLabel && "isl-visually-hidden")}>
         {label}
       </span>
       <button
@@ -150,11 +150,11 @@ export function PopUpButton<T extends string | number>({
         aria-labelledby={`${labelId} ${baseId}`}
         aria-activedescendant={open ? `${baseId}-opt-${active}` : undefined}
         disabled={disabled}
-        className={cx("mk-popup__button", `mk-popup__button--${size}`)}
+        className={cx("isl-popup__button", `isl-popup__button--${size}`)}
         onClick={() => setOpen((v) => !v)}
         onKeyDown={onKeyDown}
       >
-        <span className="mk-popup__value">{current?.label ?? "—"}</span>
+        <span className="isl-popup__value">{current?.label ?? "—"}</span>
         {CHEVRONS}
       </button>
       {open &&
@@ -164,7 +164,7 @@ export function PopUpButton<T extends string | number>({
             id={listId}
             role="listbox"
             aria-labelledby={labelId}
-            className="mk-menu mk-menu--listbox"
+            className="isl-menu isl-menu--listbox"
             style={
               pos
                 ? { top: pos.top, left: pos.left, minWidth: pos.minWidth, maxHeight: pos.maxHeight }
@@ -179,15 +179,15 @@ export function PopUpButton<T extends string | number>({
                 role="option"
                 aria-selected={o.value === value}
                 aria-disabled={o.disabled || undefined}
-                className={cx("mk-menu__item", i === active && "is-active", o.disabled && "is-disabled")}
+                className={cx("isl-menu__item", i === active && "is-active", o.disabled && "is-disabled")}
                 onPointerEnter={() => !o.disabled && setActive(i)}
                 onPointerDown={(e) => e.preventDefault()}
                 onClick={() => choose(i)}
               >
-                <span className="mk-menu__check" aria-hidden="true">
+                <span className="isl-menu__check" aria-hidden="true">
                   {o.value === value ? "✓" : ""}
                 </span>
-                <span className="mk-menu__label">{o.render ?? o.label}</span>
+                <span className="isl-menu__label">{o.render ?? o.label}</span>
               </li>
             ))}
           </ul>,

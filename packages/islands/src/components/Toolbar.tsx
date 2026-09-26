@@ -7,22 +7,19 @@ export interface ToolbarGroupProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-/**
- * Группа кнопок панели инструментов на общей стеклянной капсуле:
- * в macOS 27 связанные действия панели объединяются на одной подложке Liquid Glass.
- */
+/** Группа кнопок панели: связанные действия стоят рядом на общей спокойной подложке. */
 export function ToolbarGroup({ label, children, className, ...rest }: ToolbarGroupProps) {
   return (
-    <div role="group" aria-label={label} className={cx("mk-toolbar-group mk-glass", className)} {...rest}>
+    <div role="group" aria-label={label} className={cx("isl-toolbar-group", className)} {...rest}>
       {children}
     </div>
   );
 }
 
-/** Боковая панель в слое Liquid Glass: парит над содержимым с отступом от краёв окна. */
+/** Боковая панель навигации: поверхность panel во всю высоту окна, отделена границей. */
 export function SidebarPanel({ children, className, ...rest }: HTMLAttributes<HTMLElement> & { children: ReactNode }) {
   return (
-    <aside className={cx("mk-sidebar-panel", className)} {...rest}>
+    <aside className={cx("isl-sidebar-panel", className)} {...rest}>
       {children}
     </aside>
   );

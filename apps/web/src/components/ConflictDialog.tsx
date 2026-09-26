@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Sheet, useToast } from "@mayak/ui";
+import { Button, Sheet, useToast } from "@mayak/islands";
 import { toMarkdown, type NoteDocument } from "@mayak/domain";
 import type { ConflictChoice, ConflictRecord, LocalNote } from "@mayak/sync";
 import { useMayak } from "../state/MayakContext.tsx";
@@ -78,8 +78,8 @@ export function ConflictDialog({ note, conflict, onClose }: Props) {
           />
         ) : (
           <section className="version">
-            <h3 className="mk-headline">С другого устройства</h3>
-            <p className="mk-secondary">Заметка окончательно удалена на сервере.</p>
+            <h3 className="isl-headline">С другого устройства</h3>
+            <p className="isl-secondary">Заметка окончательно удалена на сервере.</p>
           </section>
         )}
       </div>
@@ -90,8 +90,8 @@ export function ConflictDialog({ note, conflict, onClose }: Props) {
 function Version({ label, hint, document, deleted }: { label: string; hint: string; document: NoteDocument; deleted: boolean }) {
   return (
     <section className="version">
-      <h3 className="mk-headline">{label}</h3>
-      <p className="mk-caption">
+      <h3 className="isl-headline">{label}</h3>
+      <p className="isl-caption">
         {hint}
         {deleted && " · в корзине"}
       </p>

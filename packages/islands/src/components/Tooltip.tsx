@@ -71,7 +71,7 @@ export function Tooltip({ label, children, delay = 600 }: TooltipProps) {
       {open &&
         pos &&
         createPortal(
-          <div role="tooltip" id={id} className="mk-tooltip" style={{ top: pos.top, left: pos.left }}>
+          <div role="tooltip" id={id} className="isl-tooltip" style={{ top: pos.top, left: pos.left }}>
             {label}
           </div>,
           document.body,

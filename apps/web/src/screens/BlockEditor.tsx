@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { newId, type Block } from "@mayak/domain";
-import { Button, Checkbox, IconButton, useToast } from "@mayak/ui";
+import { Button, Checkbox, IconButton, useToast } from "@mayak/islands";
 import { Icon } from "../components/Icon.tsx";
 import { useAutoHeight } from "../components/useAutoHeight.ts";
 import { composeDictation, joinPhrases, onSpeech, speechBridge, speechErrorText } from "../state/speech.ts";
@@ -244,7 +244,7 @@ export function BlockEditor({ blocks, onChange, readOnly, dictation, onWispr }: 
             </span>
             <div>
               <strong>{block.text || "Вложение"}</strong>
-              <small className="mk-caption">Файлы появятся в следующей версии: содержимое пока недоступно</small>
+              <small className="isl-caption">Файлы появятся в следующей версии: содержимое пока недоступно</small>
             </div>
           </div>
         );
@@ -264,7 +264,8 @@ export function BlockEditor({ blocks, onChange, readOnly, dictation, onWispr }: 
           {dictation && (
             <Button
               size="small"
-              variant={listening ? "primary" : undefined}
+              variant="primary"
+              className={listening ? "dictate is-listening" : "dictate"}
               icon={<Icon name="mic" />}
               aria-pressed={dictation === "speech" ? listening : undefined}
               // Кнопка не забирает фокус: курсор остаётся в поле, куда вставляется текст.

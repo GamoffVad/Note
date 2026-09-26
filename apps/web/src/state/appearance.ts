@@ -2,7 +2,9 @@
  * Настройки внешнего вида (design/APPEARANCE-SETTINGS.md). Хранятся только на
  * этом устройстве и не синхронизируются; не влияют на текст заметок и экспорт.
  */
-export type ThemeChoice = "light" | "dark" | "system";
+export type ThemeChoice = "light" | "dark" | "contrast" | "system";
+/** Тема, которая действует сейчас: data-mayak-theme на корне документа. */
+export type Theme = "light" | "dark" | "contrast";
 export type FontFamily = "system" | "sans" | "serif" | "mono";
 export type Scope = "ui" | "editor";
 
@@ -21,7 +23,7 @@ export interface Appearance {
 }
 
 export const FONTS: Record<FontFamily, { label: string; stack: string }> = {
-  // Системный шрифт ОС, как --font-system в @mayak/ui: на macOS и iOS это SF.
+  // Системный шрифт ОС, как --mayak-font-ui в @mayak/islands.
   system: {
     label: "Системный",
     stack: '-apple-system, BlinkMacSystemFont, system-ui, "Segoe UI Variable Text", "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif',
@@ -35,7 +37,6 @@ export const FONTS: Record<FontFamily, { label: string; stack: string }> = {
 };
 
 export const WEIGHTS = [
-  { value: 300, label: "300 · Лёгкий" },
   { value: 400, label: "400 · Обычный" },
   { value: 500, label: "500 · Средний" },
   { value: 600, label: "600 · Полужирный" },
@@ -43,7 +44,8 @@ export const WEIGHTS = [
 ] as const;
 
 export const MIN_SIZE = 14;
-export const MAX_SIZE = 24;
+/** Размер 14–28 px, толщина 400–700 (DESIGN-SYSTEM «Острова идей», раздел 4). */
+export const MAX_SIZE = 28;
 
 export const DEFAULT_APPEARANCE: Appearance = {
   theme: "light",
@@ -55,8 +57,8 @@ export const DEFAULT_APPEARANCE: Appearance = {
   editorWeight: 400,
   uiAuto: true,
   editorAuto: true,
-  uiColor: "#182538",
-  editorColor: "#182538",
+  uiColor: "#173b3f",
+  editorColor: "#173b3f",
 };
 
 export const STORAGE_KEY = "mayak.appearance.v2";
@@ -71,7 +73,7 @@ export function validateAppearance(data: unknown): Appearance {
   for (const key of Object.keys(DEFAULT_APPEARANCE) as Array<keyof Appearance>) {
     const value = source[key];
     const ok =
-      (key === "theme" && (value === "light" || value === "dark" || value === "system")) ||
+      (key === "theme" && (value === "light" || value === "dark" || value === "contrast" || value === "system")) ||
       ((key === "ui" || key === "editor") && typeof value === "string" && Object.hasOwn(FONTS, value)) ||
       (key.endsWith("Size") && Number.isInteger(value) && (value as number) >= MIN_SIZE && (value as number) <= MAX_SIZE) ||
       (key.endsWith("Weight") && WEIGHTS.some((w) => w.value === value)) ||
@@ -116,13 +118,14 @@ export function saveAppearance(storage: StorageLike | null, value: Appearance): 
 }
 
 /**
- * Фактические поверхности тем по токенам @mayak/ui (tokens.css): page — фон окна
- * (--bg-window), panel — содержимое (--bg-content), navigation — стеклянная боковая
- * панель (--glass-bg-strong поверх фона окна), text — --text-primary.
+ * Поверхности тем по токенам @mayak/islands (islands-tokens.css): page —
+ * --mayak-surface-page, panel — --mayak-surface-panel (списки, навигация),
+ * raised — --mayak-surface-raised (заметка, карточки), text — --mayak-text-primary.
  */
 export const SURFACES = {
-  light: { page: "#f2f2f7", panel: "#ffffff", navigation: "#fcfcfd", text: "#1d1d1f" },
-  dark: { page: "#1c1c1e", panel: "#1e1e20", navigation: "#29292d", text: "#f5f5f7" },
+  light: { page: "#dcedeb", panel: "#f8fbf8", raised: "#ffffff", text: "#173b3f" },
+  dark: { page: "#0b1d21", panel: "#123036", raised: "#194046", text: "#eaf5f2" },
+  contrast: { page: "#ffffff", panel: "#ffffff", raised: "#ffffff", text: "#0c282c" },
 } as const;
 
 function luminance(hex: string): number {
@@ -141,35 +144,39 @@ export function contrastRatio(a: string, b: string): number {
 }
 
 /** Области, где собственный цвет даёт контраст ниже 4.5:1 хотя бы с одной поверхностью. */
-export function lowContrastScopes(a: Appearance, dark: boolean): Scope[] {
-  const s = dark ? SURFACES.dark : SURFACES.light;
+export function lowContrastScopes(a: Appearance, theme: Theme): Scope[] {
+  const s = SURFACES[theme];
   const result: Scope[] = [];
-  if (!a.uiAuto && [s.page, s.panel, s.navigation].some((bg) => contrastRatio(a.uiColor, bg) < 4.5)) result.push("ui");
-  if (!a.editorAuto && contrastRatio(a.editorColor, s.panel) < 4.5) result.push("editor");
+  if (!a.uiAuto && [s.page, s.panel, s.raised].some((bg) => contrastRatio(a.uiColor, bg) < 4.5)) result.push("ui");
+  if (!a.editorAuto && contrastRatio(a.editorColor, s.raised) < 4.5) result.push("editor");
   return result;
 }
 
-export function resolveDark(theme: ThemeChoice, systemDark: boolean): boolean {
-  return theme === "dark" || (theme === "system" && systemDark);
+/** «Системная» следует настройке ОС: тёмная или светлая. */
+export function resolveTheme(theme: ThemeChoice, systemDark: boolean): Theme {
+  if (theme === "system") return systemDark ? "dark" : "light";
+  return theme;
 }
 
 /**
- * Применяет оформление к корню документа через CSS-переменные. --ui-* читают
- * базовые стили @mayak/ui (шрифт, размер корня, толщина) и app.css (цвет текста
- * интерфейса); --editor-* — только текст заметки.
+ * Применяет оформление к корню документа: тема — атрибут data-mayak-theme
+ * (токены «Островов идей»), --ui-* читают базовые стили @mayak/islands (шрифт,
+ * размер корня, толщина) и app.css (цвет текста интерфейса); --editor-* — только
+ * текст заметки.
  */
-export function applyAppearance(root: HTMLElement, a: Appearance, dark: boolean): void {
-  root.dataset.theme = dark ? "dark" : "light";
+export function applyAppearance(root: HTMLElement, a: Appearance, theme: Theme): void {
+  const dark = theme === "dark";
+  root.dataset.mayakTheme = theme;
   root.style.colorScheme = dark ? "dark" : "light";
   const set = (name: string, value: string) => root.style.setProperty(name, value);
   set("--ui-font", FONTS[a.ui].stack);
   set("--ui-size", `${a.uiSize}px`);
   set("--ui-weight", String(a.uiWeight));
-  set("--ui-color", a.uiAuto ? "var(--text-primary)" : a.uiColor);
+  set("--ui-color", a.uiAuto ? "var(--mayak-text-primary)" : a.uiColor);
   set("--editor-font", FONTS[a.editor].stack);
   set("--editor-size", `${a.editorSize}px`);
   set("--editor-weight", String(a.editorWeight));
-  set("--editor-color", a.editorAuto ? "var(--text-primary)" : a.editorColor);
+  set("--editor-color", a.editorAuto ? "var(--mayak-text-primary)" : a.editorColor);
   const meta = root.ownerDocument.querySelector('meta[name="theme-color"]');
-  meta?.setAttribute("content", dark ? SURFACES.dark.panel : SURFACES.light.panel);
+  meta?.setAttribute("content", SURFACES[theme].page);
 }
