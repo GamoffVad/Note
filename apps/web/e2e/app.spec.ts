@@ -247,3 +247,17 @@ test("строгая CSP в сборке и отсутствие ошибок в
   await createNote(page, "Проверка");
   expect(errors).toEqual([]);
 });
+
+test("прокручивается только содержимое: верхняя панель и низ боковой панели стоят на месте", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 640 });
+  await page.goto("/#/settings");
+  await expect(page.getByRole("heading", { name: "Настройки", level: 1 })).toBeVisible();
+  const card = page.locator(".sync-card");
+  const before = await card.boundingBox();
+  await page.locator(".editor").evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  await page.mouse.wheel(0, 2000);
+  expect(await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)).toBeLessThanOrEqual(0);
+  expect(await page.locator(".editor").evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  expect((await card.boundingBox())?.y).toBe(before?.y);
+  await expect(page.locator(".titlebar")).toBeInViewport();
+});

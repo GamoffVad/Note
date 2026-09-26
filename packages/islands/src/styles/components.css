@@ -1057,11 +1057,16 @@
   align-items: center;
   gap: var(--isl-space-2);
   min-height: var(--isl-hit);
-  padding: 0 var(--isl-space-1) 0 0;
+  padding: 0 var(--isl-space-3) 0 var(--isl-space-2);
+  margin-left: calc(-1 * var(--isl-space-2));
   border: 0;
+  border-radius: var(--isl-radius-button);
   background: none;
   font-weight: 600;
   color: var(--mayak-text-primary);
+}
+.isl-disclosure__button:hover {
+  background: var(--isl-hover);
 }
 .isl-disclosure__chevron {
   width: 14px;

@@ -1,6 +1,6 @@
 [package]
 name = "mayak-desktop"
-version = "0.1.2"
+version = "0.1.3"
 description = "Маяк — заметки, задачи и файлы на всех устройствах"
 edition = "2021"
 rust-version = "1.88"
@@ -23,6 +23,7 @@ getrandom = "0.4"
 rusqlite = { version = "0.40", features = ["bundled"] }
 # Вход по ссылке из письма: ссылка io.github.gamoffvad.mayak://… открывает приложение.
 tauri-plugin-deep-link = "2.4"
+tauri-plugin-http = "~2.5.9"
 
 # Системное хранилище секретов: Связка ключей macOS, Диспетчер учётных данных Windows,
 # Secret Service в Linux. На мобильных системах — отдельная реализация позже.

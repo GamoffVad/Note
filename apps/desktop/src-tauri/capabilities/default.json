@@ -1,12 +1,23 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Главное окно: собственные команды приложения (хранилище и секреты), события и ссылки для входа.",
+  "description": "Главное окно: собственные команды приложения (хранилище и секреты), события, ссылки для входа и сетевые запросы к Supabase и серверу Маяка (на Android — в обход WebView).",
   "windows": [
     "main"
   ],
   "permissions": [
     "core:default",
-    "deep-link:default"
+    "deep-link:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        {
+          "url": "https://*.supabase.co/*"
+        },
+        {
+          "url": "https://*.vercel.app/*"
+        }
+      ]
+    }
   ]
 }

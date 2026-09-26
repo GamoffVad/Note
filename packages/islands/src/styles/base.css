@@ -49,6 +49,17 @@ a {
   outline: var(--isl-focus-width) solid var(--mayak-focus-ring);
   outline-offset: var(--isl-focus-offset);
 }
+/*
+ * Скругления при наведении и фокусе у всего интерактивного: контур фокуса и
+ * подсветка повторяют скругление элемента. Ссылкам в тексте и полям без
+ * собственной формы задано небольшое скругление.
+ */
+:where(a) {
+  border-radius: 4px;
+}
+:where(input, textarea, select, button, summary, [tabindex]) {
+  border-radius: var(--isl-radius-field);
+}
 /* Поле внутри обёртки (текстовое поле, поиск, HEX): контур один — у обёртки. */
 .isl-focus-within:focus-within {
   outline: var(--isl-focus-width) solid var(--mayak-focus-ring);

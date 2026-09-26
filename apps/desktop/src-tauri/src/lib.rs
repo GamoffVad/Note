@@ -60,6 +60,8 @@ pub fn run() {
     }
     builder
         .plugin(tauri_plugin_deep_link::init())
+        // Сетевые запросы из Rust: на Android POST из WebView не доходит до сервера (state/native.ts, appFetch).
+        .plugin(tauri_plugin_http::init())
         .setup(|app| {
             // Windows и Linux: схема ссылок регистрируется при установке; в Linux
             // (AppImage) и при разработке в Windows — ещё и при запуске.
