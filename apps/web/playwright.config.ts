@@ -51,7 +51,7 @@ export default defineConfig({
     ...(dbUrl
       ? [
           {
-            command: "npx tsx ../../packages/server/scripts/e2e-server.ts",
+            command: "npx tsx --conditions=source ../../packages/server/scripts/e2e-server.ts",
             // 401 без сессии означает, что сервер готов.
             url: `http://localhost:${apiPort}/api/v1/bootstrap`,
             reuseExistingServer: false,

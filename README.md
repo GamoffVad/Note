@@ -18,7 +18,9 @@
 - вход через Supabase Auth по email (код из письма или ссылка): сервер проверяет токены по JWKS проекта, отзыв устройства закрывает и его сессию; таблицы в закрытой схеме `mayak`, не видимой Data API Supabase — [ADR 0004](docs/adr/0004-auth.md), [инструкция по настройке](docs/supabase-setup.md);
 - 80 модульных тестов (в том числе сквозные на PostgreSQL) и 23 браузерных теста Playwright, включая синхронизацию двух браузеров, вход через имитацию Supabase Auth и проверку доступности axe.
 
-Не сделано: создание проекта Supabase и проверка на живом проекте (нужен аккаунт владельца), файлы и передача копий, диктовка (кнопка честно сообщает о недоступности), SQLite и Tauri, развёртывание на Vercel, импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
+- развёртывание на Vercel: веб-клиент и функция API в одном проекте — [docs/deploy-vercel.md](docs/deploy-vercel.md);
+
+Не сделано: создание проекта Supabase и проверка на живом проекте (нужен аккаунт владельца), файлы и передача копий, диктовка (кнопка честно сообщает о недоступности), SQLite и Tauri, импорт. Постатейно — в [`docs/acceptance.md`](docs/acceptance.md).
 
 ## Структура
 
@@ -81,6 +83,7 @@ MAYAK_E2E_DATABASE_URL=postgres://…/mayak_e2e_test npm run e2e  # плюс с�
 - [ADR 0003 · Редактор](docs/adr/0003-editor.md) — реализовано, требует проверки IME
 - [ADR 0004 · Вход и сессии через Supabase Auth](docs/adr/0004-auth.md)
 - [Подключение Supabase](docs/supabase-setup.md)
+- [Развёртывание на Vercel](docs/deploy-vercel.md)
 - [Формат Markdown](docs/markdown-format.md)
 - [Приёмочные сценарии](docs/acceptance.md)
 

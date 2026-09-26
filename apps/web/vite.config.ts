@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import react from "@vitejs/plugin-react";
-import { defineConfig, loadEnv, type Plugin } from "vite";
+import { defaultClientConditions, defineConfig, loadEnv, type Plugin } from "vite";
 
 /**
  * Строгая CSP для сборки (ТЗ, раздел 7): скрипты только свои и встроенные
@@ -44,6 +44,8 @@ export default defineConfig(({ mode }) => {
   if (env.VITE_API_BASE && /^https?:/.test(env.VITE_API_BASE)) origins.push(new URL(env.VITE_API_BASE).origin);
   return {
     plugins: [react(), contentSecurityPolicy(origins)],
+    // Пакеты монорепозитория: исходники .ts по условию «source».
+    resolve: { conditions: ["source", ...defaultClientConditions] },
     server: { port: 5173, proxy: { "/api": apiTarget } },
     preview: { port: 4173, proxy: { "/api": apiTarget } },
     build: { target: "es2022", sourcemap: true },

@@ -3,8 +3,14 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
@@ -13,7 +19,16 @@
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "customConditions": [
+      "source"
+    ]
   },
-  "include": ["packages/*/src", "packages/*/test", "packages/*/scripts", "vitest.config.ts"]
+  "include": [
+    "packages/*/src",
+    "packages/*/test",
+    "packages/*/scripts",
+    "vitest.config.ts",
+    "api"
+  ]
 }

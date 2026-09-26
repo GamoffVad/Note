@@ -15,11 +15,12 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate": "tsx packages/server/scripts/migrate.ts",
-    "dev:api": "tsx packages/server/scripts/dev-server.ts",
+    "db:migrate": "tsx --conditions=source packages/server/scripts/migrate.ts",
+    "dev:api": "tsx --conditions=source packages/server/scripts/dev-server.ts",
     "dev:web": "npm run dev -w @mayak/web",
     "build:web": "npm run build -w @mayak/web",
-    "e2e": "npm run e2e -w @mayak/web"
+    "e2e": "npm run e2e -w @mayak/web",
+    "build:api": "tsc -p packages/domain/tsconfig.build.json && tsc -p packages/server/tsconfig.build.json"
   },
   "devDependencies": {
     "@types/node": "^22.20.4",
