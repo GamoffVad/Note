@@ -1,7 +1,7 @@
 import { newId, type Platform } from "@mayak/domain";
 import { IndexedDbLocalStore, KvLocalStore, type LocalStore } from "@mayak/local-store";
 import { HttpTransport, SyncEngine, SyncScheduler, type SyncTransport } from "@mayak/sync";
-import { dropSqliteNamespace, isNativeApp, nativePlatform, sqliteBackend } from "./native.ts";
+import { appFetch, dropSqliteNamespace, isNativeApp, nativePlatform, sqliteBackend } from "./native.ts";
 import { getSupabase } from "./supabase.ts";
 
 /**
@@ -147,10 +147,16 @@ export async function openWorkspace(config: SyncConfig): Promise<Workspace> {
       ? new HttpTransport({
           baseUrl: config.apiBase,
           deviceId,
+          fetch: appFetch(),
           getAuthorization: () => `Bearer dev:${config.account}`,
         })
       : config.mode === "account"
-        ? new HttpTransport({ baseUrl: DEFAULT_API_BASE, deviceId, getAuthorization: () => accountAuthorization(config.userId) })
+        ? new HttpTransport({
+            baseUrl: DEFAULT_API_BASE,
+            deviceId,
+            fetch: appFetch(),
+            getAuthorization: () => accountAuthorization(config.userId),
+          })
         : null;
   const engine = new SyncEngine({
     store,

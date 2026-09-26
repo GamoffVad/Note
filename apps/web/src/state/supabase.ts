@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { appSessionStorage, isNativeApp } from "./native.ts";
+import { appFetch, appSessionStorage, isNativeApp } from "./native.ts";
 
 /**
  * Клиент Supabase Auth. URL проекта и публикуемый ключ (sb_publishable_…)
@@ -31,6 +31,7 @@ export function getSupabase(): SupabaseClient | null {
       storageKey: "mayak.auth",
       ...(native ? { storage: appSessionStorage() } : {}),
     },
+    global: { fetch: appFetch() },
   });
   return client;
 }

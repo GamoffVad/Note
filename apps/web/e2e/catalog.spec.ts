@@ -85,3 +85,15 @@ test("каталог: у поля ввода одно кольцо фокуса 
     expect(rings, name).toEqual({ input: "none", wrapper: "solid" });
   }
 });
+
+test("каталог: у всех интерактивных элементов скруглены подсветка и контур фокуса", async ({ page }) => {
+  const square = await page.evaluate(() =>
+    [...document.querySelectorAll("a[href], button, input, textarea, [tabindex]:not([tabindex='-1'])")]
+      .filter((el) => {
+        const cs = getComputedStyle(el);
+        return cs.display !== "none" && cs.opacity !== "0" && parseFloat(cs.borderTopLeftRadius) === 0;
+      })
+      .map((el) => `${el.tagName} ${el.className}`),
+  );
+  expect(square).toEqual([]);
+});

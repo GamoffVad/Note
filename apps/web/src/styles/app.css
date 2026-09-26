@@ -70,7 +70,15 @@ code {
 }
 
 /* ─── Окно: верхняя панель, навигация, список, редактор ─── */
+/*
+ * Окно не прокручивается целиком: прокручиваются только навигация, список и
+ * содержимое, а верхняя панель, низ боковой панели и нижняя навигация стоят
+ * на месте. Области прокрутки — position: relative, чтобы скрытые подписи
+ * (isl-visually-hidden, position: absolute) не растягивали страницу.
+ */
 .app {
+  position: relative;
+  overflow: hidden;
   height: 100vh;
   height: 100dvh;
   display: grid;
@@ -151,6 +159,7 @@ code {
 }
 
 .sidebar {
+  position: relative;
   grid-column: 1;
   grid-row: 2;
   display: flex;
@@ -186,6 +195,7 @@ code {
 
 /* ─── Список заметок ─────────────────────────────────────── */
 .list {
+  position: relative;
   grid-column: 2;
   grid-row: 2;
   display: flex;
@@ -235,6 +245,7 @@ code {
 
 /* ─── Содержимое ─────────────────────────────────────────── */
 .editor {
+  position: relative;
   grid-column: 3;
   grid-row: 2;
   display: flex;
@@ -390,8 +401,11 @@ code {
 .note-title textarea:focus {
   outline: none;
 }
+/* Фокус с клавиатуры — скруглённый контур вокруг поля, а не прямая черта снизу. */
 .note-title textarea:focus-visible {
-  box-shadow: inset 0 -2px 0 var(--mayak-focus-ring);
+  outline: var(--isl-focus-width) solid var(--mayak-focus-ring);
+  outline-offset: 4px;
+  border-radius: var(--isl-radius-field);
 }
 .note-title textarea::placeholder {
   color: var(--mayak-text-secondary);
@@ -445,9 +459,12 @@ code {
 .task-input:focus {
   outline: none;
 }
+/* При наборе поле в фокусе всегда: контур мягче, чтобы не мешать тексту. */
 .block-text textarea:focus-visible,
 .task-input:focus-visible {
-  box-shadow: inset 0 -2px 0 var(--mayak-focus-ring);
+  outline: var(--isl-focus-width) solid color-mix(in srgb, var(--mayak-focus-ring) 45%, transparent);
+  outline-offset: 3px;
+  border-radius: var(--isl-radius-field);
 }
 .block-text textarea::placeholder,
 .task-input::placeholder {

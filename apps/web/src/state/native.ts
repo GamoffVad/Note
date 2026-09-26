@@ -175,3 +175,21 @@ export async function listenForAuthLinks(onUrl: (url: string) => void): Promise<
   (await getCurrent())?.forEach(onUrl);
   return onOpenUrl((urls) => urls.forEach(onUrl));
 }
+
+/**
+ * fetch для сетевых запросов приложения (вход Supabase, синхронизация).
+ * На Android запросы идут через модуль Tauri HTTP (Rust): во встроенном
+ * WebView POST к внешнему серверу не доходит — в журнале Supabase видна
+ * только предварительная проверка CORS (OPTIONS), сам запрос не приходит,
+ * и вход зависал. Разрешённые адреса — capabilities/default.json.
+ * На компьютере и в браузере — обычный fetch.
+ */
+export function appFetch(): typeof fetch {
+  if (isNativeApp() && nativePlatform() === "android") {
+    return (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const { fetch: tauriFetch } = await import("@tauri-apps/plugin-http");
+      return tauriFetch(input, init);
+    }) as typeof fetch;
+  }
+  return globalThis.fetch.bind(globalThis);
+}
