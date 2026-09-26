@@ -1,6 +1,6 @@
 [package]
 name = "mayak-desktop"
-version = "0.1.3"
+version = "0.1.4"
 description = "Маяк — заметки, задачи и файлы на всех устройствах"
 edition = "2021"
 rust-version = "1.88"
@@ -24,6 +24,8 @@ rusqlite = { version = "0.40", features = ["bundled"] }
 # Вход по ссылке из письма: ссылка io.github.gamoffvad.mayak://… открывает приложение.
 tauri-plugin-deep-link = "2.4"
 tauri-plugin-http = "~2.5.9"
+# Файлы: отправка и скачивание в хранилище Supabase из Rust (transfers.rs).
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
 
 # Системное хранилище секретов: Связка ключей macOS, Диспетчер учётных данных Windows,
 # Secret Service в Linux. На мобильных системах — отдельная реализация позже.
@@ -32,7 +34,7 @@ keyring = "4.2"
 # Повторный запуск (в Windows и Linux так приходит ссылка) передаёт её уже открытому окну.
 tauri-plugin-single-instance = { version = "2.4", features = ["deep-link"] }
 
-# Диктовка через Wispr Flow: нажатие его сочетания клавиш (wispr.rs).
+# Диктовка через Wispr Flow: удержание его сочетания клавиш (wispr.rs).
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.61", features = ["Win32_UI_Input_KeyboardAndMouse"] }
 

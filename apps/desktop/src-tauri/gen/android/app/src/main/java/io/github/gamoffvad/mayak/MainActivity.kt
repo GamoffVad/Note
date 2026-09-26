@@ -10,9 +10,12 @@ import androidx.core.view.WindowInsetsCompat
 class MainActivity : TauriActivity() {
   // Диктовка встроенным распознаванием Android (MayakSpeech.kt).
   private val speech = MayakSpeech(this)
+  // Сохранение полученных файлов в «Загрузки» (MayakFiles.kt).
+  private val files = MayakFiles(this)
 
   override fun onWebViewCreate(webView: WebView) {
     speech.attach(webView)
+    files.attach(webView)
   }
 
   override fun onPause() {

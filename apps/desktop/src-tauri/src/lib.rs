@@ -3,10 +3,11 @@
 
 mod secrets;
 mod store;
+mod transfers;
 mod wispr;
 
 use store::{Op, Store};
-use tauri::{Manager, State};
+use tauri::{AppHandle, Manager, State};
 
 #[tauri::command]
 fn kv_get(state: State<'_, Store>, ns: String, store: String, key: String) -> Result<Option<String>, String> {
@@ -35,10 +36,25 @@ fn session_key() -> Result<String, String> {
 
 // ─── Диктовка ────────────────────────────────────────────────────────────
 
-/// Включает запись в Wispr Flow его сочетанием клавиш (см. wispr.rs).
+/// Нажимает (down = true) или отпускает сочетание записи Wispr Flow (см. wispr.rs).
 #[tauri::command]
-fn wispr_start() -> Result<wispr::Outcome, String> {
-    wispr::start()
+fn wispr_press(down: bool) -> Result<wispr::Outcome, String> {
+    wispr::press(down)
+}
+
+// ─── Файлы ───────────────────────────────────────────────────────────────
+
+/// Отправляет файл в хранилище передачи (см. transfers.rs); тело — содержимое файла.
+#[tauri::command]
+async fn transfer_upload(request: tauri::ipc::Request<'_>) -> Result<(), String> {
+    transfers::upload(request).await
+}
+
+/// Сохраняет полученный файл в папку «Загрузки»; возвращает путь.
+#[tauri::command]
+async fn transfer_save(app: AppHandle, url: String, name: String) -> Result<String, String> {
+    let dir = app.path().download_dir().map_err(|e| format!("Нет папки «Загрузки»: {e}"))?;
+    transfers::save(dir, url, name).await
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -87,7 +103,9 @@ pub fn run() {
             kv_commit,
             kv_drop,
             session_key,
-            wispr_start
+            wispr_press,
+            transfer_upload,
+            transfer_save
         ])
         .run(tauri::generate_context!())
         .expect("не удалось запустить приложение «Маяк»");

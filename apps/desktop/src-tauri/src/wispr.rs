@@ -1,9 +1,10 @@
-//! Диктовка через Wispr Flow: кнопка «Диктовать» нажимает за пользователя
-//! сочетание клавиш Wispr Flow для записи без удержания (hands-free).
+//! Диктовка через Wispr Flow удержанием: пока нажата кнопка «Диктовать»,
+//! приложение держит нажатым сочетание Wispr Flow для записи с удержанием
+//! (push-to-talk); отпустили кнопку — отпускаются и клавиши, Wispr Flow
+//! вставляет распознанный текст в поле, где стоит курсор.
 //! Сочетания по умолчанию — из справки Wispr Flow:
 //! https://docs.wisprflow.ai/articles/2612050838-supported-unsupported-keyboard-hotkey-shortcuts
-//! Windows: Ctrl + Win + Space; macOS: Fn + Space.
-//! Текст вставляет сам Wispr Flow в поле, где стоит курсор.
+//! Windows: Ctrl + Win; macOS: Fn.
 
 use serde::Serialize;
 
@@ -11,20 +12,22 @@ use serde::Serialize;
 #[cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
 #[serde(rename_all = "snake_case")]
 pub enum Outcome {
-    /// Сочетание отправлено: запись включает Wispr Flow.
+    /// Нажатие (или отпускание) отправлено.
     Sent,
     /// macOS: нужно разрешение «Универсальный доступ», иначе система не пропустит нажатия.
     NeedsPermission,
-    /// Здесь сочетание не отправляется (Android — кнопка Wispr над клавиатурой, Linux — Wispr Flow нет).
+    /// Здесь сочетание не отправляется (Linux — Wispr Flow нет).
     Unsupported,
 }
 
 #[cfg(windows)]
-pub fn start() -> Result<Outcome, String> {
+pub fn press(down: bool) -> Result<Outcome, String> {
     use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
         SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, VK_CONTROL,
-        VK_LWIN, VK_SPACE,
+        VK_LWIN,
     };
+    /// Неназначенная клавиша: нажатие перед отпусканием Win не даёт открыться меню «Пуск».
+    const VK_MASK: u16 = 0xE8;
     fn key(vk: u16, up: bool) -> INPUT {
         let mut flags = if up { KEYEVENTF_KEYUP } else { 0 };
         if vk == VK_LWIN {
@@ -35,14 +38,11 @@ pub fn start() -> Result<Outcome, String> {
             Anonymous: INPUT_0 { ki: KEYBDINPUT { wVk: vk, wScan: 0, dwFlags: flags, time: 0, dwExtraInfo: 0 } },
         }
     }
-    let inputs = [
-        key(VK_CONTROL, false),
-        key(VK_LWIN, false),
-        key(VK_SPACE, false),
-        key(VK_SPACE, true),
-        key(VK_LWIN, true),
-        key(VK_CONTROL, true),
-    ];
+    let inputs: Vec<INPUT> = if down {
+        vec![key(VK_CONTROL, false), key(VK_LWIN, false)]
+    } else {
+        vec![key(VK_MASK, false), key(VK_MASK, true), key(VK_LWIN, true), key(VK_CONTROL, true)]
+    };
     // SAFETY: массив INPUT живёт до конца вызова, размер структуры передан верно.
     let sent = unsafe { SendInput(inputs.len() as u32, inputs.as_ptr(), std::mem::size_of::<INPUT>() as i32) };
     if sent as usize == inputs.len() {
@@ -53,33 +53,20 @@ pub fn start() -> Result<Outcome, String> {
 }
 
 #[cfg(target_os = "macos")]
-pub fn start() -> Result<Outcome, String> {
+pub fn press(down: bool) -> Result<Outcome, String> {
     use core_graphics::event::{CGEvent, CGEventFlags, CGEventTapLocation, CGEventType};
     use core_graphics::event_source::{CGEventSource, CGEventSourceStateID};
 
-    if !accessibility_trusted() {
+    // Отпускание отправляем всегда: клавиша не должна «залипнуть».
+    if down && !accessibility_trusted() {
         return Ok(Outcome::NeedsPermission);
     }
     const FN: u16 = 63; // kVK_Function
-    const SPACE: u16 = 49; // kVK_Space
     let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState).map_err(|_| "Нет источника событий")?;
-    let event = |code: u16, down: bool, flags: CGEventFlags, flags_changed: bool| -> Result<CGEvent, String> {
-        let e = CGEvent::new_keyboard_event(source.clone(), code, down).map_err(|_| "Не удалось создать нажатие")?;
-        e.set_flags(flags);
-        if flags_changed {
-            e.set_type(CGEventType::FlagsChanged);
-        }
-        Ok(e)
-    };
-    let with_fn = CGEventFlags::CGEventFlagSecondaryFn;
-    for e in [
-        event(FN, true, with_fn, true)?,
-        event(SPACE, true, with_fn, false)?,
-        event(SPACE, false, with_fn, false)?,
-        event(FN, false, CGEventFlags::CGEventFlagNull, true)?,
-    ] {
-        e.post(CGEventTapLocation::HID);
-    }
+    let event = CGEvent::new_keyboard_event(source, FN, down).map_err(|_| "Не удалось создать нажатие")?;
+    event.set_type(CGEventType::FlagsChanged);
+    event.set_flags(if down { CGEventFlags::CGEventFlagSecondaryFn } else { CGEventFlags::CGEventFlagNull });
+    event.post(CGEventTapLocation::HID);
     Ok(Outcome::Sent)
 }
 
@@ -105,6 +92,6 @@ fn accessibility_trusted() -> bool {
 }
 
 #[cfg(not(any(windows, target_os = "macos")))]
-pub fn start() -> Result<Outcome, String> {
+pub fn press(_down: bool) -> Result<Outcome, String> {
     Ok(Outcome::Unsupported)
 }
