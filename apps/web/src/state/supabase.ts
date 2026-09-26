@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createClient, processLock, type SupabaseClient } from "@supabase/supabase-js";
 import { appFetch, appSessionStorage, isNativeApp } from "./native.ts";
 
 /**
@@ -23,13 +23,15 @@ export function getSupabase(): SupabaseClient | null {
   client ??= createClient(url, key, {
     auth: {
       // PKCE: ссылка из письма работает, если открыть её в этом же браузере.
-      // В приложении вход — только по коду из письма.
+      // В приложении ссылка из письма открывает «Маяк» (MayakContext).
       flowType: "pkce",
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: !native,
       storageKey: "mayak.auth",
-      ...(native ? { storage: appSessionStorage() } : {}),
+      // В приложении одно окно: блокировка между вкладками браузера (navigator.locks)
+      // не нужна, операции входа упорядочивает блокировка в памяти.
+      ...(native ? { storage: appSessionStorage(), lock: processLock } : {}),
     },
     global: { fetch: appFetch() },
   });

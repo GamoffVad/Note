@@ -1,6 +1,6 @@
 [package]
 name = "mayak-desktop"
-version = "0.1.6"
+version = "0.1.7"
 description = "Маяк — заметки, задачи и файлы на всех устройствах"
 edition = "2021"
 rust-version = "1.88"

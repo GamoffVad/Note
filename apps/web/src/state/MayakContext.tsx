@@ -2,7 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { NoteDocument } from "@mayak/domain";
 import { requestPersistentStorage } from "@mayak/local-store";
 import type { ConflictChoice, ConflictRecord, LocalNote, OutboxEntry, SyncStatus } from "@mayak/sync";
-import { AUTH_LINK_ERROR_EVENT, isNativeApp, listenForAuthLinks, parseAuthLink } from "./native.ts";
+import { accountConfig, errorDetail, reportAuthLink, signInWithLink } from "./authLink.ts";
+import { isNativeApp, listenForAuthLinks, parseAuthLink } from "./native.ts";
+import { navigate } from "./router.ts";
 import { getSupabase } from "./supabase.ts";
 import {
   loadSyncConfig,
@@ -76,39 +78,54 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
     };
   }, [config]);
 
+  const connectAccount = useCallback((next: SyncConfig) => {
+    setConfig((current) => {
+      if (current.mode === "account" && next.mode === "account" && current.userId === next.userId) return current;
+      saveSyncConfig(next);
+      return next;
+    });
+  }, []);
+
   // Вход по ссылке из письма (PKCE): библиотека обменивает код на сессию при загрузке.
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) return;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event !== "SIGNED_IN" || !session) return;
-      setConfig((current) => {
-        if (current.mode === "account" && current.userId === session.user.id) return current;
-        const next: SyncConfig = { mode: "account", userId: session.user.id, email: session.user.email ?? "" };
-        saveSyncConfig(next);
-        return next;
-      });
+      if (event === "SIGNED_IN" && session) connectAccount(accountConfig(session));
     });
     return () => data.subscription.unsubscribe();
-  }, []);
+  }, [connectAccount]);
 
   // Приложение: ссылка из письма открывает «Маяк» с кодом входа (PKCE).
-  // Обмен кода на сессию вызывает SIGNED_IN, дальше — как при входе по коду.
+  // Ход и результат входа видны в «Настройках»; аккаунт подключается сразу
+  // по результату обмена кода, не дожидаясь события SIGNED_IN.
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase || !isNativeApp()) return;
     let stop: (() => void) | null = null;
     let cancelled = false;
     const handled = new Set<string>();
-    const report = (text: string) => window.dispatchEvent(new CustomEvent(AUTH_LINK_ERROR_EVENT, { detail: text }));
     void listenForAuthLinks((url) => {
       const link = parseAuthLink(url);
       if (!link || handled.has(url)) return;
       handled.add(url);
-      if ("error" in link) return report("Ссылка из письма устарела или уже использована. Запросите новое письмо.");
-      void supabase.auth.exchangeCodeForSession(link.code).then(({ error }) => {
-        if (error) report("Не удалось войти по ссылке. Запросите новое письмо на этом компьютере.");
-      });
+      if (!location.hash.startsWith("#/settings")) navigate({ section: "settings" });
+      if ("error" in link) {
+        return reportAuthLink({
+          state: "error",
+          text: "Ссылка из письма устарела или уже использована. Запросите новое письмо.",
+          detail: link.error,
+        });
+      }
+      reportAuthLink({ state: "pending", text: "Выполняем вход по ссылке из письма…" });
+      signInWithLink(supabase, link.code)
+        .then((next) => {
+          reportAuthLink({ state: "done" });
+          connectAccount(next);
+        })
+        .catch((error: unknown) =>
+          reportAuthLink({ state: "error", text: "Не удалось войти по ссылке. Запросите новое письмо.", detail: errorDetail(error) }),
+        );
     })
       .then((unlisten) => (cancelled ? unlisten() : (stop = unlisten)))
       .catch((error: unknown) => console.warn("Ссылки для входа недоступны", error));
@@ -116,7 +133,7 @@ export function MayakProvider({ children, fallback }: { children: ReactNode; fal
       cancelled = true;
       stop?.();
     };
-  }, []);
+  }, [connectAccount]);
 
   useEffect(() => {
     requestPersistentStorage()

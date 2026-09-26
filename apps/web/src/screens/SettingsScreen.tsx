@@ -8,6 +8,7 @@ import {
   FormGroup,
   FormRow,
   PopUpButton,
+  ProgressBar,
   Sheet,
   Slider,
   Switch,
@@ -18,7 +19,8 @@ import { useAppearance } from "../state/AppearanceContext.tsx";
 import { FONTS, lowContrastScopes, MAX_SIZE, MIN_SIZE, WEIGHTS, type FontFamily, type Scope, type ThemeChoice } from "../state/appearance.ts";
 import { useMayak } from "../state/MayakContext.tsx";
 import { downloadBlob, plural, safeFileName } from "../state/format.ts";
-import { AUTH_LINK_ERROR_EVENT, authEmailRedirect, isNativeApp } from "../state/native.ts";
+import { AUTH_LINK_EVENT, authLinkStatus, errorDetail, reportAuthLink, type AuthLinkStatus } from "../state/authLink.ts";
+import { authEmailRedirect, isNativeApp } from "../state/native.ts";
 import { getSupabase, isValidEmail, normalizeOtp, supabaseConfigured } from "../state/supabase.ts";
 import { DEFAULT_API_BASE, DEV_SYNC_ENABLED, type SyncConfig } from "../state/workspace.ts";
 
@@ -157,8 +159,19 @@ function FontGroup({ scope, title }: { scope: Scope; title: string }) {
 
 function SyncSection() {
   const { workspace } = useMayak();
+  const ref = useRef<HTMLElement>(null);
+  // Вход по ссылке из письма: показываем этот раздел — в нём ход и результат входа.
+  useEffect(() => {
+    const show = () => requestAnimationFrame(() => ref.current?.scrollIntoView({ block: "start" }));
+    // После входа раздел открывается заново (новое хранилище аккаунта) — показываем его один раз.
+    const status = authLinkStatus();
+    if (status) show();
+    if (status?.state === "done") reportAuthLink(null);
+    window.addEventListener(AUTH_LINK_EVENT, show);
+    return () => window.removeEventListener(AUTH_LINK_EVENT, show);
+  }, []);
   return (
-    <section className="settings-section" aria-labelledby="sync-title">
+    <section ref={ref} className="settings-section" aria-labelledby="sync-title">
       <h2 id="sync-title" className="settings-section__title">
         Аккаунт и синхронизация
       </h2>
@@ -206,13 +219,6 @@ async function withTimeout<T>(promise: Promise<T>): Promise<T> {
   }
 }
 
-/** Техническая строка для скриншота: по ней видно причину на конкретном устройстве. */
-function errorDetail(error: unknown): string {
-  if (!error || typeof error !== "object") return String(error);
-  const e = error as { name?: string; message?: string; status?: number; code?: string };
-  return [e.name, e.code, e.status, e.message].filter((x) => x !== undefined && x !== "").join(" · ");
-}
-
 /** Вход по email: письмо с кодом (или ссылкой для этого браузера). Пароль не нужен. */
 function SignInForm() {
   const { setSyncConfig, status, workspace } = useMayak();
@@ -225,11 +231,14 @@ function SignInForm() {
   const codeRef = useRef<HTMLInputElement>(null);
   const pending = status.pendingCount + status.failedCount;
 
-  // Ошибка входа по ссылке из письма (приложение, MayakContext).
+  // В приложении письмо содержит только ссылку: кода в нём нет (шаблон Supabase по умолчанию).
+  const native = isNativeApp();
+  // Ход и ошибка входа по ссылке из письма (приложение, MayakContext).
+  const [link, setLink] = useState<AuthLinkStatus | null>(authLinkStatus);
   useEffect(() => {
-    const onError = (e: Event) => setError((e as CustomEvent<string>).detail);
-    window.addEventListener(AUTH_LINK_ERROR_EVENT, onError);
-    return () => window.removeEventListener(AUTH_LINK_ERROR_EVENT, onError);
+    const onLink = (e: Event) => setLink((e as CustomEvent<AuthLinkStatus | null>).detail);
+    window.addEventListener(AUTH_LINK_EVENT, onLink);
+    return () => window.removeEventListener(AUTH_LINK_EVENT, onLink);
   }, []);
 
   const requestCode = async () => {
@@ -238,6 +247,7 @@ function SignInForm() {
     setBusy(true);
     setError(null);
     setDetail(null);
+    reportAuthLink(null);
     let e: Parameters<typeof authErrorText>[0] = null;
     try {
       ({ error: e } = await withTimeout(
@@ -285,6 +295,18 @@ function SignInForm() {
         Войдите по email, чтобы заметки синхронизировались между вашими устройствами.
         {workspace.config.mode === "local" && pending > 0 && " Заметки, созданные на этом устройстве, будут отправлены в аккаунт."}
       </p>
+      {link?.state === "pending" && (
+        <div className="card form-card" role="status">
+          <p>{link.text}</p>
+          <ProgressBar label={link.text} value={null} />
+        </div>
+      )}
+      {link?.state === "error" && (
+        <Banner tone="danger" role="alert" icon={<Icon name="warning" />}>
+          <p>{link.text}</p>
+          {link.detail && <p className="isl-caption">Подробности для разработчика: {link.detail}</p>}
+        </Banner>
+      )}
       {step === "email" ? (
         <form
           className="card form-card"
@@ -306,7 +328,7 @@ function SignInForm() {
           />
           <div className="form-actions">
             <Button type="submit" variant="primary" disabled={!isValidEmail(email)} loading={busy} loadingLabel="Отправляем…">
-              Получить код
+              {native ? "Получить ссылку" : "Получить код"}
             </Button>
           </div>
         </form>
@@ -315,29 +337,35 @@ function SignInForm() {
           className="card form-card"
           onSubmit={(e) => {
             e.preventDefault();
-            if (normalizeOtp(code).length >= 6) void verify();
+            if (!native && normalizeOtp(code).length >= 6) void verify();
           }}
         >
           <p role="status">
             Письмо отправлено на <strong>{email.trim()}</strong>.{" "}
-            {isNativeApp()
-              ? "Откройте ссылку из письма на этом компьютере — «Маяк» откроется и выполнит вход. Если в письме есть код, можно ввести его здесь."
+            {native
+              ? "Откройте его на этом устройстве и нажмите ссылку «Sign in» — «Маяк» откроется и выполнит вход."
               : "Введите код из письма или откройте ссылку из него в этом же браузере."}
           </p>
-          <TextField
-            ref={codeRef}
-            id="auth-code"
-            label="Код из письма"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            value={code}
-            error={error}
-            onChange={(e) => setCode(e.target.value)}
-          />
+          {native ? (
+            error && <p className="isl-caption" role="alert">{error}</p>
+          ) : (
+            <TextField
+              ref={codeRef}
+              id="auth-code"
+              label="Код из письма"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              error={error}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          )}
           <div className="form-actions">
-            <Button type="submit" variant="primary" disabled={normalizeOtp(code).length < 6} loading={busy} loadingLabel="Проверяем…">
-              Войти
-            </Button>
+            {!native && (
+              <Button type="submit" variant="primary" disabled={normalizeOtp(code).length < 6} loading={busy} loadingLabel="Проверяем…">
+                Войти
+              </Button>
+            )}
             <Button
               onClick={() => {
                 setStep("email");
